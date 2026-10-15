@@ -193,7 +193,7 @@ const buildKeyframes = (from: Snapshot, steps: Snapshot[]): Keyframes => {
 
   const keyframes: Keyframes = {};
   keys.forEach(k => {
-    keyframes[k] = [from[k], ...steps.map(s => s[k])];
+    keyframes[k] = [from[k]!, ...steps.map(s => s[k]!)];
   });
   return keyframes;
 };
@@ -216,7 +216,9 @@ const buildRanks = (count: number, staggerFrom: BlurTextStaggerFrom, seedText: s
     const order = ranks.slice();
     for (let i = order.length - 1; i > 0; i--) {
       const j = Math.floor(next() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+      const current = order[i]!;
+      order[i] = order[j]!;
+      order[j] = current;
     }
     order.forEach((piece, rank) => {
       ranks[piece] = rank;
@@ -266,7 +268,7 @@ const BlurText = ({
   const fromSnapshot = animationFrom ?? fx.from;
   const toSnapshots = animationTo ?? fx.steps;
   const exitSnapshot = animationFrom ?? fx.exit;
-  const restSnapshot = toSnapshots[toSnapshots.length - 1];
+  const restSnapshot = toSnapshots[toSnapshots.length - 1] ?? fx.steps[fx.steps.length - 1]!;
   const animateKeyframes = useMemo(
     () => buildKeyframes(fromSnapshot, custom ? toSnapshots : [restSnapshot]),
     [fromSnapshot, toSnapshots, restSnapshot, custom]
@@ -299,7 +301,7 @@ const BlurText = ({
 
   const groups = useMemo(() => {
     const list: number[][] = words.map(() => []);
-    pieces.forEach((piece, index) => list[piece.word].push(index));
+    pieces.forEach((piece, index) => list[piece.word]!.push(index));
     return list;
   }, [words, pieces]);
 
@@ -322,7 +324,7 @@ const BlurText = ({
     if (!element) return undefined;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setPhase(current => (current === 'from' ? 'in' : current));
           observer.disconnect();
         }
@@ -381,7 +383,8 @@ const BlurText = ({
 
   const renderPiece = (index: number): ReactNode => {
     const piece = pieces[index];
-    const rank = ranks[index];
+    if (!piece) return null;
+    const rank = ranks[index] ?? 0;
     const transition: Transition =
       phase === 'in'
         ? inTransition(rank)
