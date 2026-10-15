@@ -20,41 +20,59 @@ import { navigate, readRoute, type RouteId } from "./lib/navigation";
 import type { Application, Entitlements, Quota, User } from "./types";
 
 function LandingPage({ onSignIn }: { onSignIn: () => void }) {
-  return <main className="ace-landing">
-    <nav className="ace-landing-nav" aria-label="Main navigation">
-      <a className="ace-wordmark" href="/" aria-label="AIDC home"><span className="ace-wordmark-mark">A</span><span>AIDC<small>DEVELOPER CONSOLE</small></span></a>
-      <div className="ace-nav-links"><a href="#capabilities">Capabilities</a><a href="https://docs.ace-base.cc/projects/aidc">Documentation <span aria-hidden="true">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></a></div>
-      <button className="ace-nav-signin" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></button>
+  return <main className="fresh-landing">
+    <nav className="fresh-nav" aria-label="Main navigation">
+      <a className="fresh-brand" href="/" aria-label="AIDC home">
+        <span className="fresh-brand-mark">A</span>
+        <span className="fresh-brand-copy"><strong>AIDC</strong><small>ACE IDENTITY DEVELOPER CONSOLE</small></span>
+      </a>
+      <div className="fresh-nav-links">
+        <a href="#capabilities">Capabilities</a>
+        <a href="https://docs.ace-base.cc/projects/aidc">Documentation <span aria-hidden="true">↗</span></a>
+      </div>
+      <button className="fresh-nav-cta" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">↗</span></button>
     </nav>
-    <section className="ace-landing-hero">
-      <div className="ace-hero-copy">
-        <div className="ace-eyebrow"><span className="ace-live-dot" /> THE DEVELOPER CONSOLE FOR ACE ID</div>
-        <h1>Identity infrastructure.<br/><em>Under your control.</em></h1>
-        <p className="ace-hero-lede">Build, configure, and observe the applications connected to Ace ID. OAuth and OpenID Connect, without the guesswork.</p>
-        <div className="ace-hero-actions"><button className="ace-primary-cta" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></button><a className="ace-secondary-cta" href="https://docs.ace-base.cc/projects/aidc">Explore the docs <span aria-hidden="true">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></a></div>
-        <div className="ace-trust-line"><span className="ace-trust-check">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span> Your identity stays with Ace ID <span className="ace-trust-separator">ÃÂÃÂÃÂÃÂ·</span> Your apps stay yours</div>
+
+    <section className="fresh-hero">
+      <div className="fresh-hero-copy">
+        <div className="fresh-eyebrow"><span className="fresh-status-dot" /> IDENTITY CONTROL, CLEARLY</div>
+        <h1>Identity infrastructure.<br /><em>Without the noise.</em></h1>
+        <p>One focused workspace for the apps connected to Ace ID. Configure clients, manage credentials, and understand authentication at a glance.</p>
+        <div className="fresh-hero-actions">
+          <button className="fresh-primary" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">↗</span></button>
+          <a className="fresh-text-link" href="https://docs.ace-base.cc/projects/aidc">Read the documentation <span aria-hidden="true">→</span></a>
+        </div>
+        <div className="fresh-assurance"><HugeiconsIcon icon={Settings01Icon} size={16} strokeWidth={1.7} aria-hidden="true" /><span>Ace ID handles identity.</span><i /> <span>AIDC handles your apps.</span></div>
       </div>
-      <div className="ace-hero-art" aria-label="Illustration of an application connected securely to Ace ID">
-        <div className="ace-art-orbit ace-art-orbit-one" /><div className="ace-art-orbit ace-art-orbit-two" />
-        <div className="ace-art-label ace-art-label-top"><span className="ace-art-pulse" /> AUTH FLOW <b>READY</b></div>
-        <div className="ace-art-core"><span className="ace-art-core-mark">A</span><span>ACE ID</span><small>IDENTITY PROVIDER</small></div>
-        <div className="ace-art-connector ace-art-connector-left"><i>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</i></div><div className="ace-art-connector ace-art-connector-right"><i>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</i></div>
-        <div className="ace-art-node ace-art-node-left"><span className="ace-node-glyph">{"{}"}</span><b>Your app</b><small>OAuth client</small></div>
-        <div className="ace-art-node ace-art-node-right"><span className="ace-node-glyph">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span><b>Verified</b><small>OIDC session</small></div>
-        <div className="ace-art-footnote">STATEFUL BY DESIGN <span>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢</span> PKCE ENABLED</div>
+
+      <div className="fresh-preview" aria-label="Preview of the AIDC developer console">
+        <div className="fresh-preview-top">
+          <div className="fresh-preview-brand"><span className="fresh-preview-mark">A</span><span><b>Workspace</b><small>DEVELOPER CONSOLE</small></span></div>
+          <span className="fresh-preview-live"><i /> Operational</span>
+        </div>
+        <div className="fresh-preview-heading"><div><small>YOUR WORKSPACE</small><h2>Applications</h2></div><span className="fresh-preview-count">03</span></div>
+        <div className="fresh-preview-apps">
+          <div className="fresh-preview-app"><span className="fresh-app-glyph">N</span><span><b>Northstar Web</b><small>Production client</small></span><i>Active</i></div>
+          <div className="fresh-preview-app"><span className="fresh-app-glyph fresh-app-glyph-two">S</span><span><b>Studio Mobile</b><small>Native application</small></span><i>Active</i></div>
+          <div className="fresh-preview-app"><span className="fresh-app-glyph fresh-app-glyph-three">D</span><span><b>Dev Workspace</b><small>Development client</small></span><i>Test</i></div>
+        </div>
+        <div className="fresh-preview-foot"><span><HugeiconsIcon icon={Activity01Icon} size={15} strokeWidth={1.8} aria-hidden="true" /> OAuth / OIDC</span><span>PKCE enabled</span></div>
+        <div className="fresh-preview-side-note"><span className="fresh-note-icon"><HugeiconsIcon icon={Analytics01Icon} size={17} strokeWidth={1.7} /></span><span><b>Clear by design</b><small>Configuration, activity, and health in one place.</small></span></div>
       </div>
-      <div className="ace-hero-index"><span>01 / DEVELOPER PLATFORM</span><span>BUILT FOR THE DETAILS ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></div>
+      <div className="fresh-hero-meta"><span>01 / DEVELOPER PLATFORM</span><span>BUILT FOR THE DETAILS <span aria-hidden="true">↘</span></span></div>
     </section>
-    <section className="ace-capabilities" id="capabilities">
-      <div className="ace-section-heading"><div><span className="ace-section-kicker">ONE CONSOLE. CLEAR CONTROL.</span><h2>Everything your app needs.<br/><em>Nothing pretending to be you.</em></h2></div><p>AIDC manages app configuration. Ace ID remains the identity provider. The boundary is deliberate.</p></div>
-      <div className="ace-feature-grid">
-        <article className="ace-feature-card ace-feature-card-main"><div className="ace-feature-top"><span>01</span><span className="ace-feature-symbol">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></div><div className="ace-feature-visual ace-visual-clients"><div className="ace-mini-window"><div className="ace-mini-window-bar"><i/><i/><i/><span>APPLICATIONS / 03</span></div><div className="ace-mini-row"><b className="ace-mini-icon">N</b><span>Northstar Web<small>Production client</small></span><i className="ace-mini-tag">ACTIVE</i></div><div className="ace-mini-row"><b className="ace-mini-icon ace-mini-icon-alt">S</b><span>Studio Mobile<small>Native client</small></span><i className="ace-mini-tag">ACTIVE</i></div><div className="ace-mini-row"><b className="ace-mini-icon ace-mini-icon-third">D</b><span>Dev Workspace<small>Development</small></span><i className="ace-mini-tag">TEST</i></div></div></div><h3>Application control</h3><p>Manage clients, redirect URIs, scopes, credentials, and branding from one workspace.</p></article>
-        <article className="ace-feature-card"><div className="ace-feature-top"><span>02</span><span className="ace-feature-symbol">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></div><div className="ace-feature-visual ace-visual-protocol"><div className="ace-protocol-row"><span>01</span><b>OAuth 2.0</b><i>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</i></div><div className="ace-protocol-row"><span>02</span><b>OpenID Connect</b><i>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</i></div><div className="ace-protocol-row"><span>03</span><b>PKCE</b><i>ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</i></div><div className="ace-protocol-stamp">PROTOCOLS<br/>NOT PROMISES</div></div><h3>Standards, not shortcuts</h3><p>Configure the flows your clients need with a clear view of the settings that matter.</p></article>
-        <article className="ace-feature-card"><div className="ace-feature-top"><span>03</span><span className="ace-feature-symbol">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></div><div className="ace-feature-visual ace-visual-observe"><div className="ace-observe-header"><span>AUTH EVENTS</span><b><i/> LIVE VIEW</b></div><div className="ace-sparkline"><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/></div><div className="ace-observe-stats"><div><small>SUCCESS RATE</small><b>Observable</b></div><div><small>EVENT TRAIL</small><b>Auditable</b></div></div></div><h3>Visibility when it counts</h3><p>Review authentication activity, application events, and operational health in context.</p></article>
+
+    <section className="fresh-capabilities" id="capabilities">
+      <div className="fresh-section-heading"><div><span className="fresh-eyebrow">ONE CONSOLE. CLEAR CONTROL.</span><h2>Everything your app needs.<br /><em>Nothing pretending to be you.</em></h2></div><p>AIDC manages app configuration. Ace ID remains the identity provider. That boundary is deliberate.</p></div>
+      <div className="fresh-feature-grid">
+        <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Grid2X2Icon} size={21} strokeWidth={1.6} /></span><small>01 / CONFIGURE</small><h3>Application control</h3><p>Manage clients, redirect URIs, scopes, credentials, and application settings from one workspace.</p><a href="https://docs.ace-base.cc/projects/aidc">Explore applications <span aria-hidden="true">↗</span></a></article>
+        <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Settings01Icon} size={21} strokeWidth={1.6} /></span><small>02 / CONNECT</small><h3>Standards, not shortcuts</h3><p>Work with OAuth 2.0 and OpenID Connect flows through a clear, focused configuration surface.</p><a href="https://docs.ace-base.cc/projects/aidc">Understand the setup <span aria-hidden="true">↗</span></a></article>
+        <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Activity01Icon} size={21} strokeWidth={1.6} /></span><small>03 / OBSERVE</small><h3>Visibility when it counts</h3><p>Review authentication activity and operational signals without losing sight of the application.</p><a href="https://docs.ace-base.cc/projects/aidc">Explore observability <span aria-hidden="true">↗</span></a></article>
       </div>
     </section>
-    <section className="ace-landing-bottom"><div><span className="ace-section-kicker">YOUR WORKSPACE STARTS HERE</span><h2>Ship the app.<br/><em>Trust the identity layer.</em></h2></div><button className="ace-primary-cta" onClick={onSignIn}>Enter the console <span aria-hidden="true">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</span></button></section>
-    <footer className="ace-landing-footer"><a className="ace-wordmark ace-wordmark-footer" href="/"><span className="ace-wordmark-mark">A</span><span>Ace <b>ID</b><small>DEVELOPER CONSOLE</small></span></a><span>Identity by Ace ID. Application control by AIDC.</span><a href="https://docs.ace-base.cc/projects/aidc">Documentation ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</a><span>ÃÂÃÂÃÂÃÂ© {new Date().getFullYear()} ACE ID</span></footer>
+
+    <section className="fresh-bottom-cta"><div><span className="fresh-eyebrow">YOUR WORKSPACE STARTS HERE</span><h2>Ship the app.<br /><em>Trust the identity layer.</em></h2></div><button className="fresh-primary" onClick={onSignIn}>Enter the console <span aria-hidden="true">↗</span></button></section>
+    <footer className="fresh-footer"><a className="fresh-brand" href="/"><span className="fresh-brand-mark">A</span><span className="fresh-brand-copy"><strong>AIDC</strong><small>THE ACE BASE</small></span></a><span>Identity by Ace ID. Application control by AIDC.</span><a href="https://docs.ace-base.cc/projects/aidc">Documentation ↗</a><small>© {new Date().getFullYear()} The Ace Base</small></footer>
   </main>;
 }
 
