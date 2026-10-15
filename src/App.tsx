@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { BlurFade } from "./components/magicui/blur-fade";
+import BlurText from "./components/reactbits/BlurText";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { IdentityAvatar } from "./components/IdentityAvatar";
 import { Activity01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Logout01Icon, Search01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
@@ -36,8 +38,8 @@ function LandingPage({ onSignIn }: { onSignIn: () => void }) {
     <section className="fresh-hero">
       <div className="fresh-hero-copy">
         <div className="fresh-eyebrow"><span className="fresh-status-dot" /> IDENTITY CONTROL, CLEARLY</div>
-        <h1>Identity infrastructure.<br /><em>Without the noise.</em></h1>
-        <p>One focused workspace for the apps connected to Ace ID. Configure clients, manage credentials, and understand authentication at a glance.</p>
+        <BlurFade delay={0.08} duration={0.55}><h1>Identity infrastructure.<br /><em>Without the noise.</em></h1></BlurFade>
+        <BlurText text="One focused workspace for the apps connected to Ace ID. Configure clients, manage credentials, and understand authentication at a glance." className="fresh-hero-lede fresh-reactbits-blur" animateBy="words" direction="top" delay={24} stepDuration={0.3} blur={7} distance={18} trigger="view" threshold={0.15} />
         <div className="fresh-hero-actions">
           <button className="fresh-primary" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">↗</span></button>
           <a className="fresh-text-link" href="https://docs.ace-base.cc/projects/aidc">Read the documentation <span aria-hidden="true">→</span></a>
@@ -64,11 +66,13 @@ function LandingPage({ onSignIn }: { onSignIn: () => void }) {
 
     <section className="fresh-capabilities" id="capabilities">
       <div className="fresh-section-heading"><div><span className="fresh-eyebrow">ONE CONSOLE. CLEAR CONTROL.</span><h2>Everything your app needs.<br /><em>Nothing pretending to be you.</em></h2></div><p>AIDC manages app configuration. Ace ID remains the identity provider. That boundary is deliberate.</p></div>
+      <BlurFade delay={0.08} duration={0.55} inView>
       <div className="fresh-feature-grid">
         <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Grid2X2Icon} size={21} strokeWidth={1.6} /></span><small>01 / CONFIGURE</small><h3>Application control</h3><p>Manage clients, redirect URIs, scopes, credentials, and application settings from one workspace.</p><a href="https://docs.ace-base.cc/projects/aidc">Explore applications <span aria-hidden="true">↗</span></a></article>
         <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Settings01Icon} size={21} strokeWidth={1.6} /></span><small>02 / CONNECT</small><h3>Standards, not shortcuts</h3><p>Work with OAuth 2.0 and OpenID Connect flows through a clear, focused configuration surface.</p><a href="https://docs.ace-base.cc/projects/aidc">Understand the setup <span aria-hidden="true">↗</span></a></article>
         <article className="fresh-feature"><span className="fresh-feature-icon"><HugeiconsIcon icon={Activity01Icon} size={21} strokeWidth={1.6} /></span><small>03 / OBSERVE</small><h3>Visibility when it counts</h3><p>Review authentication activity and operational signals without losing sight of the application.</p><a href="https://docs.ace-base.cc/projects/aidc">Explore observability <span aria-hidden="true">↗</span></a></article>
       </div>
+      </BlurFade>
     </section>
 
     <section className="fresh-bottom-cta"><div><span className="fresh-eyebrow">YOUR WORKSPACE STARTS HERE</span><h2>Ship the app.<br /><em>Trust the identity layer.</em></h2></div><button className="fresh-primary" onClick={onSignIn}>Enter the console <span aria-hidden="true">↗</span></button></section>
