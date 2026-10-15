@@ -5,6 +5,7 @@ import "./styles.css";
 import "./mobile.css";
 import "./redesign.css";
 import "./fresh-landing.css";
+import "./components/uiverse/uiverse-button.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

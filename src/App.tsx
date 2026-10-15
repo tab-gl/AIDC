@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { BlurFade } from "./components/magicui/blur-fade";
 import BlurText from "./components/reactbits/BlurText";
+import { UiverseButton } from "./components/uiverse/UiverseButton";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { IdentityAvatar } from "./components/IdentityAvatar";
 import { Activity01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Logout01Icon, Search01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
@@ -41,7 +42,7 @@ function LandingPage({ onSignIn }: { onSignIn: () => void }) {
         <BlurFade delay={0.08} duration={0.55}><h1>Identity infrastructure.<br /><em>Without the noise.</em></h1></BlurFade>
         <BlurText text="One focused workspace for the apps connected to Ace ID. Configure clients, manage credentials, and understand authentication at a glance." className="fresh-hero-lede fresh-reactbits-blur" animateBy="words" direction="top" delay={24} stepDuration={0.3} blur={7} distance={18} trigger="view" threshold={0.15} />
         <div className="fresh-hero-actions">
-          <button className="fresh-primary" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">↗</span></button>
+          <UiverseButton className="fresh-primary" onClick={onSignIn}>Continue with Ace ID <span aria-hidden="true">↗</span></UiverseButton>
           <a className="fresh-text-link" href="https://docs.ace-base.cc/projects/aidc">Read the documentation <span aria-hidden="true">→</span></a>
         </div>
         <div className="fresh-assurance"><HugeiconsIcon icon={Settings01Icon} size={16} strokeWidth={1.7} aria-hidden="true" /><span>Ace ID handles identity.</span><i /> <span>AIDC handles your apps.</span></div>
@@ -75,7 +76,7 @@ function LandingPage({ onSignIn }: { onSignIn: () => void }) {
       </BlurFade>
     </section>
 
-    <section className="fresh-bottom-cta"><div><span className="fresh-eyebrow">YOUR WORKSPACE STARTS HERE</span><h2>Ship the app.<br /><em>Trust the identity layer.</em></h2></div><button className="fresh-primary" onClick={onSignIn}>Enter the console <span aria-hidden="true">↗</span></button></section>
+    <section className="fresh-bottom-cta"><div><span className="fresh-eyebrow">YOUR WORKSPACE STARTS HERE</span><h2>Ship the app.<br /><em>Trust the identity layer.</em></h2></div><UiverseButton className="fresh-primary" onClick={onSignIn}>Enter the console <span aria-hidden="true">↗</span></UiverseButton></section>
     <footer className="fresh-footer"><a className="fresh-brand" href="/"><span className="fresh-brand-mark">A</span><span className="fresh-brand-copy"><strong>AIDC</strong><small>THE ACE BASE</small></span></a><span>Identity by Ace ID. Application control by AIDC.</span><a href="https://docs.ace-base.cc/projects/aidc">Documentation ↗</a><small>© {new Date().getFullYear()} The Ace Base</small></footer>
   </main>;
 }
