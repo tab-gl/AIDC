@@ -1918,12 +1918,6 @@ html,body { max-width:100%; overflow-x:clip; }
  .neo-mobile-view .neo-hero { padding:0 0 20px; }
  .neo-mobile-view .neo-heading-actions { display:flex; flex-wrap:wrap; gap:8px; }
  .neo-mobile-view .neo-app-list { grid-template-columns:1fr; }
- .neo-mobile-tabbar { position:fixed; z-index:40; right:0; bottom:0; left:0; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; padding:8px 8px calc(8px + env(safe-area-inset-bottom)); border-top:1px solid var(--neo-border); background:color-mix(in srgb,var(--neo-bg) 96%,transparent); backdrop-filter:blur(18px); }
- .neo-mobile-tabbar button { display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:48px; border:0; border-radius:2px; background:transparent; color:var(--neo-muted); }
- .neo-mobile-tabbar button>span { font-size:20px; line-height:1; }
- .neo-mobile-tabbar button small { font-size:8px; font-weight:600; }
- .neo-mobile-tabbar button.is-active { color:var(--neo-accent); background:var(--neo-accent-soft); }
- .neo-mobile-tabbar button.is-active small { font-weight:750; }
  .neo-mobile-view .neo-hero .neo-heading-actions { display:none; }
  .neo-mobile-view .neo-table-wrap { max-width:100%; overflow-x:auto; }
  .neo-mobile-view .neo-activity-row,.neo-mobile-view .neo-overview-event { min-width:0; }
@@ -2012,20 +2006,10 @@ html,body { max-width:100%; overflow-x:clip; }
   .neo-mobile-view .neo-bento>.neo-panel,.neo-mobile-view .neo-overview-grid>.neo-panel { padding:17px; border-radius:20px; }
   .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-bento-plan .neo-plan { font-size:clamp(32px,9vw,42px); }
   .neo-mobile-view .neo-button { min-height:36px; padding-inline:13px; font-size:10px; }
-  .neo-mobile-tabbar { position:fixed; right:50%; bottom:calc(12px + env(safe-area-inset-bottom)); left:auto; width:min(540px,calc(100% - 28px)); transform:translateX(50%); grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; padding:7px; border:1px solid color-mix(in srgb,var(--neo-border) 82%,transparent); border-radius:999px; background:color-mix(in srgb,var(--neo-surface) 88%,transparent); box-shadow:0 12px 36px rgb(0 0 0 / 10%); backdrop-filter:blur(24px) saturate(1.3); }
-  .neo-mobile-tabbar button { min-height:54px; gap:4px; border-radius:999px; color:var(--neo-muted); transition:background 140ms ease,color 140ms ease,transform 140ms ease; }
-  .neo-mobile-tabbar button>svg { flex:none; }
-  .neo-mobile-tabbar button small { font-size:9px; font-weight:600; }
-  .neo-mobile-tabbar button.is-active { background:var(--neo-text); color:var(--neo-bg); }
-  .neo-mobile-tabbar button.is-active small { font-weight:700; }
-  .neo-mobile-tabbar button:active { transform:scale(.96); }
 }
 @media(max-width:420px) {
   .neo-mobile-content { padding-inline:14px; }
   .neo-mobile-header { padding-inline:15px; }
-  .neo-mobile-tabbar { width:calc(100% - 20px); bottom:calc(9px + env(safe-area-inset-bottom)); }
-  .neo-mobile-tabbar button { min-height:51px; }
-  .neo-mobile-tabbar button small { font-size:8px; }
 }
 
 
@@ -2085,7 +2069,6 @@ body { overflow-x:hidden; }
   .neo-mobile-view .neo-plan-grid { grid-template-columns:minmax(0,1fr); }
   .neo-mobile-view .neo-overview-grid>.neo-panel { padding:20px; border-radius:22px; }
   .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-plan { font-size:42px; }
-  .neo-mobile-tabbar { width:calc(100% - 24px); }
 }
 
 
@@ -2109,17 +2092,13 @@ body { overflow-x:hidden; }
 .neo-mobile-shell .neo-mobile-view .neo-panel .neo-label { font-size:10px; line-height:1.3; letter-spacing:.1em; }
 .neo-mobile-shell .neo-mobile-view .neo-panel .neo-metric,
 .neo-mobile-shell .neo-mobile-view .neo-panel .neo-plan { font-size:clamp(30px,7vw,44px); line-height:1.02; margin:12px 0 8px; }
-.neo-mobile-tabbar { grid-template-columns:repeat(5,minmax(0,1fr)) minmax(58px,.82fr)!important; align-items:stretch; gap:3px!important; padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important; border:1px solid var(--neo-border)!important; border-radius:30px!important; right:12px!important; bottom:calc(8px + env(safe-area-inset-bottom))!important; left:12px!important; width:auto!important; box-shadow:0 8px 32px rgb(0 0 0 / 8%); }
-.neo-mobile-tabbar>button { border-radius:24px!important; min-height:54px!important; gap:5px!important; }
-.neo-mobile-tabbar>button.is-active { background:var(--neo-text)!important; color:var(--neo-bg)!important; }
-.neo-mobile-tabbar>button small,.neo-mobile-profile small { font-size:10px!important; line-height:1.1; }
 .neo-mobile-account-slot { display:flex; align-items:stretch; justify-content:center; border-left:1px solid var(--neo-border); margin-left:3px; padding-left:5px; min-width:0; }
 .neo-mobile-profile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; width:100%; min-width:0; min-height:54px; padding:3px; border:0; border-radius:24px; background:transparent; color:var(--neo-muted); }
 .neo-mobile-profile>span { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:var(--neo-surface-soft); border:1px solid var(--neo-border); color:var(--neo-text); font-size:12px; font-weight:650; }
 .neo-mobile-profile.is-open,.neo-mobile-profile:focus-visible { background:var(--neo-surface-soft); }
 .neo-mobile-account-slot .neo-account-menu { position:fixed; top:auto; bottom:calc(84px + env(safe-area-inset-bottom)); right:14px; width:min(280px,calc(100vw - 28px)); }
 .neo-mobile-content { padding-inline:clamp(18px,5vw,30px)!important; padding-bottom:calc(112px + env(safe-area-inset-bottom))!important; }
-@media(max-width:520px) { .neo-mobile-shell .neo-mobile-view .neo-overview-grid,.neo-mobile-shell .neo-mobile-view .neo-bento { grid-template-columns:minmax(0,1fr)!important; gap:12px; } .neo-mobile-shell .neo-mobile-view .neo-overview-grid>*,.neo-mobile-shell .neo-mobile-view .neo-bento>* { grid-column:1/-1!important; } .neo-mobile-tabbar { grid-template-columns:repeat(5,minmax(0,1fr)) minmax(52px,.78fr)!important; right:8px!important; left:8px!important; padding-inline:7px!important; } .neo-mobile-content { padding-inline:18px!important; } }
+@media(max-width:520px) { .neo-mobile-shell .neo-mobile-view .neo-overview-grid,.neo-mobile-shell .neo-mobile-view .neo-bento { grid-template-columns:minmax(0,1fr)!important; gap:12px; } .neo-mobile-shell .neo-mobile-view .neo-overview-grid>*,.neo-mobile-shell .neo-mobile-view .neo-bento>* { grid-column:1/-1!important; } .neo-mobile-content { padding-inline:18px!important; } }
 
 
 /* Reusable Radix Avatar / Dropdown and Magic UI NumberTicker integration. */

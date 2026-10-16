@@ -48,7 +48,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     const data = (await response.json().catch(() => null)) as unknown;
     if (!response.ok) {
       const payload = data as { error?: string; code?: string } | null;
-      const error = new Error(payload?.error || `Request failed with status ${response.status}`) as ApiError;
+      const friendly = response.status >= 500
+        ? "The console couldn't reach Ace ID. Please try again in a moment."
+        : `Request failed (${response.status}).`;
+      const error = new Error(payload?.error || friendly) as ApiError;
       error.status = response.status;
       error.code = payload?.code;
       error.data = data;
