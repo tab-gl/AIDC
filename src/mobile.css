@@ -139,3 +139,58 @@
 .neo-mobile-shell .neo-mobile-brand small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .neo-mobile-shell .neo-mobile-icon-button,
 .neo-mobile-shell .neo-mobile-avatar { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+
+/* ---- Touch targets for touch screens (WCAG 2.5.5: >= 44px) ---- */
+@media (pointer: coarse) {
+  .neo-app-card button, .neo-app-card .neo-button,
+  .neo-tabs button, .neo-tabs [role="tab"],
+  .neo-drawer button, .neo-drawer .neo-button,
+  .neo-modal button, .neo-modal .neo-button, .neo-modal input, .neo-modal select, .neo-modal textarea,
+  .neo-drawer-actions .neo-button, .neo-modal-actions .neo-button,
+  .neo-icon-button, .neo-mobile-create { min-height: 44px; }
+  .neo-icon-button, .neo-mobile-create { min-width: 44px; width: 44px; height: 44px; }
+}
+
+/* ---- Application drawer and create modal become bottom sheets on phones ---- */
+@media (max-width: 640px) {
+  .neo-drawer {
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important;
+    width: 100% !important; max-width: 100% !important; height: auto !important;
+    max-height: 92dvh !important; border-radius: 22px 22px 0 0 !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+  .neo-modal {
+    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
+    width: 100% !important; max-width: 100% !important; max-height: 92dvh !important;
+    border-radius: 22px 22px 0 0 !important; overflow-y: auto;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Phone overlays: sheets sit flush on the bottom edge with no page gutter. */
+@media (max-width: 640px) {
+  .neo-overlay.neo-drawer-overlay,
+  .neo-overlay:has(> .neo-modal) {
+    padding: 0 !important; place-items: end stretch !important; align-items: end !important; justify-items: stretch !important;
+  }
+}
+
+/* Touch screens: outrank the older 38px rules that still target these controls. */
+@media (pointer: coarse) {
+  .neo-app-card > .neo-button, .neo-app-card button,
+  .neo-tabs button, .neo-tabs [role="tab"],
+  .neo-drawer button, .neo-modal button, .neo-modal input, .neo-modal select,
+  .neo-drawer-actions .neo-button, .neo-modal-actions .neo-button,
+  .neo-icon-button, .neo-mobile-create { min-height: 44px !important; }
+  .neo-icon-button, .neo-mobile-create { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+}
+/* Desktop: keep controls comfortably clickable (>= 40px) without changing layout. */
+@media (hover: hover) and (pointer: fine) {
+  .neo-tabs button, .neo-tabs [role="tab"] { min-height: 40px; }
+  .neo-drawer .neo-icon-button, .neo-modal .neo-icon-button { width: 40px; height: 40px; }
+}
+
+/* Touch screens: every button-styled control meets the 44px minimum. */
+@media (pointer: coarse) {
+  .neo-button, .neo-state button, .neo-panel button { min-height: 44px !important; }
+}
