@@ -23,7 +23,7 @@ async function mockApi(page: import("@playwright/test").Page, options: { expireA
     } else if (path === "/api/applications" && route.request().method() === "POST") {
       await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Application service unavailable" }) });
     } else if (path === "/api/quota") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ quota: { plan: "base", status: "active", count: 1, limit: 8, remaining: 7 }, entitlements: { plan: "base", status: "active", applications: 8, mau: 5000, usage: { applications: 1 }, subscription: null, features: {}, offers: [], accessories: [] } }) });
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ quota: { count: 1, limit: 8, remaining: 7 } }) });
     } else if (path === "/api/analytics/logins" && options.expireAnalytics) {
       await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Session expired" }) });
     } else if (path === "/api/analytics/logins") {
@@ -38,8 +38,6 @@ async function mockApi(page: import("@playwright/test").Page, options: { expireA
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "ready", issuer: "https://identity.example.test" }) });
     } else if (path === "/api/health") {
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
-    } else if (path === "/api/plans") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ plans: [{ id: "base", name: "Base", priceInrMonthly: 0, applications: 8, mau: 5000 }], payments: { razorpayConfigured: false } }) });
     } else {
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({}) });
     }

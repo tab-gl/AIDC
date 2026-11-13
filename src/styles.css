@@ -205,15 +205,6 @@ a {
   border-radius:50%;
   box-sizing:border-box
 }
-.neo-avatar-frame.is-premium {
-  flex-basis:40px;
-  width:40px;
-  height:40px;
-  padding:3px;
-  border:2px solid #f97316;
-  box-shadow:0 0 0 2px rgba(249,115,22,.18);
-  background:var(--neo-surface)
-}
 .neo-avatar {
   display:grid;
   place-items:center;
@@ -389,21 +380,6 @@ a {
   max-width:540px;
   margin:0;
   color:var(--neo-muted)
-}
-.neo-plan {
-  grid-column:span 4;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  padding:22px;
-  border:1px solid var(--neo-border);
-  border-radius:var(--neo-radius);
-  background:var(--neo-surface);
-  box-shadow:var(--neo-shadow)
-}
-.neo-plan strong {
-  font-size:24px;
-  letter-spacing:-.05em
 }
 .neo-health-grid,.neo-activity-metrics,.neo-analytics-metrics {
   grid-column:span 12;
@@ -1185,9 +1161,6 @@ a {
   .neo-hero {
     grid-column:span 7
   }
-  .neo-plan {
-    grid-column:span 5
-  }
   .neo-panel,.neo-panel-large {
     grid-column:span 6
   }
@@ -1235,9 +1208,6 @@ a {
   }
   .neo-content {
     padding:22px 18px
-  }
-  .neo-hero,.neo-plan {
-    grid-column:span 12
   }
   .neo-hero {
     min-height:205px
@@ -1287,10 +1257,6 @@ a {
   }
   .neo-bento,.neo-analytics-grid {
     gap:10px
-  }
-  .neo-hero,.neo-plan,.neo-panel {
-    padding:17px;
-    border-radius:13px
   }
   .neo-health-grid,.neo-activity-metrics,.neo-analytics-metrics {
     gap:8px
@@ -1360,38 +1326,6 @@ a {
 }
 
 
-/* Authoritative Ace ID subscription and entitlement surfaces. */
-.neo-entitlements,.neo-plan-catalog{display:grid;gap:22px;margin-top:20px}
-.neo-entitlements-heading{align-items:flex-start}
-.neo-entitlements-heading h3,.neo-plan-catalog h3{margin:7px 0}
-.neo-entitlements-heading p,.neo-plan-catalog p{max-width:720px}
-.neo-entitlement-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;border:1px solid var(--neo-border,var(--line,#ddd));background:var(--neo-border,var(--line,#ddd))}
-.neo-entitlement-metrics>div{display:grid;align-content:start;gap:7px;min-width:0;padding:14px;background:var(--neo-panel,var(--surface,#fff))}
-.neo-entitlement-metrics span,.neo-entitlement-fields dt,.neo-plan-card dt{font-size:12px;color:var(--neo-muted,var(--muted,#666))}
-.neo-entitlement-metrics strong{overflow-wrap:anywhere;font-size:15px}
-.neo-entitlement-section{display:grid;gap:12px}
-.neo-entitlement-section h4{margin:0;font-size:14px}
-.neo-entitlement-chip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
-.neo-entitlement-chip{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--neo-border,var(--line,#ddd));border-radius:8px}
-.neo-entitlement-chip span{font-size:13px;overflow-wrap:anywhere}
-.neo-entitlement-chip strong{font-size:12px;text-align:right}
-.neo-entitlement-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;margin:0;background:var(--neo-border,var(--line,#ddd));border:1px solid var(--neo-border,var(--line,#ddd))}
-.neo-entitlement-fields>div{min-width:0;padding:11px 12px;background:var(--neo-panel,var(--surface,#fff))}
-.neo-entitlement-fields dt{margin:0 0 5px}
-.neo-entitlement-fields dd{margin:0;font-size:13px;overflow-wrap:anywhere;word-break:break-word}
-.neo-entitlement-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
-.neo-entitlement-items article{display:grid;gap:12px;min-width:0;padding:14px;border:1px solid var(--neo-border,var(--line,#ddd));border-radius:10px}
-.neo-entitlement-manage a,.neo-save-status a{font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.neo-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
-.neo-plan-card{display:grid;align-content:start;gap:12px;min-width:0;padding:18px;border:1px solid var(--neo-border,var(--line,#ddd));border-radius:10px}
-.neo-plan-card.is-current{border-color:var(--neo-accent,var(--accent,#e65f2b))}
-.neo-plan-card h4{margin:0;font-size:20px}
-.neo-plan-price{font-size:23px;letter-spacing:-.03em}
-.neo-plan-card dl{display:grid;gap:8px;margin:0}
-.neo-plan-card dl>div{display:flex;justify-content:space-between;gap:12px}
-.neo-plan-card dd{margin:0;font-size:13px;text-align:right;overflow-wrap:anywhere}
-.neo-plan-card .neo-button{width:100%}
-@media(max-width:600px){.neo-entitlements,.neo-plan-catalog{padding:16px}.neo-entitlements-heading{display:grid}.neo-entitlement-fields{grid-template-columns:1fr}}
 
 
 /* Neo interaction polish: consistent controls, readable focus states, and responsive navigation. */
@@ -1417,7 +1351,6 @@ a {
 .neo-icon-button,.neo-button,.neo-command { transition:transform var(--neo-fast),background var(--neo-fast),border-color var(--neo-fast),box-shadow var(--neo-fast),color var(--neo-fast); }
 .neo-button:active,.neo-icon-button:active { transform:translateY(1px) scale(.99); }
 .neo-button-primary { box-shadow:0 1px 2px rgb(0 0 0/.06); }
-.neo-panel,.neo-metric,.neo-app-card,.neo-plan-card { transition:border-color var(--neo-fast),box-shadow var(--neo-fast),transform var(--neo-fast); }
 .neo-panel:focus-within { border-color:color-mix(in srgb,var(--neo-accent) 35%,var(--neo-border)); }
 .neo-page { animation:neo-enter 220ms cubic-bezier(.2,.7,.2,1) both; }
 .neo-filter-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -1494,7 +1427,6 @@ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,*::-webkit-scrollbar
 html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover,*::-webkit-scrollbar-thumb:hover { background:var(--neo-accent); border:2px solid transparent; background-clip:padding-box; }
 :root[data-theme="dark"] { scrollbar-color:#77756d transparent; }
 body { font-family:"Instrument Sans",ui-sans-serif,system-ui,sans-serif; letter-spacing:-.012em; }
-.neo-brand strong,.neo-topbar h1,.neo-page-header h1,.neo-hero h2,.neo-modal-head h2,.neo-section-heading h2,.neo-panel h2,.neo-section-heading h3,.neo-plan-card h4 { font-family:"Instrument Serif",Georgia,serif; font-weight:400; letter-spacing:-.035em; }
 .neo-brand strong { font-size:20px; } .neo-topbar h1 { font-size:23px; } .neo-page-header h1 { font-size:clamp(30px,3.6vw,46px); line-height:1; }
 .neo-hero { min-height:270px; border-radius:2px; border:1px solid var(--neo-text); background:var(--neo-accent); color:#171715; box-shadow:6px 6px 0 var(--neo-text); padding:clamp(24px,3.5vw,42px); }
 .neo-hero .neo-kicker,.neo-hero p { color:rgb(23 23 21 / .72); } .neo-hero h2 { max-width:650px; font-size:clamp(38px,5vw,64px); font-weight:400; line-height:.94; letter-spacing:-.045em; }
@@ -1504,18 +1436,17 @@ body { font-family:"Instrument Sans",ui-sans-serif,system-ui,sans-serif; letter-
 .neo-bento > .neo-panel,.neo-bento > .neo-panel-large,.neo-bento > .neo-panel-wide { border:1px solid var(--neo-text); border-radius:2px; box-shadow:3px 3px 0 color-mix(in srgb,var(--neo-text) 88%,transparent); padding:clamp(17px,2vw,25px); background:var(--neo-surface); }
 .neo-bento > .neo-panel:nth-child(1) { grid-column:span 7; } .neo-bento > .neo-panel:nth-child(2) { grid-column:span 5; } .neo-bento > .neo-panel:nth-child(3) { grid-column:span 4; } .neo-bento > .neo-panel:nth-child(4) { grid-column:span 8; } .neo-bento > .neo-panel:nth-child(5) { grid-column:span 7; } .neo-bento > .neo-panel:nth-child(6) { grid-column:span 5; }
 .neo-bento > .neo-panel:nth-child(1) .neo-metric { font-size:clamp(40px,5vw,64px); line-height:1; }
-.neo-bento > .neo-panel:nth-child(1) .neo-metric,.neo-bento > .neo-panel:nth-child(2) .neo-metric,.neo-bento > .neo-panel:nth-child(3) .neo-plan { display:block; margin:12px 0 8px; padding:0; border:0; background:transparent; box-shadow:none; font-family:"Instrument Serif",Georgia,serif; font-size:clamp(32px,4vw,48px); font-weight:400; line-height:1; letter-spacing:-.035em; }
 .neo-bento > .neo-panel:nth-child(4) { background:var(--neo-text); color:var(--neo-bg); } .neo-bento > .neo-panel:nth-child(4) .neo-label,.neo-bento > .neo-panel:nth-child(4) .neo-health-grid span { color:color-mix(in srgb,var(--neo-bg) 70%,transparent); }
 .neo-bento > .neo-panel:nth-child(4) .neo-health-grid strong { font-family:"Instrument Serif",Georgia,serif; font-size:clamp(23px,2.4vw,34px); font-weight:400; } .neo-bento > .neo-panel:nth-child(4) .neo-button { border-color:color-mix(in srgb,var(--neo-bg) 40%,transparent); background:transparent; color:var(--neo-bg); } .neo-bento > .neo-panel:nth-child(4) .neo-status-pill { color:var(--neo-bg); background:transparent; border-color:color-mix(in srgb,var(--neo-bg) 35%,transparent); border-radius:2px; }
 .neo-bento > .neo-panel:nth-child(4) .neo-health-grid { gap:0; margin:18px 0; } .neo-bento > .neo-panel:nth-child(4) .neo-health-grid > div { padding:12px 14px 12px 0; border-top:1px solid color-mix(in srgb,var(--neo-bg) 24%,transparent); }
-.neo-panel,.neo-metric,.neo-app-card,.neo-plan-card,.neo-entitlements,.neo-plan-catalog { border-radius:2px; } .neo-metric { border-radius:2px; box-shadow:2px 2px 0 color-mix(in srgb,var(--neo-text) 18%,transparent); }
+ .neo-metric { border-radius:2px; box-shadow:2px 2px 0 color-mix(in srgb,var(--neo-text) 18%,transparent); }
 .neo-button,.neo-icon-button,.neo-command,.neo-choice,.neo-status-pill,.neo-chip,.neo-app-kind,.neo-tabs,.neo-tabs button,.neo-command kbd,.neo-filter-input input,.neo-form input,.neo-form select,.neo-form textarea,.neo-drawer-form input,.neo-drawer-form select,.neo-drawer-form textarea,.neo-inline-form input { border-radius:2px; }
 .neo-button,.neo-icon-button { box-shadow:2px 2px 0 color-mix(in srgb,var(--neo-text) 75%,transparent); } .neo-button-primary { border-color:var(--neo-text); background:var(--neo-text); color:var(--neo-bg); }
 .neo-button:hover,.neo-icon-button:hover,.neo-command:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--neo-text); } .neo-button:active,.neo-icon-button:active { transform:translate(2px,2px); box-shadow:none; }
 .neo-nav button { border-radius:2px; } .neo-nav button.active,.neo-nav button[aria-current="page"] { box-shadow:inset 4px 0 0 var(--neo-accent); }
 .neo-app-card { border-radius:2px; border:1px solid var(--neo-text); box-shadow:3px 3px 0 color-mix(in srgb,var(--neo-text) 75%,transparent); } .neo-app-card:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--neo-accent); } .neo-app-icon { border-radius:2px; border-color:var(--neo-text); }
 .neo-modal,.neo-command-palette { border-radius:2px; border-color:var(--neo-text); box-shadow:8px 8px 0 color-mix(in srgb,var(--neo-text) 35%,transparent); } .neo-overlay,.neo-drawer-overlay { backdrop-filter:blur(2px); }
-.neo-entitlement-metrics,.neo-entitlement-fields { border-radius:0; } .neo-entitlement-chip,.neo-entitlement-items article,.neo-plan-card { border-radius:2px; } .neo-kicker { font-size:10px; letter-spacing:.15em; } .neo-panel h3,.neo-panel h2 { letter-spacing:-.025em; } .neo-page { gap:28px; }
+ .neo-kicker { font-size:10px; letter-spacing:.15em; } .neo-panel h3,.neo-panel h2 { letter-spacing:-.025em; } .neo-page { gap:28px; }
 @media(max-width:820px) { .neo-bento > .neo-panel:nth-child(n) { grid-column:span 6; } .neo-bento > .neo-panel:nth-child(4),.neo-bento > .neo-panel:nth-child(6) { grid-column:span 12; } .neo-hero { box-shadow:4px 4px 0 var(--neo-text); } }
 @media(max-width:520px) { .neo-bento { gap:12px; } .neo-bento > .neo-panel:nth-child(n) { grid-column:span 12; } .neo-hero { min-height:245px; padding:22px 18px; } .neo-hero h2 { font-size:clamp(39px,12vw,52px); } .neo-bento > .neo-panel,.neo-bento > .neo-panel-large,.neo-bento > .neo-panel-wide { padding:16px; } }
 
@@ -1533,19 +1464,16 @@ html,body { max-width:100%; overflow-x:clip; }
 .neo-main { margin-left:244px; }
 .neo-content { padding:clamp(18px,2.6vw,36px); }
 .neo-page { gap:24px; }
-.neo-page > *, .neo-panel, .neo-hero, .neo-plan, .neo-section-heading, .neo-section-heading > div { min-width:0; }
 .neo-bento { grid-template-columns:repeat(12,minmax(0,1fr)); gap:14px; align-items:stretch; }
 .neo-bento > * { min-width:0; max-width:100%; }
 .neo-bento > .neo-panel { padding:clamp(16px,1.8vw,22px); }
 /* Only the overview gets the six-card asymmetric layout. Analytics/activity use metric grids. */
 .neo-overview-grid > .neo-bento-applications { grid-column:span 7; }
 .neo-overview-grid > .neo-bento-quota { grid-column:span 5; }
-.neo-overview-grid > .neo-bento-plan { grid-column:span 4; }
 .neo-overview-grid > .neo-bento-health { grid-column:span 8; }
 .neo-overview-grid > .neo-bento-activity { grid-column:span 7; }
 .neo-overview-grid > .neo-bento-shortcuts { grid-column:span 5; }
 .neo-overview-grid .neo-metric { min-width:0; margin:12px 0 8px; padding:0; border:0; background:transparent; box-shadow:none; font-family:"Instrument Serif",Georgia,serif; font-size:clamp(36px,4.4vw,58px); font-weight:400; line-height:1; letter-spacing:-.04em; overflow-wrap:anywhere; }
-.neo-overview-grid .neo-bento-plan .neo-plan { display:block; min-width:0; margin:12px 0 8px; padding:0; border:0; background:transparent; box-shadow:none; font-family:"Instrument Serif",Georgia,serif; font-size:clamp(30px,3.5vw,44px); font-weight:400; line-height:1.05; overflow-wrap:anywhere; }
 .neo-overview-grid .neo-bento-health { background:var(--neo-text); color:var(--neo-bg); }
 .neo-overview-grid .neo-bento-health .neo-label,.neo-overview-grid .neo-bento-health .neo-health-grid span { color:color-mix(in srgb,var(--neo-bg) 70%,transparent); }
 .neo-overview-grid .neo-bento-health .neo-health-grid { grid-column:auto; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px; margin:16px 0; }
@@ -1587,7 +1515,6 @@ html,body { max-width:100%; overflow-x:clip; }
 .neo-hero { min-width:0; padding:clamp(20px,2.5vw,34px); border-radius:2px; box-shadow:5px 5px 0 var(--neo-text); }
 .neo-hero h2 { max-width:600px; font-size:clamp(38px,4.8vw,62px); line-height:.98; overflow-wrap:anywhere; }
 .neo-hero p { max-width:50ch; }
-.neo-panel,.neo-metric,.neo-app-card,.neo-plan-card,.neo-entitlements,.neo-plan-catalog,.neo-modal,.neo-command-palette,.neo-drawer,.neo-tip,.neo-secret-panel,.neo-monitoring-stats>* { border-radius:2px; }
 .neo-panel { box-shadow:3px 3px 0 color-mix(in srgb,var(--neo-text) 78%,transparent); }
 .neo-button,.neo-icon-button,.neo-command,.neo-choice,.neo-status-pill,.neo-chip,.neo-app-kind,.neo-tabs,.neo-tabs button,.neo-command kbd,.neo-filter-input input,.neo-form input,.neo-form select,.neo-form textarea,.neo-drawer-form input,.neo-drawer-form select,.neo-drawer-form textarea,.neo-inline-form input { border-radius:2px; }
 .neo-button,.neo-icon-button { box-shadow:2px 2px 0 var(--neo-text); }
@@ -1597,7 +1524,6 @@ html,body { max-width:100%; overflow-x:clip; }
 .neo-modal,.neo-command-palette { box-shadow:6px 6px 0 color-mix(in srgb,var(--neo-text) 45%,transparent); }
 @media(max-width:1100px) {
   .neo-content { padding:24px; }
-  .neo-overview-grid > .neo-bento-applications,.neo-overview-grid > .neo-bento-quota,.neo-overview-grid > .neo-bento-plan,.neo-overview-grid > .neo-bento-health,.neo-overview-grid > .neo-bento-activity,.neo-overview-grid > .neo-bento-shortcuts { grid-column:span 6; }
   .neo-overview-grid > .neo-bento-health,.neo-overview-grid > .neo-bento-shortcuts { grid-column:span 12; }
   .neo-activity-metrics,.neo-analytics-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .neo-activity-metrics > .neo-panel,.neo-analytics-metrics > .neo-panel { grid-column:span 1; }
@@ -1614,7 +1540,6 @@ html,body { max-width:100%; overflow-x:clip; }
   .neo-topbar { min-width:0; gap:10px; padding:12px 20px; }
   .neo-top-actions { min-width:0; }
   .neo-content { padding:22px 20px; }
-  .neo-overview-grid > .neo-bento-applications,.neo-overview-grid > .neo-bento-quota,.neo-overview-grid > .neo-bento-plan,.neo-overview-grid > .neo-bento-health,.neo-overview-grid > .neo-bento-activity,.neo-overview-grid > .neo-bento-shortcuts { grid-column:span 6; }
   .neo-overview-grid > .neo-bento-health,.neo-overview-grid > .neo-bento-shortcuts { grid-column:span 12; }
   .neo-activity-metrics,.neo-analytics-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .neo-activity-metrics > .neo-panel,.neo-analytics-metrics > .neo-panel { grid-column:span 1; }
@@ -1625,7 +1550,6 @@ html,body { max-width:100%; overflow-x:clip; }
   .neo-content { padding:16px 12px; }
   .neo-page { gap:18px; }
   .neo-bento { gap:10px; }
-  .neo-overview-grid > .neo-bento-applications,.neo-overview-grid > .neo-bento-quota,.neo-overview-grid > .neo-bento-plan,.neo-overview-grid > .neo-bento-health,.neo-overview-grid > .neo-bento-activity,.neo-overview-grid > .neo-bento-shortcuts { grid-column:span 12; }
   .neo-overview-grid > .neo-panel { padding:16px; }
   .neo-hero { min-height:0; padding:22px 18px; box-shadow:3px 3px 0 var(--neo-text); }
   .neo-hero h2 { font-size:clamp(36px,10.5vw,48px); }
@@ -1654,20 +1578,6 @@ html,body { max-width:100%; overflow-x:clip; }
   grid-column:span 1;
   background:var(--neo-surface);
   color:var(--neo-text);
-}
-.neo-bento:not(.neo-overview-grid):not(.neo-analytics-grid) > .neo-panel:nth-child(1) .neo-metric,
-.neo-bento:not(.neo-overview-grid):not(.neo-analytics-grid) > .neo-panel:nth-child(2) .neo-metric,
-.neo-bento:not(.neo-overview-grid):not(.neo-analytics-grid) > .neo-panel:nth-child(3) .neo-plan {
-  display:block;
-  margin:8px 0 0;
-  padding:0;
-  border:0;
-  background:transparent;
-  box-shadow:none;
-  font-family:"Instrument Serif",Georgia,serif;
-  font-size:clamp(28px,3vw,42px);
-  font-weight:400;
-  line-height:1.05;
 }
 .neo-bento:not(.neo-overview-grid):not(.neo-analytics-grid) > .neo-panel:nth-child(4) .neo-label,
 .neo-bento:not(.neo-overview-grid):not(.neo-analytics-grid) > .neo-panel:nth-child(4) .neo-health-grid span {
@@ -1856,11 +1766,9 @@ html,body { max-width:100%; overflow-x:clip; }
 .neo-panel:hover,.neo-bento>.neo-panel:hover { transform:none; box-shadow:none!important; }
 .neo-overview-grid>.neo-bento-applications { grid-column:span 7; }
 .neo-overview-grid>.neo-bento-quota { grid-column:span 5; }
-.neo-overview-grid>.neo-bento-plan { grid-column:span 4; }
 .neo-overview-grid>.neo-bento-health { grid-column:span 8; }
 .neo-overview-grid>.neo-bento-activity { grid-column:span 7; }
 .neo-overview-grid>.neo-bento-shortcuts { grid-column:span 5; }
-.neo-overview-grid .neo-metric,.neo-overview-grid .neo-bento-plan .neo-plan { margin:19px 0 8px; font-family:"Instrument Serif",Georgia,serif; font-size:clamp(38px,4vw,58px); font-weight:400; letter-spacing:-.045em; line-height:1; }
 .neo-overview-grid .neo-bento-health { background:#e8e8e2; color:#20211f; border-color:#d5d5cd; }
 :root[data-theme="dark"] .neo-overview-grid .neo-bento-health { background:#252722; color:var(--neo-text); border-color:var(--neo-border); }
 .neo-overview-grid .neo-bento-health .neo-label,.neo-overview-grid .neo-bento-health .neo-health-grid span { color:var(--neo-muted); }
@@ -1911,7 +1819,6 @@ html,body { max-width:100%; overflow-x:clip; }
  .neo-mobile-view .neo-bento { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
  .neo-mobile-view .neo-bento>.neo-panel,.neo-mobile-view .neo-overview-grid>.neo-panel { grid-column:span 1!important; padding:15px; min-width:0; }
  .neo-mobile-view .neo-overview-grid>.neo-bento-health,.neo-mobile-view .neo-overview-grid>.neo-bento-activity,.neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts { grid-column:span 2!important; }
- .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-bento-plan .neo-plan { margin:17px 0 8px; font-size:37px; overflow-wrap:anywhere; }
  .neo-mobile-view .neo-panel p { font-size:10px; line-height:1.6; }
  .neo-mobile-view .neo-label { font-size:8px; letter-spacing:.09em; }
  .neo-mobile-view .neo-button { min-height:34px; max-width:100%; padding:0 9px; font-size:10px; }
@@ -1927,7 +1834,6 @@ html,body { max-width:100%; overflow-x:clip; }
  .neo-mobile-header { padding-inline:14px; }
  .neo-mobile-view .neo-bento { grid-template-columns:minmax(0,1fr); }
  .neo-mobile-view .neo-bento>.neo-panel,.neo-mobile-view .neo-overview-grid>.neo-panel,.neo-mobile-view .neo-overview-grid>.neo-bento-health,.neo-mobile-view .neo-overview-grid>.neo-bento-activity,.neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts { grid-column:span 1!important; }
- .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-bento-plan .neo-plan { font-size:42px; }
 }
 @media(prefers-reduced-motion:reduce) { .neo-mobile-shell *, .neo-desktop-shell *, .ace-landing * { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }
 
@@ -2004,7 +1910,6 @@ html,body { max-width:100%; overflow-x:clip; }
   .neo-mobile-page-heading { border-bottom-color:var(--neo-border-soft); }
   .neo-mobile-view .neo-bento { gap:12px; }
   .neo-mobile-view .neo-bento>.neo-panel,.neo-mobile-view .neo-overview-grid>.neo-panel { padding:17px; border-radius:20px; }
-  .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-bento-plan .neo-plan { font-size:clamp(32px,9vw,42px); }
   .neo-mobile-view .neo-button { min-height:36px; padding-inline:13px; font-size:10px; }
 }
 @media(max-width:420px) {
@@ -2018,8 +1923,6 @@ html, body, #root { width:100%; min-width:0; max-width:100%; }
 body { overflow-x:hidden; }
 .neo-app,.neo-mobile-shell,.neo-mobile-content,.neo-mobile-view { min-width:0; max-width:100%; }
 .neo-overview-grid,.neo-bento { min-width:0; }
-.neo-panel,.neo-app-card,.neo-plan-card,.neo-entitlements,.neo-plan-catalog { min-width:0; max-width:100%; overflow-wrap:anywhere; }
-.neo-plan-grid,.neo-entitlement-metrics,.neo-entitlement-chip-grid { min-width:0; }
 .neo-account-control { position:relative; flex:none; }
 .neo-account-menu { position:absolute; z-index:80; top:calc(100% + 12px); right:0; display:flex; flex-direction:column; gap:4px; width:min(280px,calc(100vw - 32px)); padding:9px; border:1px solid var(--neo-border); border-radius:22px; background:var(--neo-surface); color:var(--neo-text); box-shadow:0 18px 55px rgb(0 0 0 / 14%); }
 .neo-account-summary { display:flex; flex-direction:column; gap:4px; padding:12px 12px 14px; border-bottom:1px solid var(--neo-border-soft); margin-bottom:4px; min-width:0; }
@@ -2036,39 +1939,11 @@ body { overflow-x:hidden; }
   .neo-mobile-header-actions { flex:none; }
   .neo-mobile-content { width:100%; max-width:760px; padding-inline:clamp(14px,4vw,24px); }
   .neo-mobile-view .neo-overview-grid { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; align-items:stretch; gap:12px; width:100%; }
-  .neo-mobile-view .neo-overview-grid>.neo-panel,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-applications,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-quota,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-plan,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-health,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-activity,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts { grid-column:span 1!important; grid-row:auto!important; width:auto; min-width:0; }
-  .neo-mobile-view .neo-overview-grid>.neo-bento-health,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-activity,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts,
-  .neo-mobile-view .neo-overview-grid>.neo-entitlements,
-  .neo-mobile-view .neo-overview-grid>.neo-plan-catalog { grid-column:1/-1!important; }
-  .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-plan { max-width:100%; font-size:clamp(30px,8vw,42px); overflow-wrap:anywhere; }
   .neo-mobile-view .neo-overview-grid .neo-shortcut-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .neo-mobile-view .neo-plan-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-  .neo-mobile-view .neo-plan-card { width:auto; padding:16px; border-radius:22px; }
-  .neo-mobile-view .neo-plan-price { font-size:clamp(18px,5vw,24px); overflow-wrap:anywhere; }
-  .neo-mobile-view .neo-entitlement-fields>div { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }
 @media(max-width:520px) {
   .neo-mobile-view .neo-overview-grid { grid-template-columns:minmax(0,1fr)!important; gap:12px; }
-  .neo-mobile-view .neo-overview-grid>.neo-panel,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-applications,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-quota,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-plan,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-health,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-activity,
-  .neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts,
-  .neo-mobile-view .neo-overview-grid>.neo-entitlements,
-  .neo-mobile-view .neo-overview-grid>.neo-plan-catalog { grid-column:1/-1!important; }
-  .neo-mobile-view .neo-plan-grid { grid-template-columns:minmax(0,1fr); }
   .neo-mobile-view .neo-overview-grid>.neo-panel { padding:20px; border-radius:22px; }
-  .neo-mobile-view .neo-overview-grid .neo-metric,.neo-mobile-view .neo-overview-grid .neo-plan { font-size:42px; }
 }
 
 
@@ -2077,11 +1952,6 @@ body { overflow-x:hidden; }
 .neo-mobile-shell .neo-mobile-view .neo-bento { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-auto-rows:min-content; align-items:start; align-content:start; gap:clamp(12px,2.5vw,18px); width:100%; max-width:100%; }
 .neo-mobile-shell .neo-mobile-view .neo-overview-grid>*,
 .neo-mobile-shell .neo-mobile-view .neo-bento>* { grid-column:span 1!important; grid-row:auto!important; align-self:start; justify-self:stretch; width:100%; min-width:0; max-width:100%; height:auto; min-height:0; box-sizing:border-box; }
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid>.neo-bento-health,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid>.neo-bento-activity,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid>.neo-bento-shortcuts,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid>.neo-entitlements,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid>.neo-plan-catalog { grid-column:1/-1!important; }
 .neo-mobile-shell .neo-mobile-view .neo-panel { border-radius:24px!important; box-shadow:0 2px 14px rgb(0 0 0 / 3%)!important; padding:clamp(16px,3.8vw,22px)!important; }
 .neo-mobile-shell .neo-mobile-view .neo-panel p,
 .neo-mobile-shell .neo-mobile-view .neo-panel small,
@@ -2090,8 +1960,6 @@ body { overflow-x:hidden; }
 .neo-mobile-shell .neo-mobile-view .neo-panel h3,
 .neo-mobile-shell .neo-mobile-view .neo-panel h4 { max-width:100%; line-height:1.15; letter-spacing:-.025em; overflow-wrap:break-word; }
 .neo-mobile-shell .neo-mobile-view .neo-panel .neo-label { font-size:10px; line-height:1.3; letter-spacing:.1em; }
-.neo-mobile-shell .neo-mobile-view .neo-panel .neo-metric,
-.neo-mobile-shell .neo-mobile-view .neo-panel .neo-plan { font-size:clamp(30px,7vw,44px); line-height:1.02; margin:12px 0 8px; }
 .neo-mobile-account-slot { display:flex; align-items:stretch; justify-content:center; border-left:1px solid var(--neo-border); margin-left:3px; padding-left:5px; min-width:0; }
 .neo-mobile-profile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; width:100%; min-width:0; min-height:54px; padding:3px; border:0; border-radius:24px; background:transparent; color:var(--neo-muted); }
 .neo-mobile-profile>span { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:var(--neo-surface-soft); border:1px solid var(--neo-border); color:var(--neo-text); font-size:12px; font-weight:650; }
@@ -2133,14 +2001,9 @@ body { overflow-x:hidden; }
 .neo-overview-grid > .neo-panel-wide { min-width:0; height:auto; min-height:0; align-self:start; padding:clamp(18px,1.8vw,26px); border:1px solid var(--neo-border); border-radius:var(--neo-radius); background:var(--neo-surface); box-shadow:var(--neo-shadow); overflow-wrap:anywhere; }
 .neo-overview-grid > .neo-bento-applications { grid-column:span 7; }
 .neo-overview-grid > .neo-bento-quota { grid-column:span 5; }
-.neo-overview-grid > .neo-bento-plan { grid-column:span 4; }
 .neo-overview-grid > .neo-bento-health { grid-column:span 8; }
 .neo-overview-grid > .neo-bento-activity { grid-column:span 7; }
 .neo-overview-grid > .neo-bento-shortcuts { grid-column:span 5; }
-.neo-overview-grid > .neo-entitlements,
-.neo-overview-grid > .neo-plan-catalog { grid-column:1/-1; }
-.neo-overview-grid .neo-metric,
-.neo-overview-grid .neo-plan { max-width:100%; overflow-wrap:anywhere; word-break:normal; }
 .neo-overview-grid .neo-panel p { max-width:68ch; line-height:1.6; }
 .neo-app-card { min-width:0; }
 .neo-app-main { min-width:0; overflow-wrap:anywhere; }
@@ -2148,12 +2011,6 @@ body { overflow-x:hidden; }
 .neo-button { flex-shrink:0; }
 @media (max-width:1100px) and (min-width:821px) {
   .neo-content { padding:24px; }
-  .neo-overview-grid > .neo-bento-applications,
-  .neo-overview-grid > .neo-bento-quota,
-  .neo-overview-grid > .neo-bento-plan,
-  .neo-overview-grid > .neo-bento-health,
-  .neo-overview-grid > .neo-bento-activity,
-  .neo-overview-grid > .neo-bento-shortcuts { grid-column:span 6; }
 }
 @media (max-width:820px) {
   .neo-content { padding:20px 16px; }
@@ -2161,10 +2018,5 @@ body { overflow-x:hidden; }
   .neo-overview-grid > .neo-panel,
   .neo-overview-grid > .neo-panel-large,
   .neo-overview-grid > .neo-panel-wide { grid-column:span 1; padding:16px; border-radius:16px; box-shadow:var(--neo-shadow); }
-  .neo-overview-grid > .neo-bento-health,
-  .neo-overview-grid > .neo-bento-activity,
-  .neo-overview-grid > .neo-bento-shortcuts,
-  .neo-overview-grid > .neo-entitlements,
-  .neo-overview-grid > .neo-plan-catalog { grid-column:1/-1; }
   .neo-overview-grid .neo-health-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }

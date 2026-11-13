@@ -1,4 +1,4 @@
-import type { ActivityEvent, ApiError, Application, DiscoveryStatus, LoginAnalytics, OperationsAnalytics, Quota, RedirectUri, User, AppCredential, AppBranding, Entitlements, SessionRecord, UptimeReport, UserRecord, AceIdPlanCatalog, AceIdCheckout } from "../types";
+import type { ActivityEvent, ApiError, Application, DiscoveryStatus, LoginAnalytics, OperationsAnalytics, Quota, RedirectUri, User, AppCredential, AppBranding, SessionRecord, UptimeReport, UserRecord } from "../types";
 
 export const API_ORIGIN = (import.meta.env.VITE_AIDC_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
 const API_BASE = `${API_ORIGIN}/api`;
@@ -124,10 +124,8 @@ export const api = {
     search: (q = "", limit = 20) => request<{ users: UserRecord[] }>(`/users/search?q=${encodeURIComponent(q.slice(0, 120))}&limit=${Math.min(50, Math.max(1, limit))}`)
   },
   quota: {
-    get: () => request<{ quota: Quota; entitlements?: Entitlements }>("/quota")
+    get: () => request<{ quota: Quota }>("/quota")
   },
-  plans: { list: () => request<AceIdPlanCatalog>("/plans") },
-  subscription: { checkout: (planId: string) => request<AceIdCheckout>("/subscription/checkout", { method: "POST", body: JSON.stringify({ planId }) }) },
   health: {
     get: () => request<{ ok: boolean }>("/health")
   }

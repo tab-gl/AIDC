@@ -20,7 +20,7 @@ import { Users } from "./views/Users";
 import { API_ORIGIN, api } from "./lib/api";
 import { haptic } from "./lib/haptics";
 import { navigate, readRoute, type RouteId } from "./lib/navigation";
-import type { Application, Entitlements, Quota, User } from "./types";
+import type { Application, Quota, User } from "./types";
 
 function LandingPage({ onSignIn }: { onSignIn: () => void }) {
   return <main className="fresh-landing">
@@ -91,7 +91,6 @@ export function App() {
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [applicationsError, setApplicationsError] = useState<string | null>(null);
   const [quota, setQuota] = useState<Quota | null>(null);
-  const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -103,7 +102,7 @@ export function App() {
   const authEpoch = useRef(0);
   const clearAuthenticatedState = useCallback(() => {
     authEpoch.current += 1;
-    setUser(null); setApplications([]); setQuota(null); setEntitlements(null); setSelectedApplication(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false);
+    setUser(null); setApplications([]); setQuota(null); setSelectedApplication(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false);
   }, []);
   const signOut = async () => {
     if (logoutBusy) return;
@@ -142,10 +141,10 @@ export function App() {
     try {
       const data = await api.quota.get();
       if (epoch !== authEpoch.current) return;
-      setQuota(data.quota ?? null); setEntitlements(data.entitlements ?? null);
+      setQuota(data.quota ?? null);
     } catch {
       if (epoch !== authEpoch.current) return;
-      setQuota(null); setEntitlements(null);
+      setQuota(null);
     }
   }, []);
   const bootstrap = useCallback(async () => {
@@ -191,14 +190,14 @@ export function App() {
   }, [user, loadApplications, loadQuota]);
   useEffect(() => {
     if (!user) return;
-    const refreshEntitlements = () => {
+    const refreshQuota = () => {
       if (document.visibilityState === "visible") void loadQuota();
     };
-    window.addEventListener("focus", refreshEntitlements);
-    document.addEventListener("visibilitychange", refreshEntitlements);
+    window.addEventListener("focus", refreshQuota);
+    document.addEventListener("visibilitychange", refreshQuota);
     return () => {
-      window.removeEventListener("focus", refreshEntitlements);
-      document.removeEventListener("visibilitychange", refreshEntitlements);
+      window.removeEventListener("focus", refreshQuota);
+      document.removeEventListener("visibilitychange", refreshQuota);
     };
   }, [user, loadQuota]);
   useEffect(() => {
@@ -237,7 +236,7 @@ export function App() {
   const mobileRouteLabel = ({ overview: "Overview", applications: "Applications", analytics: "Analytics", activity: "Activity", users: "Users", settings: "Settings" } as Record<RouteId, string>)[route];
   return <div className="neo-app">
     {!isMobile && <div className="neo-desktop-shell">
-      <Sidebar route={route} userName={userName} avatarUrl={user?.picture || user?.avatar_url || undefined} plan={entitlements?.plan} hasPaidSubscription={Boolean(entitlements?.subscription)} onSignIn={signIn} onSignOut={() => void signOut()} logoutBusy={logoutBusy} />
+      <Sidebar route={route} userName={userName} avatarUrl={user?.picture || user?.avatar_url || undefined} onSignIn={signIn} onSignOut={() => void signOut()} logoutBusy={logoutBusy} />
       <div className="neo-main">
         <Topbar route={route} onCommand={() => setCommandOpen(true)} />
       {authLoading ? (
@@ -246,7 +245,7 @@ export function App() {
         <main className="neo-content"><div className="neo-state neo-state-error" role="alert"><strong>Console connection failed</strong><span>{authError}</span><button className="neo-button neo-button-secondary" onClick={() => void bootstrap()}>Retry</button></div></main>
       ) : (
         <main className="neo-content">
-          {route === "overview" && <Overview applications={applications} quota={quota} entitlements={entitlements} signedIn={Boolean(user)} showTips={showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreateApplication} />}
+          {route === "overview" && <Overview applications={applications} quota={quota} signedIn={Boolean(user)} showTips={showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreateApplication} />}
           {route === "applications" && <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn={Boolean(user)} onRetry={() => void loadApplications()} onCreate={openCreateApplication} onOpen={setSelectedApplication} />}
           {route === "analytics" && <Analytics />}
           {route === "activity" && <Activity />}
@@ -267,7 +266,7 @@ export function App() {
       <main className="neo-mobile-content">
         <div className="neo-mobile-page-heading"><div><span className="neo-mobile-eyebrow">ACE ID / CONSOLE</span><h1>{mobileRouteLabel}</h1></div>{route === "applications" && <button className="neo-mobile-create" onClick={openCreateApplication} aria-label="Create application">+</button>}</div>
         {authLoading ? <div className="neo-state"><span className="neo-spinner" aria-hidden="true" /><strong>Connecting to Ace ID</strong><span>Checking the current session.</span></div> : authError ? <div className="neo-state neo-state-error" role="alert"><strong>Console connection failed</strong><span>{authError}</span><button className="neo-button neo-button-secondary" onClick={() => void bootstrap()}>Retry</button></div> : <div className="neo-mobile-view">
-          {route === "overview" && <Overview applications={applications} quota={quota} entitlements={entitlements} signedIn={Boolean(user)} showTips={showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreateApplication} />}
+          {route === "overview" && <Overview applications={applications} quota={quota} signedIn={Boolean(user)} showTips={showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreateApplication} />}
           {route === "applications" && <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn={Boolean(user)} onRetry={() => void loadApplications()} onCreate={openCreateApplication} onOpen={setSelectedApplication} />}
           {route === "analytics" && <Analytics />}
           {route === "activity" && <Activity />}

@@ -40,35 +40,14 @@
 .neo-mobile-shell .neo-bento { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; align-items:start; align-content:start; gap:12px; width:100%; min-width:0; max-width:100%; }
 .neo-mobile-shell .neo-overview-grid>*,
 .neo-mobile-shell .neo-bento>* { grid-column:span 1!important; grid-row:auto!important; justify-self:stretch; align-self:start; width:100%; min-width:0; max-width:100%; height:auto; min-height:0; }
-.neo-mobile-shell .neo-overview-grid>.neo-bento-health,
-.neo-mobile-shell .neo-overview-grid>.neo-bento-activity,
-.neo-mobile-shell .neo-overview-grid>.neo-bento-shortcuts,
-.neo-mobile-shell .neo-overview-grid>.neo-entitlements,
-.neo-mobile-shell .neo-overview-grid>.neo-plan-catalog { grid-column:1/-1!important; }
 .neo-mobile-shell .neo-overview-grid .neo-panel,
 .neo-mobile-shell .neo-bento .neo-panel { min-width:0; max-width:100%; }
-.neo-mobile-shell .neo-panel h2,
-.neo-mobile-shell .neo-panel h3,
-.neo-mobile-shell .neo-panel h4,
-.neo-mobile-shell .neo-panel p,
-.neo-mobile-shell .neo-panel small,
-.neo-mobile-shell .neo-panel strong,
-.neo-mobile-shell .neo-panel label,
-.neo-mobile-shell .neo-entitlement-fields dd,
-.neo-mobile-shell .neo-entitlement-fields dt { max-width:100%; overflow-wrap:anywhere; word-break:normal; }
 .neo-mobile-shell .neo-mobile-tabbar>button,
 .neo-mobile-shell .neo-mobile-account-slot,
 .neo-mobile-shell .neo-mobile-profile { min-width:0; }
 @media(max-width:520px) {
   .neo-mobile-shell .neo-overview-grid,
   .neo-mobile-shell .neo-bento { grid-template-columns:minmax(0,1fr)!important; gap:12px; }
-  .neo-mobile-shell .neo-overview-grid>*,
-  .neo-mobile-shell .neo-bento>*,
-  .neo-mobile-shell .neo-overview-grid>.neo-bento-health,
-  .neo-mobile-shell .neo-overview-grid>.neo-bento-activity,
-  .neo-mobile-shell .neo-overview-grid>.neo-bento-shortcuts,
-  .neo-mobile-shell .neo-overview-grid>.neo-entitlements,
-  .neo-mobile-shell .neo-overview-grid>.neo-plan-catalog { grid-column:1/-1!important; }
   .neo-mobile-shell .neo-mobile-content { padding-inline:16px; }
   .neo-mobile-shell .neo-mobile-page-heading h1 { font-size:clamp(32px,9vw,38px); }
   .neo-mobile-shell .neo-app-card { grid-template-columns:38px minmax(0,1fr); gap:10px; padding:12px; }
@@ -84,14 +63,6 @@
 .neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-panel,
 .neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-panel-large,
 .neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-panel-wide { min-width:0; height:auto; min-height:0; align-self:start; padding:15px; border:1px solid var(--neo-border); border-radius:16px; box-shadow:var(--neo-shadow); overflow-wrap:anywhere; }
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-applications,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-quota,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-plan { grid-column:span 1!important; }
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-health,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-activity,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-bento-shortcuts,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-entitlements,
-.neo-mobile-shell .neo-mobile-view .neo-overview-grid > .neo-plan-catalog { grid-column:1/-1!important; }
 .neo-mobile-shell .neo-mobile-view .neo-panel p { line-height:1.55; overflow-wrap:anywhere; }
 .neo-mobile-shell .neo-mobile-view .neo-heading-actions { width:100%; }
 .neo-mobile-shell .neo-mobile-view .neo-heading-actions .neo-button { max-width:100%; white-space:normal; }
