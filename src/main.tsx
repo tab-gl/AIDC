@@ -6,6 +6,7 @@ import "./mobile.css";
 import "./redesign.css";
 import "./fresh-landing.css";
 import "./components/uiverse/uiverse-button.css";
+import "./polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
