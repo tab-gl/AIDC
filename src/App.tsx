@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { BlurFade } from "./components/magicui/blur-fade";
 import BlurText from "./components/reactbits/BlurText";
@@ -12,11 +12,11 @@ import { CommandPalette } from "./components/CommandPalette";
 import { CreateApplicationModal } from "./components/CreateApplicationModal";
 import { ApplicationDrawer } from "./components/ApplicationDrawer";
 import { Applications } from "./views/Applications";
-import { Activity } from "./views/Activity";
-import { Analytics } from "./views/Analytics";
+const Activity = lazy(() => import("./views/Activity").then((m) => ({ default: m.Activity })));
+const Analytics = lazy(() => import("./views/Analytics").then((m) => ({ default: m.Analytics })));
 import { Overview } from "./views/Overview";
-import { Settings } from "./views/Settings";
-import { Users } from "./views/Users";
+const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
+const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users })));
 import { API_ORIGIN, api } from "./lib/api";
 import { haptic } from "./lib/haptics";
 import { navigate, readRoute, type RouteId } from "./lib/navigation";
@@ -234,7 +234,7 @@ export function App() {
     return <LandingPage onSignIn={signIn} />;
   }
   const mobileRouteLabel = ({ overview: "Overview", applications: "Applications", analytics: "Analytics", activity: "Activity", users: "Users", settings: "Settings" } as Record<RouteId, string>)[route];
-  return <div className="neo-app">
+  return <Suspense fallback={null}><div className="neo-app">
     {!isMobile && <div className="neo-desktop-shell">
       <Sidebar route={route} userName={userName} avatarUrl={user?.picture || user?.avatar_url || undefined} onSignIn={signIn} onSignOut={() => void signOut()} logoutBusy={logoutBusy} />
       <div className="neo-main">
@@ -299,5 +299,5 @@ export function App() {
     <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} />
     <CreateApplicationModal open={createOpen} busy={createBusy} error={createError} onClose={() => !createBusy && setCreateOpen(false)} onCreate={createApplication} />
     <ApplicationDrawer application={selectedApplication} onClose={() => setSelectedApplication(null)} onUpdate={updateApplication} onDelete={deleteApplication} />
-  </div>;
+  </div></Suspense>;
 }
