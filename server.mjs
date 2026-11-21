@@ -44,7 +44,13 @@ async function proxy(req, res) {
 }
 
 async function serve(req, res) {
-  const pathname = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  } catch {
+    res.writeHead(400);
+    return res.end("Bad request");
+  }
   let file = normalize(join(root, pathname));
   if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }
   let isAsset = true;
@@ -64,5 +70,8 @@ async function serve(req, res) {
 http.createServer((req, res) => {
   if (req.url === "/healthz") { res.writeHead(200); return res.end("ok"); }
   if (/^\/(api|auth)(\/|\?|$)/.test(req.url)) return proxy(req, res);
-  return serve(req, res);
+  return serve(req, res).catch((e) => {
+    console.error("serve failed:", e?.message);
+    if (!res.headersSent) { res.writeHead(500); res.end("Internal error"); }
+  });
 }).listen(port, "0.0.0.0", () => console.log(`AIDC frontend on :${port}`));
