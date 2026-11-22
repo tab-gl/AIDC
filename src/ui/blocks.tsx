@@ -7,16 +7,19 @@ import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
-import { M3Loading } from "./m3e";
+import { useReducedMotion } from "../lib/prefs";
+
+// App-level compositions built from Astryx primitives. No hand-rolled controls live here:
+// switches, progress and loading indicators come from @astryxdesign/core and @m3e/web.
 
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow: string; title: string; description?: string; actions?: ReactNode }) {
-  return <HStack gap={4} hAlign="between" vAlign="end" className="page-header">
+  return <HStack gap={4} hAlign="between" vAlign="end" wrap="wrap">
     <VStack gap={1}>
       <Text type="label" color="secondary">{eyebrow}</Text>
       <Heading level={1} type="display-3">{title}</Heading>
       {description && <Text color="secondary">{description}</Text>}
     </VStack>
-    {actions && <HStack gap={2} vAlign="center" className="page-actions">{actions}</HStack>}
+    {actions && <HStack gap={2} vAlign="center" wrap="wrap">{actions}</HStack>}
   </HStack>;
 }
 
@@ -24,7 +27,7 @@ export function Metric({ label, value, hint, children }: { label: string; value:
   return <Card padding={4}>
     <VStack gap={1}>
       <Text type="label" color="secondary">{label}</Text>
-      <Heading level={2} type="display-2" >{value}</Heading>
+      <Text type="display-2" weight="semibold">{value}</Text>
       {hint && <Text type="supporting" color="secondary">{hint}</Text>}
       {children}
     </VStack>
@@ -32,8 +35,9 @@ export function Metric({ label, value, hint, children }: { label: string; value:
 }
 
 export function LoadingState({ title = "Loading", text }: { title?: string; text?: string }) {
-  return <VStack gap={2} hAlign="center" paddingBlock={8} aria-live="polite">
-    <M3Loading label={title} />
+  const reducedMotion = useReducedMotion();
+  return <VStack gap={2} hAlign="center" paddingBlock={8} role="status" aria-live="polite" aria-label={title}>
+    <m3e-loading-indicator pull-progress={reducedMotion ? 0 : undefined} aria-hidden="true" />
     <Text weight="semibold">{title}</Text>
     {text && <Text type="supporting" color="secondary">{text}</Text>}
   </VStack>;

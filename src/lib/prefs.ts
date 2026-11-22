@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-export type Preferences = { theme: "light" | "dark" | "system"; density: "comfortable" | "compact"; showTips: boolean; reduceMotion: boolean };
-export const defaultPreferences: Preferences = { theme: "system", density: "comfortable", showTips: true, reduceMotion: false };
+export type Preferences = { theme: "light" | "dark" | "system"; showTips: boolean; reduceMotion: boolean };
+export const defaultPreferences: Preferences = { theme: "system", showTips: true, reduceMotion: false };
 const KEY = "aidc-neo-preferences-v1";
 const EVENT = "aidc:preferences-change";
 
@@ -10,7 +10,6 @@ export function readPreferences(): Preferences {
     const p = JSON.parse(localStorage.getItem(KEY) || "{}");
     return {
       theme: ["light", "dark", "system"].includes(p.theme) ? p.theme : defaultPreferences.theme,
-      density: ["comfortable", "compact"].includes(p.density) ? p.density : defaultPreferences.density,
       showTips: typeof p.showTips === "boolean" ? p.showTips : defaultPreferences.showTips,
       reduceMotion: typeof p.reduceMotion === "boolean" ? p.reduceMotion : defaultPreferences.reduceMotion
     };
@@ -37,4 +36,19 @@ export function usePreferences(): Preferences {
   }, []);
   useEffect(() => { document.documentElement.dataset.reduceMotion = String(prefs.reduceMotion); }, [prefs.reduceMotion]);
   return prefs;
+}
+
+/** Includes the system preference, including for components inside shadow DOM. */
+export function useReducedMotion(): boolean {
+  const { reduceMotion } = usePreferences();
+  const [systemReduced, setSystemReduced] = useState(() => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setSystemReduced(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return reduceMotion || systemReduced;
 }

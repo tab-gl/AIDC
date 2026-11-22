@@ -13,7 +13,7 @@ import type { Application, RedirectUri } from "../types";
 type Preset = "react-vite" | "nextjs" | "vanilla" | "mobile";
 const PRESETS = [{ value: "react-vite", label: "React + Vite" }, { value: "nextjs", label: "Next.js" }, { value: "vanilla", label: "Vanilla web" }, { value: "mobile", label: "Mobile client" }];
 
-export function ClientPresetGuide({ application, redirects, scopes, onStatus }: { application: Application; redirects: RedirectUri[]; scopes: string[]; onStatus: (message: string) => void }) {
+export function ClientPresetGuide({ application, redirects, scopes, onStatus }: { application: Application; redirects: RedirectUri[]; scopes: string[]; onStatus: (message: string, ok: boolean) => void }) {
   const [preset, setPreset] = useState<Preset>("react-vite");
   const origin = application.origin_url?.replace(/\/$/, "") || "";
   const redirect = useMemo(() => preset === "mobile" ? "YOUR_APP_SCHEME://oauth/callback" : (origin || "https://app.example.com") + (preset === "nextjs" ? "/api/auth/callback/ace-id" : "/auth/callback"), [preset, origin]);
@@ -34,7 +34,7 @@ export function ClientPresetGuide({ application, redirects, scopes, onStatus }: 
     { label: "Client type and redirect flow reviewed", ok: false },
     { label: "Callback handles state, PKCE and provider errors", ok: false }
   ];
-  const copy = (value: string, done: string, fail: string) => void copyText(value).then((ok) => onStatus(ok ? done : fail));
+  const copy = (value: string, done: string, fail: string) => void copyText(value).then((ok) => onStatus(ok ? done : fail, ok));
 
   return <VStack gap={4}>
     <Text color="secondary">Generate a starter configuration for your client stack. Confirm the actual issuer and callback route before launch.</Text>

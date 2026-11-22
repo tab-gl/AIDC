@@ -22,7 +22,7 @@ See the [AIDC documentation](https://docs.ace-base.cc/projects/aidc) for setup a
 
 ## UI stack
 
-The console UI is built on [Astryx](https://www.npmjs.com/package/@astryxdesign/core) (`@astryxdesign/core` + `theme-neutral`) for layout, navigation, forms, dialogs, drawers and the command palette, with [`@m3e/web`](https://www.npmjs.com/package/@m3e/web) Material 3 Expressive web components for switches, loading and progress indicators. Theme (system/light/dark) is chosen in Settings. Run the browser tests with `npm run test:e2e` (set `CHROMIUM_PATH` to use a pre-installed Chromium).
+The console UI is built on [Astryx](https://www.npmjs.com/package/@astryxdesign/core) (`@astryxdesign/core` + `theme-neutral`) for layout, navigation, forms, dialogs, drawers, switches, progress indicators and the command palette, with [`@m3e/web`](https://www.npmjs.com/package/@m3e/web) Material 3 Expressive web components for loading indicators. AIDC's existing light (`#f1f1f1`) and charcoal (`#1b1b1b`) colors inform the Astryx surfaces and the monochrome Material seed. Theme (system/light/dark) and reduced motion are chosen in Settings. Run the browser tests with `npm run test:e2e` (install Playwright Chromium or set `CHROMIUM_PATH` to use a pre-installed Chromium).
 
 ## Vercel deployment
 

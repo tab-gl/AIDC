@@ -7,6 +7,7 @@ export async function copyText(value: string): Promise<boolean> {
     }
   } catch { /* Try the selection fallback below. */ }
   let area: HTMLTextAreaElement | null = null;
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   try {
     area = document.createElement("textarea");
     area.value = value;
@@ -25,5 +26,6 @@ export async function copyText(value: string): Promise<boolean> {
     return false;
   } finally {
     area?.remove();
+    previousFocus?.focus({ preventScroll: true });
   }
 }

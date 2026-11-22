@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
@@ -8,11 +8,10 @@ import { Heading } from "@astryxdesign/core/Heading";
 import { Item } from "@astryxdesign/core/Item";
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Switch } from "@astryxdesign/core/Switch";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
-import { HStack } from "@astryxdesign/core/HStack";
 import { api } from "../lib/api";
-import { M3Switch } from "../ui/m3e";
 import { PageHeader } from "../ui/blocks";
 import { defaultPreferences, readPreferences, resetPreferences, savePreferences, type Preferences } from "../lib/prefs";
 import type { DiscoveryStatus } from "../types";
@@ -25,36 +24,38 @@ export function Settings() {
   const [health, setHealth] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
   const [diagError, setDiagError] = useState("");
+  const checkSeq = useRef(0);
   const dirty = JSON.stringify(prefs) !== JSON.stringify(saved);
 
   const check = async () => {
+    const id = ++checkSeq.current;
     setChecking(true); setDiagError("");
-    try { const [identity, service] = await Promise.all([api.integration.discovery(), api.health.get()]); setDiscovery(identity); setHealth(Boolean(service.ok)); }
-    catch (e) { setHealth(false); setDiagError(e instanceof Error ? e.message : "Integration check failed."); }
-    finally { setChecking(false); }
+    const [identity, service] = await Promise.allSettled([api.integration.discovery(), api.health.get()]);
+    if (id !== checkSeq.current) return;
+    setDiscovery(identity.status === "fulfilled" ? identity.value : null);
+    setHealth(service.status === "fulfilled" ? Boolean(service.value.ok) : null);
+    const failed = [identity.status === "rejected" && "Ace ID discovery", service.status === "rejected" && "AIDC API"].filter(Boolean);
+    if (failed.length) setDiagError(`Could not check ${failed.join(" and ")}. Please try again.`);
+    setChecking(false);
   };
-  useEffect(() => { void check(); }, []);
+  useEffect(() => { void check(); return () => { checkSeq.current += 1; }; }, []);
   const update = <K extends keyof Preferences>(k: K, v: Preferences[K]) => { setPrefs((p) => ({ ...p, [k]: v })); setNotice(null); };
   const save = () => { const ok = savePreferences(prefs); if (ok) setSaved(prefs); setNotice(ok ? { ok, text: "Preferences saved on this device." } : { ok, text: "Preferences could not be saved in this browser. Check storage permissions and try again." }); };
-  const reset = () => { const ok = resetPreferences(); setPrefs(defaultPreferences); setSaved(defaultPreferences); setNotice(ok ? { ok, text: "Defaults restored." } : { ok, text: "Defaults are active for this session, but browser storage could not be cleared." }); };
+  const reset = () => { const ok = resetPreferences(); if (ok) { setPrefs(defaultPreferences); setSaved(defaultPreferences); } setNotice(ok ? { ok, text: "Defaults restored." } : { ok, text: "Preferences could not be reset. Check storage permissions and try again." }); };
 
   return <VStack gap={5}>
     <PageHeader eyebrow="Configuration" title="Settings" description="Personalize the console without changing identity or security configuration."
       actions={<><Button label="Reset" onClick={reset} /><Button label="Save preferences" variant="primary" onClick={save} isDisabled={!dirty} /></>} />
-    {notice && <Banner status={notice.ok ? "success" : "error"} title={notice.text} isDismissable />}
-    <Grid columns={{ minWidth: 320 }} gap={4}>
+    {notice && <div role={notice.ok ? "status" : "alert"}><Banner status={notice.ok ? "success" : "error"} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
+    <Grid columns={{ minWidth: 320, max: 3, repeat: "fit" }} gap={4}>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Appearance</Heading>
         <Text color="secondary">Choose the canvas that suits your workspace.</Text>
         <SegmentedControl label="Theme" value={prefs.theme} onChange={(v) => update("theme", v as Preferences["theme"])}>
           <SegmentedControlItem value="system" label="System" /><SegmentedControlItem value="light" label="Light" /><SegmentedControlItem value="dark" label="Dark" />
         </SegmentedControl>
-        <Text color="secondary">Information density</Text>
-        <SegmentedControl label="Information density" value={prefs.density} onChange={(v) => update("density", v as Preferences["density"])}>
-          <SegmentedControlItem value="comfortable" label="Comfortable" /><SegmentedControlItem value="compact" label="Compact" />
-        </SegmentedControl>
-        <M3Switch label="Reduce motion" description="Respect motion-sensitive preferences." checked={prefs.reduceMotion} onChange={(v) => update("reduceMotion", v)} />
-        <M3Switch label="Show tips" description="Display contextual guidance when available." checked={prefs.showTips} onChange={(v) => update("showTips", v)} />
+        <Switch label="Reduce motion" description="Respect motion-sensitive preferences." value={prefs.reduceMotion} onChange={(v) => update("reduceMotion", v)} labelPosition="start" labelSpacing="spread" width="100%" />
+        <Switch label="Show tips" description="Display contextual guidance when available." value={prefs.showTips} onChange={(v) => update("showTips", v)} labelPosition="start" labelSpacing="spread" width="100%" />
       </VStack></Card>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Integration health</Heading>
@@ -64,7 +65,7 @@ export function Settings() {
         {discovery?.issuer && <Item label="Issuer" description={<Code>{discovery.issuer}</Code>} />}
         {discovery?.lastError && <Banner status="warning" title="Last discovery error" description={discovery.lastError} />}
         {diagError && <Banner status="error" title="Diagnostics failed" description={diagError} />}
-        <HStack gap={2}><Button label="Run diagnostics" isLoading={checking} onClick={() => void check()} /></HStack>
+        <Button label="Run diagnostics" isLoading={checking} onClick={() => void check()} />
       </VStack></Card>
       <Card padding={4}><VStack gap={2}>
         <Heading level={2}>Ace ID / OIDC</Heading>
