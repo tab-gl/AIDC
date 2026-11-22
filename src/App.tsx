@@ -97,9 +97,12 @@ export function App() {
     const epoch = authEpoch.current;
     setAuthLoading(true); setAuthError(null);
     try {
-      const d = await api.auth.me();
+      const session = await api.auth.me();
       if (seq !== bootSeq.current || epoch !== authEpoch.current) return;
-      setUser(d.user ?? null);
+      if (!session || typeof session !== "object" || !("user" in session)) {
+        throw new Error("The AIDC API returned an invalid session response. Check the API proxy and backend configuration.");
+      }
+      setUser(session.user ?? null);
     } catch (error) {
       if (seq !== bootSeq.current || epoch !== authEpoch.current) return;
       if ((error as { status?: number }).status !== 401) setAuthError(connectionMessage(error));
