@@ -3,15 +3,88 @@ html, body, #root { min-height: 100%; }
 body { margin: 0; background: var(--color-background-body, Canvas); color: var(--color-text-primary, CanvasText); }
 m3e-theme { display: contents; }
 
-/* Landing */
+/* Editorial typography: keep Astryx's Figtree body and use Instrument Serif for headings. */
+[data-astryx-theme="neutral"] {
+  --font-family-heading: "Instrument Serif", Georgia, serif;
+  --text-heading-1-weight: 400;
+  --text-heading-2-weight: 400;
+  --text-heading-3-weight: 400;
+  --text-heading-4-weight: 400;
+  --text-heading-5-weight: 400;
+  --text-heading-6-weight: 400;
+}
+/* Display-sized numbers are data, not headings; retain the UI's body typeface. */
+[data-astryx-theme="neutral"] .astryx-text[data-type^="display"] { font-family: var(--font-family-body); }
+.console-page-header { padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+.console-page-header h1 { font-size: clamp(2.4rem, 4vw, 3.5rem); font-weight: 400; line-height: 1; }
+.console-eyebrow { font-size: .6875rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
+.console-metric { min-width: 0; }
+
+/* Landing: an editorial rhythm of generous type, fine rules and numbered sections. */
 .landing { min-height: 100dvh; display: flex; flex-direction: column; }
-.landing main { width: min(1120px, 100% - 32px); margin: 0 auto; flex: 1; }
-.landing-hero { padding: clamp(40px, 9vw, 112px) 0 clamp(32px, 6vw, 72px); }
-.landing-lede { max-width: 60ch; }
-.landing-section { padding: 40px 0; }
-.landing-intro { max-width: 70ch; margin-bottom: 24px; }
-.landing-cta { text-align: center; padding: 56px 0; }
-.landing-footer { padding: 24px 16px; text-align: center; }
+.landing-nav { padding: 20px clamp(20px, 4vw, 64px); border-bottom: 1px solid var(--color-border); }
+.landing-brand { white-space: nowrap; }
+.landing-brand img { object-fit: contain; }
+.landing-brand-description { color: var(--color-text-secondary); font-size: .8125rem; margin-left: .5rem; }
+.landing-nav-docs { margin-right: .5rem; }
+.landing-main { width: min(100% - clamp(40px, 8vw, 128px), 1440px); margin: 0 auto; flex: 1; }
+.landing-masthead, .landing-section-label, .landing-feature-index, .landing-note-index, .landing-footer {
+  font-family: var(--font-family-body);
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.landing-masthead { display: flex; justify-content: space-between; gap: 1rem; padding: 23px 0; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); }
+.landing-masthead span span { padding: 0 .4rem; }
+.landing-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 290px); gap: clamp(48px, 6vw, 100px); align-items: end; padding: clamp(72px, 9vw, 148px) 0 clamp(88px, 10vw, 152px); }
+.landing-hero-copy { min-width: 0; }
+.landing-eyebrow { display: flex; align-items: center; gap: .6rem; margin: 0 0 30px; color: var(--color-text-secondary); font: 600 .6875rem/1.4 var(--font-family-body); letter-spacing: .12em; text-transform: uppercase; }
+.landing-eyebrow-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-primary); }
+.landing .landing-hero-title { max-width: 13ch; margin: 0; font-family: var(--font-family-heading); font-size: clamp(4.1rem, 7.7vw, 8rem); font-weight: 400; line-height: .94; letter-spacing: -.025em; text-wrap: balance; }
+.landing-hero-title em, .landing-section-title em, .landing-cta-title em, .landing-note-quote em { font-weight: 400; }
+.landing .landing-lede { display: block; max-width: 48ch; margin-top: 32px; font-size: clamp(1rem, 1.25vw, 1.15rem); font-weight: 400; line-height: 1.7; }
+.landing-actions { margin-top: 32px; }
+.landing-hero-note { min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; border-left: 1px solid var(--color-border); padding: 0 0 0 clamp(24px, 3vw, 48px); }
+.landing-note-index { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); padding-bottom: 16px; }
+.landing-note-quote { font: 400 clamp(2.3rem, 3.5vw, 3.75rem)/.98 var(--font-family-heading); letter-spacing: -.02em; margin: 28px 0; }
+.landing-note-copy { color: var(--color-text-secondary); font: 400 .875rem/1.7 var(--font-family-body); margin: 0; }
+.landing-note-mark { color: var(--color-text-secondary); font: 400 1rem/1 var(--font-family-heading); margin-top: 52px; }
+.landing-section { padding: 0 0 clamp(80px, 9vw, 140px); }
+.landing-section-label { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--color-text-primary); padding: 18px 0 0; color: var(--color-text-secondary); }
+.landing-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 330px); align-items: end; gap: 3rem; margin: clamp(48px, 6vw, 90px) 0 64px; }
+.landing .landing-section-title, .landing .landing-cta-title { font-family: var(--font-family-heading); font-size: clamp(3rem, 5vw, 5.5rem); font-weight: 400; letter-spacing: -.02em; line-height: 1; text-wrap: balance; }
+.landing-section-title { max-width: 18ch; }
+.landing .landing-intro-copy { font-size: 1rem; font-weight: 400; line-height: 1.7; }
+.landing-feature { border-top: 1px solid var(--color-border); padding: 18px 0 0; min-width: 0; }
+.landing-feature-index { display: flex; justify-content: space-between; color: var(--color-text-secondary); }
+.landing .landing-feature-title { margin: 46px 0 14px; font-family: var(--font-family-heading); font-size: clamp(2rem, 2.7vw, 2.75rem); font-weight: 400; line-height: 1.05; }
+.landing .landing-feature-copy { display: block; max-width: 34ch; font-size: .9375rem; line-height: 1.7; }
+.landing-cta { display: flex; justify-content: space-between; align-items: end; gap: 40px; border-top: 1px solid var(--color-text-primary); padding: clamp(48px, 6vw, 88px) 0; }
+.landing-cta .landing-eyebrow { margin-bottom: 28px; }
+.landing-footer { width: min(100% - clamp(40px, 8vw, 128px), 1440px); margin: 0 auto; padding: 22px 0 30px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; color: var(--color-text-secondary); }
+
+@media (max-width: 760px) {
+  .landing-brand-description, .landing-nav-docs { display: none; }
+  .landing-nav { padding: 14px 20px; }
+  .landing-masthead > :last-child, .landing-section-label > :last-child { display: none; }
+  .landing-hero { grid-template-columns: minmax(0, 1fr); gap: 48px; padding: 72px 0 80px; }
+  .landing .landing-hero-title { font-size: clamp(3.6rem, 11.5vw, 5.5rem); }
+  .landing .landing-lede { margin-top: 26px; }
+  .landing-hero-note { border-left: 0; border-top: 1px solid var(--color-border); padding: 18px 0 0; }
+  .landing-note-index { border-bottom: 0; padding-bottom: 0; }
+  .landing-note-quote { font-size: 2.3rem; margin: 22px 0 14px; }
+  .landing-note-mark { display: none; }
+  .landing-intro { grid-template-columns: minmax(0, 1fr); gap: 24px; margin: 48px 0; }
+  .landing .landing-section-title, .landing .landing-cta-title { font-size: clamp(2.8rem, 9vw, 4rem); }
+  .landing .landing-feature-title { margin-top: 30px; }
+  .landing-cta { align-items: start; flex-direction: column; }
+  .landing-footer { flex-direction: column; }
+}
+@media (max-width: 380px) {
+  .landing .landing-hero-title { font-size: 3.35rem; }
+}
 
 /* AIDC's existing light and charcoal surfaces, shared by Astryx and m3e. */
 :root, [data-astryx-theme="neutral"] {
@@ -28,6 +101,7 @@ m3e-theme { display: contents; }
   --color-icon-accent: #f1f1f1;
   --color-on-accent: #1b1b1b;
 }
+[data-theme="dark"] .landing-brand img { filter: invert(1); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]), [data-astryx-theme="neutral"]:not([data-theme]) {
     --color-background-body: #1b1b1b;
@@ -36,6 +110,7 @@ m3e-theme { display: contents; }
     --color-icon-accent: #f1f1f1;
     --color-on-accent: #1b1b1b;
   }
+  [data-astryx-theme="neutral"]:not([data-theme]) .landing-brand img { filter: invert(1); }
 }
 
 /* Subtle, non-layout-shifting press feedback. Astryx owns focus and hover styles. */

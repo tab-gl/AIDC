@@ -186,3 +186,20 @@ test("daily sign-in values remain accessible", async ({ page }) => {
   await page.goto("/#analytics");
   await expect(page.getByRole("progressbar", { name: "2026-10-01: 8 sign-ins" })).toBeVisible();
 });
+
+for (const width of [320, 390, 1440]) {
+  test(`editorial landing keeps its typography and fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.route("**/api/me", (route) => route.fulfill({ status: 401, json: { error: "Signed out" } }));
+    await page.goto("/");
+    const heading = page.getByRole("heading", { level: 1, name: /Identity infrastructure/ });
+    await expect(heading).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(heading).toHaveCSS("font-family", /Instrument Serif/);
+    await expect(page.locator(".landing-lede")).toHaveCSS("font-family", /Figtree/);
+    await expect(page.getByRole("button", { name: "Continue with Ace ID" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Read the documentation" })).toHaveAttribute("href", "https://docs.ace-base.cc/projects/aidc");
+    const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+    expect(widths.content).toBeLessThanOrEqual(widths.viewport);
+  });
+}
