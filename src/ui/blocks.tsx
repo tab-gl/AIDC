@@ -13,9 +13,9 @@ import { useReducedMotion } from "../lib/prefs";
 // switches, progress and loading indicators come from @astryxdesign/core and @m3e/web.
 
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow: string; title: string; description?: string; actions?: ReactNode }) {
-  return <HStack gap={4} hAlign="between" vAlign="end" wrap="wrap">
+  return <HStack gap={4} hAlign="between" vAlign="end" wrap="wrap" className="console-page-header">
     <VStack gap={1}>
-      <Text type="label" color="secondary">{eyebrow}</Text>
+      <Text type="label" color="secondary" className="console-eyebrow">{eyebrow}</Text>
       <Heading level={1} type="display-3">{title}</Heading>
       {description && <Text color="secondary">{description}</Text>}
     </VStack>
@@ -24,9 +24,9 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow: 
 }
 
 export function Metric({ label, value, hint, children }: { label: string; value: ReactNode; hint?: string; children?: ReactNode }) {
-  return <Card padding={4}>
+  return <Card padding={4} className="console-metric">
     <VStack gap={1}>
-      <Text type="label" color="secondary">{label}</Text>
+      <Text type="label" color="secondary" className="console-eyebrow">{label}</Text>
       <Text type="display-2" weight="semibold">{value}</Text>
       {hint && <Text type="supporting" color="secondary">{hint}</Text>}
       {children}

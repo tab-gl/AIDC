@@ -1,27 +1,39 @@
 import { useEffect, useState } from "react";
 
-export type Preferences = { theme: "light" | "dark" | "system"; showTips: boolean; reduceMotion: boolean };
-export const defaultPreferences: Preferences = { theme: "system", showTips: true, reduceMotion: false };
-const KEY = "aidc-neo-preferences-v1";
+export type Preferences = {
+  theme: "light" | "dark" | "system";
+  contrast: "standard" | "medium" | "high";
+  textSize: "standard" | "large";
+  defaultRange: 7 | 14 | 30;
+  hapticFeedback: boolean;
+  showTips: boolean;
+  reduceMotion: boolean;
+};
+export const defaultPreferences: Preferences = { theme: "system", contrast: "standard", textSize: "standard", defaultRange: 7, hapticFeedback: true, showTips: true, reduceMotion: false };
+export const PREFERENCES_KEY = "aidc-neo-preferences-v1";
 const EVENT = "aidc:preferences-change";
 
 export function readPreferences(): Preferences {
   try {
-    const p = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const p = JSON.parse(localStorage.getItem(PREFERENCES_KEY) || "{}");
     return {
       theme: ["light", "dark", "system"].includes(p.theme) ? p.theme : defaultPreferences.theme,
+      contrast: ["standard", "medium", "high"].includes(p.contrast) ? p.contrast : defaultPreferences.contrast,
+      textSize: ["standard", "large"].includes(p.textSize) ? p.textSize : defaultPreferences.textSize,
+      defaultRange: [7, 14, 30].includes(p.defaultRange) ? p.defaultRange : defaultPreferences.defaultRange,
+      hapticFeedback: typeof p.hapticFeedback === "boolean" ? p.hapticFeedback : defaultPreferences.hapticFeedback,
       showTips: typeof p.showTips === "boolean" ? p.showTips : defaultPreferences.showTips,
       reduceMotion: typeof p.reduceMotion === "boolean" ? p.reduceMotion : defaultPreferences.reduceMotion
     };
   } catch { return defaultPreferences; }
 }
 export function savePreferences(next: Preferences): boolean {
-  try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { return false; }
+  try { localStorage.setItem(PREFERENCES_KEY, JSON.stringify(next)); } catch { return false; }
   window.dispatchEvent(new Event(EVENT));
   return true;
 }
 export function resetPreferences(): boolean {
-  try { localStorage.removeItem(KEY); } catch { window.dispatchEvent(new Event(EVENT)); return false; }
+  try { localStorage.removeItem(PREFERENCES_KEY); } catch { window.dispatchEvent(new Event(EVENT)); return false; }
   window.dispatchEvent(new Event(EVENT));
   return true;
 }
@@ -34,7 +46,7 @@ export function usePreferences(): Preferences {
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(EVENT, sync); window.removeEventListener("storage", sync); };
   }, []);
-  useEffect(() => { document.documentElement.dataset.reduceMotion = String(prefs.reduceMotion); }, [prefs.reduceMotion]);
+  useEffect(() => { document.documentElement.dataset.reduceMotion = String(prefs.reduceMotion); document.documentElement.dataset.textSize = prefs.textSize; }, [prefs.reduceMotion, prefs.textSize]);
   return prefs;
 }
 

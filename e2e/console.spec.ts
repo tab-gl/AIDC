@@ -56,6 +56,8 @@ test("loads the signed-in console and filters applications", async ({ page }) =>
   await expect(page.getByRole("heading", { name: /no applications match/i })).toBeVisible();
   await search.fill("Example identity");
   await expect(page.getByText("Example identity app")).toBeVisible();
+  await search.fill("aidc_test_client");
+  await expect(page.getByText("Example identity app")).toBeVisible();
 });
 
 test("returns to the signed-out overview when an authenticated API call expires", async ({ page }) => {
@@ -137,7 +139,7 @@ test("saved theme and reduced motion reach both theme systems", async ({ page })
   await page.goto("/#settings");
   await page.getByText("Dark", { exact: true }).click();
   await page.getByRole("switch", { name: "Reduce motion" }).check();
-  await page.getByRole("button", { name: "Save preferences" }).click();
+  await page.getByRole("button", { name: "Sync preferences" }).click();
   await expect(page.getByText("Preferences saved on this device.")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("html")).toHaveAttribute("data-reduce-motion", "true");
@@ -185,4 +187,152 @@ test("daily sign-in values remain accessible", async ({ page }) => {
   await page.route("**/api/analytics/logins**", (route) => route.fulfill({ json: { days: 7, items: [{ date: "2026-10-01", count: 8, uniqueUsers: 4, failedAttempts: 0 }], total: 8, failedAttempts: 0, uniqueUsers: 4 } }));
   await page.goto("/#analytics");
   await expect(page.getByRole("progressbar", { name: "2026-10-01: 8 sign-ins" })).toBeVisible();
+});
+
+for (const width of [320, 390, 1440]) {
+  test(`editorial landing keeps its typography and fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.route("**/api/me", (route) => route.fulfill({ status: 401, json: { error: "Signed out" } }));
+    await page.goto("/");
+    const heading = page.getByRole("heading", { level: 1, name: /Identity infrastructure/ });
+    await expect(heading).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(heading).toHaveCSS("font-family", /Instrument Serif/);
+    await expect(page.locator(".landing-lede")).toHaveCSS("font-family", /Figtree/);
+    await expect(page.getByRole("button", { name: "Continue with Ace ID" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Read the documentation" })).toHaveAttribute("href", "https://docs.ace-base.cc/projects/aidc");
+    const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+    expect(widths.content).toBeLessThanOrEqual(widths.viewport);
+  });
+}
+
+test("invalid session responses show a recoverable error", async ({ page }) => {
+  await mockApi(page);
+  let recovered = false;
+  await page.route("**/api/me", (route) => route.fulfill({ json: recovered ? { user: { id: "dev-1", name: "Developer" } } : {} }));
+  await page.goto("/");
+  await expect(page.getByText(/invalid session response/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  recovered = true;
+  await page.getByRole("button", { name: "Retry" }).click();
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+});
+
+test("redirect URIs can be added and removed only after confirmation", async ({ page }) => {
+  await mockApi(page);
+  const uri = "https://app.example.test/auth/callback";
+  let removed = false;
+  await page.route(`**/api/applications/${app.id}/redirect-uris`, async (route) => {
+    if (route.request().method() === "POST") {
+      expect(JSON.parse(route.request().postData() || "{}")).toEqual({ uri });
+      await route.fulfill({ json: { redirect_uri: { id: "uri-1", application_id: app.id, uri } } });
+    } else {
+      await route.fulfill({ json: { redirect_uris: [] } });
+    }
+  });
+  await page.route(`**/api/applications/${app.id}/redirect-uris/uri-1`, async (route) => {
+    removed = true;
+    await route.fulfill({ json: { deleted: true } });
+  });
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("tab", { name: "Redirect URIs" }).click();
+  await page.getByRole("textbox", { name: "New redirect URI" }).fill(uri);
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByText("Redirect URI added.")).toBeVisible();
+  await expect(page.getByText(uri, { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Remove", exact: true }).click();
+  const confirmation = page.getByRole("alertdialog", { name: "Remove this redirect URI?" });
+  await expect(confirmation).toBeVisible();
+  expect(removed).toBe(false);
+  await confirmation.getByRole("button", { name: "Remove", exact: true }).click();
+  await expect(page.getByText("Redirect URI removed.")).toBeVisible();
+  await expect(page.getByText(uri, { exact: true })).toHaveCount(0);
+  expect(removed).toBe(true);
+});
+
+test("rotated credentials are visible once and cleared on leaving the tab", async ({ page }) => {
+  await mockApi(page);
+  await page.route(`**/api/applications/${app.id}/credentials`, (route) => route.fulfill({ json: { credentials: [] } }));
+  await page.route(`**/api/applications/${app.id}/credentials/rotate`, (route) => route.fulfill({ json: { credential: { id: "credential-1", application_id: app.id, secret_prefix: "secret", secret: "secret-once-only", created_at: "2026-10-01T12:00:00Z" } } }));
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("tab", { name: "Credentials" }).click();
+  await page.getByRole("button", { name: "Rotate client secret" }).click();
+  await page.getByRole("alertdialog", { name: "Rotate credentials?" }).getByRole("button", { name: "Rotate", exact: true }).click();
+  await expect(page.getByText("secret-once-only", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Overview" }).click();
+  await page.getByRole("tab", { name: "Credentials" }).click();
+  await expect(page.getByText("secret-once-only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("secret…", { exact: true })).toBeVisible();
+});
+
+test("settings drafts survive navigation, revert, and sync useful defaults", async ({ page }) => {
+  await mockApi(page);
+  const analyticsRequests: string[] = [];
+  page.on("request", (request) => { if (request.url().includes("/api/analytics/logins")) analyticsRequests.push(request.url()); });
+  await page.goto("/#settings");
+  const theme = page.getByRole("radiogroup", { name: "Theme" });
+  await theme.getByRole("radio", { name: "Dark" }).click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "auto");
+  await page.getByRole("link", { name: "Applications" }).first().click();
+  await page.getByRole("link", { name: "Settings" }).first().click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(theme.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(theme.getByRole("radio", { name: "System" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radiogroup", { name: "Default reporting range" }).getByRole("radio", { name: "30 days" }).click();
+  await page.getByRole("radiogroup", { name: "Text size" }).getByRole("radio", { name: "Large" }).click();
+  await page.getByRole("radiogroup", { name: "Material contrast" }).getByRole("radio", { name: "High" }).click();
+  await page.getByRole("switch", { name: "Haptic feedback" }).uncheck();
+  await page.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("contrast", "high");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("aidc-neo-preferences-v1") || "{}"))).toMatchObject({ defaultRange: 30, hapticFeedback: false });
+  await page.getByRole("link", { name: "Analytics" }).first().click();
+  await expect.poll(() => analyticsRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
+  await page.getByRole("link", { name: "Settings" }).first().click();
+  await page.getByRole("button", { name: "Restore defaults" }).click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Text size" }).getByRole("radio", { name: "Large" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("settings avoid overwriting changes from another tab", async ({ page, context }) => {
+  await mockApi(page);
+  await page.goto("/#settings");
+  await page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" }).click();
+  const other = await context.newPage();
+  await mockApi(other);
+  await other.goto("/#settings");
+  await other.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Light" }).click();
+  await other.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.getByText(/Saved preferences changed in another tab/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sync preferences" })).toBeDisabled();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Light" })).toHaveAttribute("aria-checked", "true");
+  await other.close();
+});
+
+test("failed preference sync keeps the draft available for retry", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/#settings");
+  await page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" }).click();
+  await page.evaluate(() => { Storage.prototype.setItem = () => { throw new Error("Storage denied"); }; });
+  await page.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.getByRole("alert")).toContainText("Your changes are still here");
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("settings controls fit a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await mockApi(page);
+  await page.goto("/#settings");
+  await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+  const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+  expect(widths.content).toBeLessThanOrEqual(widths.viewport);
 });
