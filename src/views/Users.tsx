@@ -37,7 +37,7 @@ export function Users() {
     <Card padding={4}><VStack gap={4}>
       <form onSubmit={(e) => { e.preventDefault(); void search(query); }} role="search">
         <HStack gap={2} vAlign="end">
-          <TextInput label="Search authorized users" isLabelHidden type="search" startIcon="search" hasClear value={query} onChange={setQuery} onEnter={() => void search(query)} placeholder="Search email, username, name, or ID" width="100%" />
+          <TextInput label="Search authorized users" isLabelHidden type="search" startIcon="search" hasClear value={query} onChange={setQuery} placeholder="Search email, username, name, or ID" width="100%" />
           <Button label="Search" type="submit" variant="primary" isLoading={loading} />
         </HStack>
       </form>

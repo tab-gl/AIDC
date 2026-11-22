@@ -26,6 +26,8 @@ export function M3Switch({ label, description, checked, disabled, onChange }: { 
 export function M3Loading({ label = "Loading" }: { label?: string }) {
   return <span className="m3-loading" role="status" aria-label={label}><m3e-loading-indicator /></span>;
 }
-export function M3Progress({ value, label }: { value: number; label: string }) {
-  return <m3e-linear-progress-indicator value={Math.round(value)} max={100} role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value)} />;
+/** Determinate m3e/web linear progress; `max` defaults to 100 like a percentage. */
+export function M3Progress({ value, max = 100, label, className }: { value: number; max?: number; label: string; className?: string }) {
+  const clamped = Math.max(0, Math.min(value, max));
+  return <m3e-linear-progress-indicator mode="determinate" value={clamped} max={max} role="progressbar" aria-label={label} className={className} />;
 }

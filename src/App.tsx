@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Activity01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Settings01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { Activity01Icon, Add01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Settings01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { AppShell } from "@astryxdesign/core/AppShell";
 import { Avatar } from "@astryxdesign/core/Avatar";
 import { Button } from "@astryxdesign/core/Button";
@@ -150,7 +150,7 @@ export function App() {
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
-      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><span>＋</span><span>New application</span></HStack> }
+      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={1.7} aria-hidden="true" /><span>New application</span></HStack> }
     ];
     const find = (q: string) => items.filter((i) => i.label.toLowerCase().includes(q.trim().toLowerCase()));
     return { search: find, bootstrap: () => items, cancel: () => {} };

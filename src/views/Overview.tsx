@@ -44,7 +44,7 @@ export function Overview({ applications, quota, signedIn, showTips, onApplicatio
 
   return <VStack gap={6}>
     <PageHeader eyebrow="AIDC / Console" title="Manage identity apps" description="Applications, usage, provider health, and recent events."
-      actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} />{signedIn && <Button label="New application" variant="primary" onClick={onCreate} />}</>} />
+      actions={<>{signedIn && <><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label="New application" variant="primary" onClick={onCreate} /></>}</>} />
 
     <Grid columns={{ minWidth: 200 }} gap={4}>
       <Metric label="Applications" value={signedIn ? applications.length : "—"} hint={signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
