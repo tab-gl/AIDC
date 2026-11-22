@@ -80,7 +80,13 @@ export function App() {
   }, []);
   const bootstrap = useCallback(async () => {
     setAuthLoading(true); setAuthError(null);
-    try { setUser((await api.auth.me()).user ?? null); }
+    try {
+      const session = await api.auth.me();
+      if (!session || typeof session !== "object" || !("user" in session)) {
+        throw new Error("The AIDC API returned an invalid session response. Check the API proxy and backend configuration.");
+      }
+      setUser(session.user ?? null);
+    }
     catch (error) {
       if ((error as { status?: number }).status !== 401) setAuthError(connectionMessage(error));
       clearAuthenticatedState();
