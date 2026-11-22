@@ -124,3 +124,12 @@ m3e-theme { display: contents; }
 :root[data-reduce-motion="true"] *, :root[data-reduce-motion="true"] *::before, :root[data-reduce-motion="true"] *::after {
   animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important;
 }
+
+/* Discrete feedback for staged settings and interactive controls. */
+:root[data-text-size="large"] { font-size: 112.5%; }
+.settings-status { display: flex; align-items: center; gap: .55rem; color: var(--color-text-secondary); font: 500 .8125rem/1.4 var(--font-family-body); }
+.settings-status-dot { width: .5rem; height: .5rem; flex: none; border: 1px solid currentColor; border-radius: 50%; }
+.settings-status-dot.is-dirty { background: currentColor; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion="true"]) button:not(:disabled):hover { transform: translateY(-1px); }
+}

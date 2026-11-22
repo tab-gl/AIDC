@@ -24,7 +24,7 @@ import { API_ORIGIN, api } from "./lib/api";
 import { reconcileApplications } from "./lib/applications";
 import { haptic } from "./lib/haptics";
 import { navigate, readRoute, routes, type RouteId } from "./lib/navigation";
-import { usePreferences } from "./lib/prefs";
+import { usePreferences, type Preferences } from "./lib/prefs";
 import type { Application, Quota, User } from "./types";
 
 const CommandPalette = lazy(() => import("@astryxdesign/core/CommandPalette").then((m) => ({ default: m.CommandPalette })));
@@ -47,6 +47,13 @@ function connectionMessage(error: unknown): string {
 
 export function App() {
   const prefs = usePreferences();
+  const [settingsDraft, setSettingsDraft] = useState<{ base: Preferences; values: Preferences } | null>(null);
+  useEffect(() => {
+    if (!settingsDraft) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [settingsDraft]);
   const [route, setRoute] = useState<RouteId>(readRoute);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -153,7 +160,7 @@ export function App() {
       const d = await api.applications.create({ ...input, application_type: "web" });
       if (epoch !== authEpoch.current) return;
       if (!d.application) throw new Error("The server returned an invalid application.");
-      haptic(8);
+      if (prefs.hapticFeedback) haptic(8);
       appsSeq.current += 1;
       setApplicationsLoading(false); setApplicationsError(null);
       setApplications((c) => [d.application, ...c.filter((a) => a.id !== d.application.id)]);
@@ -170,7 +177,7 @@ export function App() {
     const epoch = authEpoch.current;
     const r = await api.applications.update(id, changes);
     if (epoch !== authEpoch.current) return;
-    haptic(6);
+    if (prefs.hapticFeedback) haptic(6);
     appsSeq.current += 1;
     setApplicationsLoading(false); setApplicationsError(null);
     setApplications((items) => items.map((i) => i.id === id ? { ...i, ...r.application } : i));
@@ -181,7 +188,7 @@ export function App() {
     const epoch = authEpoch.current;
     await api.applications.remove(id);
     if (epoch !== authEpoch.current) return;
-    haptic(8);
+    if (prefs.hapticFeedback) haptic(8);
     appsSeq.current += 1;
     setApplicationsLoading(false); setApplicationsError(null);
     setApplications((items) => items.filter((i) => i.id !== id));
@@ -206,7 +213,7 @@ export function App() {
   };
 
   // The existing AIDC charcoal/neutral palette is also the Material color seed.
-  const frame = (content: ReactNode) => <Theme theme={neutralTheme} mode={prefs.theme}><m3e-theme color="#1b1b1b" variant="monochrome" scheme={prefs.theme === "system" ? "auto" : prefs.theme}>{content}</m3e-theme></Theme>;
+  const frame = (content: ReactNode) => <Theme theme={neutralTheme} mode={prefs.theme}><m3e-theme color="#1b1b1b" variant="monochrome" contrast={prefs.contrast} scheme={prefs.theme === "system" ? "auto" : prefs.theme}>{content}</m3e-theme></Theme>;
 
   // Session checks and backend errors render without the authenticated shell, so no phantom
   // account menu or navigation is shown before the session is known.
@@ -227,7 +234,7 @@ export function App() {
       case "analytics": return <Analytics />;
       case "activity": return <Activity />;
       case "users": return <Users />;
-      case "settings": return <Settings />;
+      case "settings": return <Settings saved={prefs} draft={settingsDraft} onDraftChange={setSettingsDraft} />;
     }
   })();
 

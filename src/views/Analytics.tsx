@@ -15,11 +15,13 @@ import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { RANGES } from "../lib/ranges";
+import { usePreferences } from "../lib/prefs";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
 import type { LoginAnalytics, OperationsAnalytics } from "../types";
 
 export function Analytics() {
-  const [days, setDays] = useState(7);
+  const { defaultRange } = usePreferences();
+  const [days, setDays] = useState<number>(defaultRange);
   const [logins, setLogins] = useState<LoginAnalytics | null>(null);
   const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
   const [loading, setLoading] = useState(true);

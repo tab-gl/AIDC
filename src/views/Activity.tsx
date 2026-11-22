@@ -14,6 +14,7 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { ErrorBanner, LoadingState, Metric, PageHeader, eventDetail, eventLabel } from "../ui/blocks";
 import { RANGES } from "../lib/ranges";
+import { usePreferences } from "../lib/prefs";
 import type { ActivityEvent, LoginAnalytics, OperationsAnalytics } from "../types";
 
 const FILTERS = [{ value: "all", label: "All results" }, { value: "success", label: "Successful" }, { value: "failed", label: "Failed" }];
@@ -22,7 +23,8 @@ export function Activity() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [analytics, setAnalytics] = useState<LoginAnalytics | null>(null);
   const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
-  const [days, setDays] = useState(7);
+  const { defaultRange } = usePreferences();
+  const [days, setDays] = useState<number>(defaultRange);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);

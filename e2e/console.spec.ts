@@ -139,7 +139,7 @@ test("saved theme and reduced motion reach both theme systems", async ({ page })
   await page.goto("/#settings");
   await page.getByText("Dark", { exact: true }).click();
   await page.getByRole("switch", { name: "Reduce motion" }).check();
-  await page.getByRole("button", { name: "Save preferences" }).click();
+  await page.getByRole("button", { name: "Sync preferences" }).click();
   await expect(page.getByText("Preferences saved on this device.")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("html")).toHaveAttribute("data-reduce-motion", "true");
@@ -265,4 +265,74 @@ test("rotated credentials are visible once and cleared on leaving the tab", asyn
   await page.getByRole("tab", { name: "Credentials" }).click();
   await expect(page.getByText("secret-once-only", { exact: true })).toHaveCount(0);
   await expect(page.getByText("secret…", { exact: true })).toBeVisible();
+});
+
+test("settings drafts survive navigation, revert, and sync useful defaults", async ({ page }) => {
+  await mockApi(page);
+  const analyticsRequests: string[] = [];
+  page.on("request", (request) => { if (request.url().includes("/api/analytics/logins")) analyticsRequests.push(request.url()); });
+  await page.goto("/#settings");
+  const theme = page.getByRole("radiogroup", { name: "Theme" });
+  await theme.getByRole("radio", { name: "Dark" }).click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "auto");
+  await page.getByRole("link", { name: "Applications" }).first().click();
+  await page.getByRole("link", { name: "Settings" }).first().click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(theme.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(theme.getByRole("radio", { name: "System" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radiogroup", { name: "Default reporting range" }).getByRole("radio", { name: "30 days" }).click();
+  await page.getByRole("radiogroup", { name: "Text size" }).getByRole("radio", { name: "Large" }).click();
+  await page.getByRole("radiogroup", { name: "Material contrast" }).getByRole("radio", { name: "High" }).click();
+  await page.getByRole("switch", { name: "Haptic feedback" }).uncheck();
+  await page.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("contrast", "high");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("aidc-neo-preferences-v1") || "{}"))).toMatchObject({ defaultRange: 30, hapticFeedback: false });
+  await page.getByRole("link", { name: "Analytics" }).first().click();
+  await expect.poll(() => analyticsRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
+  await page.getByRole("link", { name: "Settings" }).first().click();
+  await page.getByRole("button", { name: "Restore defaults" }).click();
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Text size" }).getByRole("radio", { name: "Large" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("settings avoid overwriting changes from another tab", async ({ page, context }) => {
+  await mockApi(page);
+  await page.goto("/#settings");
+  await page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" }).click();
+  const other = await context.newPage();
+  await mockApi(other);
+  await other.goto("/#settings");
+  await other.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Light" }).click();
+  await other.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.getByText(/Saved preferences changed in another tab/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sync preferences" })).toBeDisabled();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Revert changes" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Light" })).toHaveAttribute("aria-checked", "true");
+  await other.close();
+});
+
+test("failed preference sync keeps the draft available for retry", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/#settings");
+  await page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" }).click();
+  await page.evaluate(() => { Storage.prototype.setItem = () => { throw new Error("Storage denied"); }; });
+  await page.getByRole("button", { name: "Sync preferences" }).click();
+  await expect(page.getByRole("alert")).toContainText("Your changes are still here");
+  await expect(page.getByText(/Unsynced changes/)).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Theme" }).getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("settings controls fit a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await mockApi(page);
+  await page.goto("/#settings");
+  await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+  const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+  expect(widths.content).toBeLessThanOrEqual(widths.viewport);
 });
