@@ -83,3 +83,106 @@ test("preserves the create form when the server rejects an application request",
   await expect(dialog.getByLabel("Description")).toHaveValue("Retain this description after failure");
   await expect(dialog.getByLabel("Origin URL")).toHaveValue("https://app.example.test");
 });
+
+test("failed scope loading cannot overwrite settings and can be retried", async ({ page }) => {
+  await mockApi(page);
+  let attempts = 0;
+  let writes = 0;
+  await page.route(`**/api/applications/${app.id}/scopes`, async (route) => {
+    if (route.request().method() === "PUT") {
+      writes++;
+      await route.fulfill({ json: { scopes: JSON.parse(route.request().postData() || "{}").scopes } });
+    } else if (++attempts === 1) {
+      await route.fulfill({ status: 503, json: { error: "Scopes unavailable" } });
+    } else {
+      await route.fulfill({ json: { scopes: ["openid", "email"] } });
+    }
+  });
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("tab", { name: "Scopes" }).click();
+  await expect(page.getByText(/could not load scopes/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save scopes" })).toHaveCount(0);
+  expect(writes).toBe(0);
+  await page.getByRole("button", { name: "Retry" }).click();
+  await expect(page.getByRole("switch", { name: "email" })).toBeChecked();
+  await page.getByRole("button", { name: "Save scopes" }).click();
+  await expect(page.getByText("Scopes saved.")).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test("application creation shows confirmation and refreshes the list", async ({ page }) => {
+  await mockApi(page);
+  let created = false;
+  const newApp = { ...app, id: "new-app", name: "New identity app" };
+  await page.route("**/api/applications", async (route) => {
+    if (route.request().method() === "POST") {
+      created = true;
+      await route.fulfill({ json: { application: newApp } });
+    } else {
+      await route.fulfill({ json: { applications: created ? [newApp, app] : [app] } });
+    }
+  });
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Create application" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Create an application" });
+  await dialog.getByLabel("Application name").fill("New identity app");
+  await dialog.getByRole("button", { name: "Create application", exact: true }).click();
+  await expect(page.getByText("Application “New identity app” created.")).toBeVisible();
+  await expect(page.getByText("New identity app", { exact: true })).toBeVisible();
+});
+
+test("saved theme and reduced motion reach both theme systems", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/#settings");
+  await page.getByText("Dark", { exact: true }).click();
+  await page.getByRole("switch", { name: "Reduce motion" }).check();
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(page.getByText("Preferences saved on this device.")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-reduce-motion", "true");
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "dark");
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("color", "#1b1b1b");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-reduce-motion", "true");
+  await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "dark");
+});
+
+test("loads drawer sections on demand and keeps the saved app open during a stale refresh", async ({ page }) => {
+  await mockApi(page);
+  let scopeReads = 0;
+  await page.route(`**/api/applications/${app.id}/scopes`, async (route) => {
+    scopeReads++;
+    await route.fulfill({ json: { scopes: ["openid"] } });
+  });
+  await page.route(`**/api/applications/${app.id}`, async (route) => {
+    await route.fulfill({ json: { application: { ...app, name: "Updated app" } } });
+  });
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await expect(page.getByRole("button", { name: "Edit application" })).toBeVisible();
+  expect(scopeReads).toBe(0);
+  await page.getByRole("button", { name: "Edit application" }).click();
+  await page.getByLabel("Application name").fill("Updated app");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByText("Application updated.")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Updated app settings" })).toBeVisible();
+  await page.getByRole("tab", { name: "Scopes" }).click();
+  await expect(page.getByRole("switch", { name: "openid" })).toBeVisible();
+  expect(scopeReads).toBe(1);
+});
+
+test("diagnostics report partial failures without misreporting API health", async ({ page }) => {
+  await mockApi(page);
+  await page.route("**/api/integration/discovery", (route) => route.fulfill({ status: 503, json: { error: "unavailable" } }));
+  await page.goto("/#settings");
+  await expect(page.getByText(/Could not check Ace ID discovery/)).toBeVisible();
+  await expect(page.getByText("Healthy", { exact: true })).toBeVisible();
+});
+
+test("daily sign-in values remain accessible", async ({ page }) => {
+  await mockApi(page);
+  await page.route("**/api/analytics/logins**", (route) => route.fulfill({ json: { days: 7, items: [{ date: "2026-10-01", count: 8, uniqueUsers: 4, failedAttempts: 0 }], total: 8, failedAttempts: 0, uniqueUsers: 4 } }));
+  await page.goto("/#analytics");
+  await expect(page.getByRole("progressbar", { name: "2026-10-01: 8 sign-ins" })).toBeVisible();
+});

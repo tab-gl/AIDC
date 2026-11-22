@@ -1,22 +1,27 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Activity01Icon, Add01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Settings01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { AppShell } from "@astryxdesign/core/AppShell";
 import { Avatar } from "@astryxdesign/core/Avatar";
+import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
+import { Center } from "@astryxdesign/core/Center";
 import { DropdownMenu, DropdownMenuItem } from "@astryxdesign/core/DropdownMenu";
+import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
 import { Theme } from "@astryxdesign/core/theme";
 import { TopNav } from "@astryxdesign/core/TopNav";
+import { VStack } from "@astryxdesign/core/VStack";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { Landing } from "./components/Landing";
 import { Overview } from "./views/Overview";
 import { Applications } from "./views/Applications";
-import { ErrorBanner, LoadingState } from "./ui/blocks";
+import { LoadingState } from "./ui/blocks";
 import { API_ORIGIN, api } from "./lib/api";
+import { reconcileApplications } from "./lib/applications";
 import { haptic } from "./lib/haptics";
 import { navigate, readRoute, routes, type RouteId } from "./lib/navigation";
 import { usePreferences } from "./lib/prefs";
@@ -47,7 +52,7 @@ export function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [applicationsError, setApplicationsError] = useState<string | null>(null);
   const [quota, setQuota] = useState<Quota | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -56,41 +61,53 @@ export function App() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [logoutBusy, setLogoutBusy] = useState(false);
+  const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const authEpoch = useRef(0);
+  const bootSeq = useRef(0);
+  const appsSeq = useRef(0);
+  const quotaSeq = useRef(0);
   const selected = useMemo(() => applications.find((a) => a.id === selectedId) ?? null, [applications, selectedId]);
 
   const clearAuthenticatedState = useCallback(() => {
     authEpoch.current += 1;
-    setUser(null); setApplications([]); setQuota(null); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false);
+    setUser(null); setApplications([]); setQuota(null); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null);
   }, []);
   const loadQuota = useCallback(async () => {
+    const seq = ++quotaSeq.current;
     const epoch = authEpoch.current;
-    try { const d = await api.quota.get(); if (epoch === authEpoch.current) setQuota(d.quota ?? null); }
-    catch { if (epoch === authEpoch.current) setQuota(null); }
+    try { const d = await api.quota.get(); if (seq === quotaSeq.current && epoch === authEpoch.current) setQuota(d.quota ?? null); }
+    catch { if (seq === quotaSeq.current && epoch === authEpoch.current) setQuota(null); }
   }, []);
-  const loadApplications = useCallback(async () => {
+  const loadApplications = useCallback(async (reconcile?: { upsert?: Application; removedId?: string }) => {
+    const seq = ++appsSeq.current;
     const epoch = authEpoch.current;
     setApplicationsLoading(true); setApplicationsError(null);
     try {
       const d = await api.applications.list();
-      if (epoch === authEpoch.current) setApplications(Array.isArray(d.applications) ? d.applications : []);
+      if (!Array.isArray(d?.applications)) throw new Error("The server returned an invalid application list.");
+      if (seq === appsSeq.current && epoch === authEpoch.current) {
+        setApplications(reconcileApplications(d.applications, reconcile));
+      }
     } catch (error) {
-      if (epoch === authEpoch.current) setApplicationsError(error instanceof Error ? error.message : "Failed to load applications.");
-    } finally { if (epoch === authEpoch.current) setApplicationsLoading(false); }
+      if (seq === appsSeq.current && epoch === authEpoch.current) setApplicationsError(error instanceof Error ? error.message : "Failed to load applications.");
+    } finally { if (seq === appsSeq.current && epoch === authEpoch.current) setApplicationsLoading(false); }
   }, []);
   const bootstrap = useCallback(async () => {
+    const seq = ++bootSeq.current;
+    const epoch = authEpoch.current;
     setAuthLoading(true); setAuthError(null);
     try {
       const session = await api.auth.me();
+      if (seq !== bootSeq.current || epoch !== authEpoch.current) return;
       if (!session || typeof session !== "object" || !("user" in session)) {
         throw new Error("The AIDC API returned an invalid session response. Check the API proxy and backend configuration.");
       }
       setUser(session.user ?? null);
-    }
-    catch (error) {
+    } catch (error) {
+      if (seq !== bootSeq.current || epoch !== authEpoch.current) return;
       if ((error as { status?: number }).status !== 401) setAuthError(connectionMessage(error));
       clearAuthenticatedState();
-    } finally { setAuthLoading(false); }
+    } finally { if (seq === bootSeq.current) setAuthLoading(false); }
   }, [clearAuthenticatedState]);
 
   useEffect(() => { void bootstrap(); }, [bootstrap]);
@@ -120,36 +137,57 @@ export function App() {
   const signOut = async () => {
     if (logoutBusy) return;
     setLogoutBusy(true);
-    try { await api.auth.logout(); } catch { /* Clear the local view even if the session already expired. */ }
-    clearAuthenticatedState();
-    window.location.replace("/");
+    try {
+      await api.auth.logout();
+      clearAuthenticatedState();
+      window.location.replace("/");
+    } catch (error) {
+      if ((error as { status?: number }).status !== 401) setNotice({ kind: "error", text: "Could not sign out. Please try again." });
+    } finally { setLogoutBusy(false); }
   };
   const openCreate = () => { setCreateError(null); setCreateOpen(true); };
   const createApplication = async (input: { name: string; description: string; origin_url?: string }) => {
+    const epoch = authEpoch.current;
     setCreateBusy(true); setCreateError(null);
     try {
       const d = await api.applications.create({ ...input, application_type: "web" });
+      if (epoch !== authEpoch.current) return;
       if (!d.application) throw new Error("The server returned an invalid application.");
       haptic(8);
-      setApplications((c) => [d.application, ...c]);
+      appsSeq.current += 1;
+      setApplicationsLoading(false); setApplicationsError(null);
+      setApplications((c) => [d.application, ...c.filter((a) => a.id !== d.application.id)]);
       setCreateOpen(false);
-      void loadQuota();
+      setNotice({ kind: "success", text: `Application “${d.application.name}” created.` });
+      void loadApplications({ upsert: d.application }); void loadQuota();
     } catch (error) {
+      if (epoch !== authEpoch.current) return;
       const t = error as { message?: string; data?: { error?: string } };
       setCreateError(t.data?.error || t.message || "Failed to create application.");
     } finally { setCreateBusy(false); }
   };
   const updateApplication = async (id: string, changes: Changes) => {
+    const epoch = authEpoch.current;
     const r = await api.applications.update(id, changes);
+    if (epoch !== authEpoch.current) return;
     haptic(6);
+    appsSeq.current += 1;
+    setApplicationsLoading(false); setApplicationsError(null);
     setApplications((items) => items.map((i) => i.id === id ? { ...i, ...r.application } : i));
+    const previous = applications.find((item) => item.id === id);
+    if (previous) void loadApplications({ upsert: { ...previous, ...r.application } });
   };
   const deleteApplication = async (id: string) => {
+    const epoch = authEpoch.current;
     await api.applications.remove(id);
+    if (epoch !== authEpoch.current) return;
     haptic(8);
+    appsSeq.current += 1;
+    setApplicationsLoading(false); setApplicationsError(null);
     setApplications((items) => items.filter((i) => i.id !== id));
     setSelectedId(null);
-    void loadQuota();
+    setNotice({ kind: "success", text: "Application deleted." });
+    void loadApplications({ removedId: id }); void loadQuota();
   };
 
   const userName = user?.name || user?.email || "Developer";
@@ -167,12 +205,25 @@ export function App() {
     else if (value.startsWith("route:")) navigate(value.slice(6) as RouteId);
   };
 
+  // The existing AIDC charcoal/neutral palette is also the Material color seed.
+  const frame = (content: ReactNode) => <Theme theme={neutralTheme} mode={prefs.theme}><m3e-theme color="#1b1b1b" variant="monochrome" scheme={prefs.theme === "system" ? "auto" : prefs.theme}>{content}</m3e-theme></Theme>;
+
+  // Session checks and backend errors render without the authenticated shell, so no phantom
+  // account menu or navigation is shown before the session is known.
+  if (authLoading) return frame(<Center minHeight="100dvh" padding={4}><LoadingState title="Connecting to Ace ID" text="Checking the current session." /></Center>);
+  if (authError) return frame(<Center minHeight="100dvh" padding={4}>
+    <VStack gap={4} width="100%" maxWidth={560}>
+      <HStack gap={2} vAlign="center"><img src="/assets/icon.png" alt="" width={32} height={32} /><Heading level={1} type="display-3">AIDC</Heading></HStack>
+      <Banner status="error" title="The console can't reach Ace ID" description={authError} endContent={<Button label="Retry" onClick={() => void bootstrap()} />} />
+      <Button label="Continue with Ace ID" variant="primary" onClick={signIn} />
+    </VStack>
+  </Center>);
+  if (!user) return frame(<Landing onSignIn={signIn} />);
+
   const page = (() => {
-    if (authLoading) return <LoadingState title="Connecting to Ace ID" text="Checking the current session." />;
-    if (authError) return <ErrorBanner message={authError} onRetry={() => void bootstrap()} />;
     switch (route) {
-      case "overview": return <Overview applications={applications} quota={quota} signedIn={Boolean(user)} showTips={prefs.showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreate} />;
-      case "applications": return <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn={Boolean(user)} onRetry={() => void loadApplications()} onCreate={openCreate} onOpen={(a) => setSelectedId(a.id)} />;
+      case "overview": return <Overview applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} quota={quota} signedIn showTips={prefs.showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreate} />;
+      case "applications": return <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn onRetry={() => void loadApplications()} onCreate={openCreate} onOpen={(a) => setSelectedId(a.id)} />;
       case "analytics": return <Analytics />;
       case "activity": return <Activity />;
       case "users": return <Users />;
@@ -180,32 +231,30 @@ export function App() {
     }
   })();
 
-  const signedOut = !authLoading && !authError && !user;
-  return <Theme theme={neutralTheme} mode={prefs.theme}>
-    <m3e-theme>
-      {signedOut ? <Landing onSignIn={signIn} /> : <>
-        <AppShell contentPadding={5}
-          sideNav={<SideNav header={<SideNavHeading heading="AIDC" subheading="Developer console" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
-            <SideNavSection title="Console">
-              {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
-            </SideNavSection>
-          </SideNav>}
-          topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
-            <Button label="Search" onClick={() => setCommandOpen(true)} icon={<Icon icon="search" />} />
-            <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Account menu" variant="ghost" icon={<Avatar name={userName} src={user?.picture || user?.avatar_url || undefined} size="sm" tooltip={false} />} />}>
-              <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
-              <DropdownMenuItem label="Account" icon="externalLink" href="https://identity.ace-base.cc/account" target="_blank" rel="noreferrer" />
-              <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
-            </DropdownMenu>
-          </HStack>} />}>
-          <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
-        </AppShell>
-        <Suspense fallback={null}>
-          {commandOpen && <CommandPalette isOpen onOpenChange={setCommandOpen} searchSource={searchSource} onValueChange={onCommand} label="Command palette" />}
-          {createOpen && <CreateApplicationModal open busy={createBusy} error={createError} onClose={() => !createBusy && setCreateOpen(false)} onCreate={createApplication} />}
-          {selected && <ApplicationDrawer application={selected} onClose={() => setSelectedId(null)} onUpdate={updateApplication} onDelete={deleteApplication} />}
-        </Suspense>
-      </>}
-    </m3e-theme>
-  </Theme>;
+  return frame(<>
+    <AppShell contentPadding={5}
+      sideNav={<SideNav header={<SideNavHeading heading="AIDC" subheading="Developer console" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
+        <SideNavSection title="Console">
+          {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
+        </SideNavSection>
+      </SideNav>}
+      topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
+        <Button label="Search" onClick={() => setCommandOpen(true)} icon={<Icon icon="search" />} />
+        <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Account menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
+          <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
+          <DropdownMenuItem label="Account" icon="externalLink" href="https://identity.ace-base.cc/account" target="_blank" rel="noreferrer" />
+          <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
+        </DropdownMenu>
+      </HStack>} />}>
+      <VStack gap={4}>
+        {notice && <div role={notice.kind === "error" ? "alert" : "status"}><Banner status={notice.kind} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
+        <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
+      </VStack>
+    </AppShell>
+    <Suspense fallback={null}>
+      {commandOpen && <CommandPalette isOpen onOpenChange={setCommandOpen} searchSource={searchSource} onValueChange={onCommand} label="Command palette" />}
+      {createOpen && <CreateApplicationModal open busy={createBusy} error={createError} onClose={() => !createBusy && setCreateOpen(false)} onCreate={createApplication} />}
+      {selected && <ApplicationDrawer application={selected} onClose={() => setSelectedId(null)} onUpdate={updateApplication} onDelete={deleteApplication} />}
+    </Suspense>
+  </>);
 }

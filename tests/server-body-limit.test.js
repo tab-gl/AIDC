@@ -74,7 +74,9 @@ afterAll(async () => {
 });
 
 for (const [name, makeRequest] of [
-  ["declared content length", () => post("/api/test", { declaredLength: MAX_BODY_BYTES + 1, chunks: [Buffer.alloc(MAX_BODY_BYTES + 1)] })],
+  // The server must reject based on headers alone; sending the body as well races
+  // the intentional connection close and can produce a client-side EPIPE.
+  ["declared content length", () => post("/api/test", { declaredLength: MAX_BODY_BYTES + 1, chunks: [] })],
   ["chunked request body", () => post("/api/test", { chunks: [Buffer.alloc(MAX_BODY_BYTES), Buffer.from("x")] })]
 ]) {
   test(`rejects an oversized ${name} before proxying`, async () => {

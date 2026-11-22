@@ -4,6 +4,8 @@ import "@astryxdesign/theme-neutral/fonts.css";
 import "@astryxdesign/core/reset.css";
 import "@astryxdesign/core/astryx.css";
 import "@astryxdesign/theme-neutral/theme.css";
+import "@m3e/web/theme";
+import "@m3e/web/loading-indicator";
 import "./app.css";
 import { App } from "./App";
 
