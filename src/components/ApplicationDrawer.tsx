@@ -162,7 +162,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
     </VStack>,
     credentials: <VStack gap={4}>
       <Text color="secondary">Secrets are stored as hashes. A newly rotated secret is shown once and cannot be retrieved later.</Text>
-      {freshSecret && <Banner status="success" title="New client secret" description="Store it securely now. Leaving this tab clears it from the screen."
+      {freshSecret && <Banner status="success" title="New client secret" description="Store it securely now. Leaving this tab clears it from the screen." collapsible={false}
         endContent={<Button label="Copy secret" onClick={() => copy(freshSecret, "Client secret copied.", "Clipboard unavailable. Select and copy the secret manually.")} />}><Code>{freshSecret}</Code></Banner>}
       <Button label="Rotate client secret" variant="primary" isLoading={busy} onClick={() => ask({ title: "Rotate credentials?", description: "All currently active credentials will be revoked.", action: "Rotate", run: () => void rotate() })} />
       {credentials.length ? <VStack gap={0}>{credentials.map((c) => <Item key={c.id} label={<Code>{c.secret_prefix}…</Code>}

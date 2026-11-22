@@ -56,6 +56,8 @@ test("loads the signed-in console and filters applications", async ({ page }) =>
   await expect(page.getByRole("heading", { name: /no applications match/i })).toBeVisible();
   await search.fill("Example identity");
   await expect(page.getByText("Example identity app")).toBeVisible();
+  await search.fill("aidc_test_client");
+  await expect(page.getByText("Example identity app")).toBeVisible();
 });
 
 test("returns to the signed-out overview when an authenticated API call expires", async ({ page }) => {
@@ -203,3 +205,64 @@ for (const width of [320, 390, 1440]) {
     expect(widths.content).toBeLessThanOrEqual(widths.viewport);
   });
 }
+
+test("invalid session responses show a recoverable error", async ({ page }) => {
+  await mockApi(page);
+  let recovered = false;
+  await page.route("**/api/me", (route) => route.fulfill({ json: recovered ? { user: { id: "dev-1", name: "Developer" } } : {} }));
+  await page.goto("/");
+  await expect(page.getByText(/invalid session response/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  recovered = true;
+  await page.getByRole("button", { name: "Retry" }).click();
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+});
+
+test("redirect URIs can be added and removed only after confirmation", async ({ page }) => {
+  await mockApi(page);
+  const uri = "https://app.example.test/auth/callback";
+  let removed = false;
+  await page.route(`**/api/applications/${app.id}/redirect-uris`, async (route) => {
+    if (route.request().method() === "POST") {
+      expect(JSON.parse(route.request().postData() || "{}")).toEqual({ uri });
+      await route.fulfill({ json: { redirect_uri: { id: "uri-1", application_id: app.id, uri } } });
+    } else {
+      await route.fulfill({ json: { redirect_uris: [] } });
+    }
+  });
+  await page.route(`**/api/applications/${app.id}/redirect-uris/uri-1`, async (route) => {
+    removed = true;
+    await route.fulfill({ json: { deleted: true } });
+  });
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("tab", { name: "Redirect URIs" }).click();
+  await page.getByRole("textbox", { name: "New redirect URI" }).fill(uri);
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByText("Redirect URI added.")).toBeVisible();
+  await expect(page.getByText(uri, { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Remove", exact: true }).click();
+  const confirmation = page.getByRole("alertdialog", { name: "Remove this redirect URI?" });
+  await expect(confirmation).toBeVisible();
+  expect(removed).toBe(false);
+  await confirmation.getByRole("button", { name: "Remove", exact: true }).click();
+  await expect(page.getByText("Redirect URI removed.")).toBeVisible();
+  await expect(page.getByText(uri, { exact: true })).toHaveCount(0);
+  expect(removed).toBe(true);
+});
+
+test("rotated credentials are visible once and cleared on leaving the tab", async ({ page }) => {
+  await mockApi(page);
+  await page.route(`**/api/applications/${app.id}/credentials`, (route) => route.fulfill({ json: { credentials: [] } }));
+  await page.route(`**/api/applications/${app.id}/credentials/rotate`, (route) => route.fulfill({ json: { credential: { id: "credential-1", application_id: app.id, secret_prefix: "secret", secret: "secret-once-only", created_at: "2026-10-01T12:00:00Z" } } }));
+  await page.goto("/#applications");
+  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("tab", { name: "Credentials" }).click();
+  await page.getByRole("button", { name: "Rotate client secret" }).click();
+  await page.getByRole("alertdialog", { name: "Rotate credentials?" }).getByRole("button", { name: "Rotate", exact: true }).click();
+  await expect(page.getByText("secret-once-only", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Overview" }).click();
+  await page.getByRole("tab", { name: "Credentials" }).click();
+  await expect(page.getByText("secret-once-only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("secret…", { exact: true })).toBeVisible();
+});

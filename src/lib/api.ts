@@ -45,7 +45,12 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal: controller.signal
     });
 
-    const data = (await response.json().catch(() => null)) as unknown;
+    const data = (await response.json().catch((error: unknown) => {
+      // Empty or non-JSON responses are allowed, but an interrupted body is not
+      // a successful empty response. Preserve aborts for the outer handler.
+      if (controller.signal.aborted) throw error;
+      return null;
+    })) as unknown;
     if (!response.ok) {
       const payload = data as { error?: string; code?: string } | null;
       const friendly = response.status >= 500

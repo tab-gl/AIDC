@@ -17,7 +17,7 @@ export function Applications({ applications, loading, error, signedIn, onRetry, 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
     if (!needle) return applications;
-    return applications.filter((app) => [app.name, app.description, app.origin_url, app.id].some((v) => String(v || "").toLocaleLowerCase().includes(needle)));
+    return applications.filter((app) => [app.name, app.description, app.origin_url, app.id, app.client_id].some((v) => String(v || "").toLocaleLowerCase().includes(needle)));
   }, [applications, query]);
 
   return <VStack gap={5}>
