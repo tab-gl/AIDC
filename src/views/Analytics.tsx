@@ -11,6 +11,7 @@ import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
+import { M3Progress } from "../ui/m3e";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
 import type { LoginAnalytics, OperationsAnalytics } from "../types";
 
@@ -53,11 +54,11 @@ export function Analytics() {
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Daily sign-ins</Heading>
         {loading && !logins ? <LoadingState title="Loading trends" /> : daily.length
-          ? <div className="bars" role="img" aria-label="Daily successful sign-ins bar chart">
-            {daily.map((i) => <div className="bar" key={i.date} title={`${i.date}: ${i.count} logins`}>
+          ? <div className="chart" role="img" aria-label="Daily successful sign-ins">
+            {daily.map((i) => <div className="chart-row" key={i.date} title={`${i.date}: ${i.count} logins`}>
+              <Text type="supporting" color="secondary" hasTabularNumbers>{new Date(`${i.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</Text>
+              <M3Progress value={i.count} max={peak} label={`${i.date}: ${i.count} sign-ins`} />
               <Text type="supporting" hasTabularNumbers>{i.count}</Text>
-              <div className="bar-track"><span style={{ height: `${Math.max(4, (i.count / peak) * 100)}%` }} /></div>
-              <Text type="supporting" color="secondary">{new Date(`${i.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</Text>
             </div>)}
           </div>
           : <EmptyState isCompact title="No sign-in data yet" description="Real activity will appear here after users authenticate." />}
