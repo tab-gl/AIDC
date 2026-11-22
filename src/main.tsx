@@ -1,12 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "@astryxdesign/theme-neutral/fonts.css";
+import "@astryxdesign/core/reset.css";
+import "@astryxdesign/core/astryx.css";
+import "@astryxdesign/theme-neutral/theme.css";
+import "./app.css";
 import { App } from "./App";
-import "./styles.css";
-import "./mobile.css";
-import "./redesign.css";
-import "./fresh-landing.css";
-import "./components/uiverse/uiverse-button.css";
-import "./polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,40 +1,70 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Refresh01Icon } from "@hugeicons/core-free-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { Card } from "@astryxdesign/core/Card";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Grid } from "@astryxdesign/core/Grid";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Item } from "@astryxdesign/core/Item";
+import { Selector } from "@astryxdesign/core/Selector";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { Timestamp } from "@astryxdesign/core/Timestamp";
+import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
-import type { ActivityEvent, LoginAnalytics } from "../types";
+import { ErrorBanner, LoadingState, Metric, PageHeader, eventDetail, eventLabel } from "../ui/blocks";
+import { RANGES } from "./Analytics";
+import type { ActivityEvent, LoginAnalytics, OperationsAnalytics } from "../types";
+
+const FILTERS = [{ value: "all", label: "All results" }, { value: "success", label: "Successful" }, { value: "failed", label: "Failed" }];
 
 export function Activity() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [analytics, setAnalytics] = useState<LoginAnalytics | null>(null);
-  const [operations, setOperations] = useState<import("../types").OperationsAnalytics | null>(null);
+  const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
   const [days, setDays] = useState(7);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true); setError(null);
-    try {
-      const [activityResult, loginResult, operationsResult] = await Promise.allSettled([api.activity.list(100), api.analytics.logins(days), api.analytics.operations(days)]);
-      if (activityResult.status === "rejected") throw activityResult.reason;
-      setEvents(activityResult.value.events || []);
-      setAnalytics(loginResult.status === "fulfilled" ? loginResult.value : null);
-      setOperations(operationsResult.status === "fulfilled" ? operationsResult.value : null);
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not load activity."); }
-    finally { setLoading(false); }
+    const [a, l, o] = await Promise.allSettled([api.activity.list(100), api.analytics.logins(days), api.analytics.operations(days)]);
+    if (a.status === "rejected") setError(a.reason instanceof Error ? a.reason.message : "Could not load activity.");
+    else setEvents(a.value.events || []);
+    setAnalytics(l.status === "fulfilled" ? l.value : null);
+    setOperations(o.status === "fulfilled" ? o.value : null);
+    setLoading(false);
   }, [days]);
   useEffect(() => { void load(); }, [load]);
-  const filtered = useMemo(() => events.filter((event) => {
-    const matchesType = filter === "all" || (filter === "success" ? event.success : !event.success);
-    const haystack = `${event.event_type} ${event.application_name || ""} ${JSON.stringify(event.metadata || {})}`.toLowerCase();
-    return matchesType && haystack.includes(search.toLowerCase());
-  }), [events, filter, search]);
-  return <div className="neo-page">
-    <section className="neo-section-heading"><div><span className="neo-kicker">Observability</span><h2>Activity</h2><p>Real application events and login trends, scoped to applications you own.</p></div><div className="neo-heading-actions"><select aria-label="Login analytics range" value={days} onChange={(e) => setDays(Number(e.target.value))}><option value={7}>7 days</option><option value={14}>14 days</option><option value={30}>30 days</option></select><button className="neo-button neo-button-secondary" onClick={() => void load()} disabled={loading}><HugeiconsIcon icon={Refresh01Icon} size={16} /> Refresh</button></div></section>
-    {error && <div className="neo-form-error" role="alert">{error} <button className="neo-button neo-button-secondary" onClick={() => void load()}>Retry</button></div>}
-    <section className="neo-bento neo-activity-metrics"><article className="neo-panel"><span className="neo-label">Logins</span><strong className="neo-metric">{analytics?.total ?? "—"}</strong><p>Successful identity sessions in the selected window.</p></article><article className="neo-panel"><span className="neo-label">Failed attempts</span><strong className="neo-metric">{analytics?.failedAttempts ?? "—"}</strong><p>Failed login events associated with your applications.</p></article><article className="neo-panel"><span className="neo-label">Active sessions</span><strong className="neo-metric">{operations?.sessions.active ?? "—"}</strong><p>Current sessions associated with your apps.</p></article><article className="neo-panel"><span className="neo-label">Operational apps</span><strong className="neo-metric">{operations ? `${operations.uptime.operational}/${operations.uptime.total}` : "—"}</strong><p>Apps with a successful uptime check in the last 15 minutes.</p></article><article className="neo-panel"><span className="neo-label">Events loaded</span><strong className="neo-metric">{events.length}</strong><p>Most recent application activity records.</p></article></section>
-    <section className="neo-panel"><div className="neo-activity-toolbar"><div><span className="neo-label">Event stream</span><h3>Latest events</h3></div><div className="neo-heading-actions"><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search events" aria-label="Search activity events"/><select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter activity"><option value="all">All results</option><option value="success">Successful</option><option value="failed">Failed</option></select></div></div>
-    {loading ? <div className="neo-state"><span className="neo-spinner"/><strong>Loading activity</strong></div> : filtered.length ? <div className="neo-event-list">{filtered.map((event) => <article className="neo-event" key={event.id}><span className={`neo-event-dot ${event.success ? "is-success" : "is-failed"}`} aria-hidden="true"/><div className="neo-event-main"><strong>{event.event_type.replace(/[._]/g, " ")}</strong><span>{event.application_name || "Application"} · {event.success ? "Succeeded" : "Failed"}</span>{event.metadata && Object.keys(event.metadata).length > 0 && <small>{Object.entries(event.metadata).slice(0, 3).map(([k,v]) => `${k}: ${String(v)}`).join(" · ")}</small>}</div><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></article>)}</div> : <div className="neo-state"><strong>No matching events</strong><span>Activity appears when applications emit events. No demo data is fabricated.</span></div>}</section>
-  </div>;
+
+  const filtered = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return events.filter((e) => (filter === "all" || (filter === "success" ? e.success : !e.success))
+      && `${e.event_type} ${e.application_name || ""} ${JSON.stringify(e.metadata || {})}`.toLowerCase().includes(needle));
+  }, [events, filter, search]);
+
+  return <VStack gap={5}>
+    <PageHeader eyebrow="Observability" title="Activity" description="Real application events and login trends, scoped to applications you own."
+      actions={<><Selector label="Range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
+    {error && <ErrorBanner message={error} onRetry={() => void load()} />}
+    <Grid columns={{ minWidth: 190 }} gap={4}>
+      <Metric label="Logins" value={analytics?.total ?? "—"} hint="Successful sessions in the window." />
+      <Metric label="Failed attempts" value={analytics?.failedAttempts ?? "—"} hint="Failed logins on your apps." />
+      <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Current sessions on your apps." />
+      <Metric label="Operational apps" value={operations ? `${operations.uptime.operational}/${operations.uptime.total}` : "—"} hint="Successful check in the last 15 minutes." />
+      <Metric label="Events loaded" value={events.length} hint="Most recent records." />
+    </Grid>
+    <Card padding={4}><VStack gap={3}>
+      <HStack gap={3} vAlign="end" className="toolbar">
+        <TextInput label="Search events" isLabelHidden type="search" startIcon="search" hasClear value={search} onChange={setSearch} placeholder="Search events" />
+        <Selector label="Filter" variant="secondary" options={FILTERS} value={filter} onChange={(v) => v && setFilter(v)} />
+      </HStack>
+      {loading ? <LoadingState title="Loading activity" /> : filtered.length
+        ? <VStack gap={0}>{filtered.map((e) => <Item key={e.id} label={eventLabel(e.event_type)}
+          description={<>{e.application_name || "Application"} · {e.success ? "Succeeded" : "Failed"}{eventDetail(e.metadata) && ` · ${eventDetail(e.metadata)}`}</>}
+          startContent={<StatusDot variant={e.success ? "success" : "error"} label={e.success ? "Succeeded" : "Failed"} />} endContent={<Timestamp value={e.created_at} format="auto" />} />)}</VStack>
+        : <EmptyState isCompact title="No matching events" description="Activity appears when applications emit events. No demo data is fabricated." />}
+    </VStack></Card>
+  </VStack>;
 }

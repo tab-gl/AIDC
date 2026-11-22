@@ -47,13 +47,13 @@ async function mockApi(page: import("@playwright/test").Page, options: { expireA
 test("loads the signed-in console and filters applications", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByText("Test Developer")).toBeVisible();
-  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("button", { name: "Applications" }).click();
-  await expect(page.getByRole("heading", { name: "Applications", level: 2 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await page.getByRole("link", { name: "Applications" }).first().click();
+  await expect(page.getByRole("heading", { name: "Applications", level: 1 })).toBeVisible();
   await expect(page.getByText("Example identity app")).toBeVisible();
-  const search = page.getByRole("textbox", { name: "Search applications" });
+  const search = page.getByRole("searchbox", { name: "Search applications" });
   await search.fill("not a match");
-  await expect(page.getByText(/no applications match/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /no applications match/i })).toBeVisible();
   await search.fill("Example identity");
   await expect(page.getByText("Example identity app")).toBeVisible();
 });
@@ -61,24 +61,24 @@ test("loads the signed-in console and filters applications", async ({ page }) =>
 test("returns to the signed-out overview when an authenticated API call expires", async ({ page }) => {
   await mockApi(page, { expireAnalytics: true });
   await page.goto("/");
-  await expect(page.getByText("Test Developer")).toBeVisible();
-  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("button", { name: "Analytics" }).click();
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await page.getByRole("link", { name: "Analytics" }).first().click();
   await expect(page.getByRole("button", { name: /continue with ace id/i }).first()).toBeVisible();
-  await expect(page.getByText("Test Developer")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
 });
 
 
 test("preserves the create form when the server rejects an application request", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByText("Test Developer")).toBeVisible();
-  await page.getByRole("button", { name: "Create application" }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Create a real client" });
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await page.getByRole("button", { name: "New application" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Create an application" });
   await dialog.getByLabel("Application name").fill("Keep this value");
   await dialog.getByLabel("Description").fill("Retain this description after failure");
   await dialog.getByLabel("Origin URL").fill("https://app.example.test");
   await dialog.getByRole("button", { name: "Create application", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Application service unavailable");
+  await expect(dialog.getByText("Application service unavailable")).toBeVisible();
   await expect(dialog.getByLabel("Application name")).toHaveValue("Keep this value");
   await expect(dialog.getByLabel("Description")).toHaveValue("Retain this description after failure");
   await expect(dialog.getByLabel("Origin URL")).toHaveValue("https://app.example.test");

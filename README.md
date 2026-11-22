@@ -20,6 +20,10 @@ By default, the Vite development server proxies `/api` and `/auth` to `http://lo
 
 See the [AIDC documentation](https://docs.ace-base.cc/projects/aidc) for setup and API integration guidance.
 
+## UI stack
+
+The console UI is built on [Astryx](https://www.npmjs.com/package/@astryxdesign/core) (`@astryxdesign/core` + `theme-neutral`) for layout, navigation, forms, dialogs, drawers and the command palette, with [`@m3e/web`](https://www.npmjs.com/package/@m3e/web) Material 3 Expressive web components for switches, loading and progress indicators. Theme (system/light/dark) is chosen in Settings. Run the browser tests with `npm run test:e2e` (set `CHROMIUM_PATH` to use a pre-installed Chromium).
+
 ## Vercel deployment
 
 - Import this repository into Vercel with the project root at the repository root. The vercel.json file configures the Vite build, SPA fallback, and same-origin /api + /auth proxy routes.

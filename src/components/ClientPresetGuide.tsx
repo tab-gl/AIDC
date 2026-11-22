@@ -1,8 +1,18 @@
 import { useMemo, useState } from "react";
-import type { Application, RedirectUri } from "../types";
+import { Button } from "@astryxdesign/core/Button";
+import { CodeBlock } from "@astryxdesign/core/CodeBlock";
+import { Heading } from "@astryxdesign/core/Heading";
+import { Item } from "@astryxdesign/core/Item";
+import { Selector } from "@astryxdesign/core/Selector";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
 import { copyText } from "../lib/copy";
+import type { Application, RedirectUri } from "../types";
 
 type Preset = "react-vite" | "nextjs" | "vanilla" | "mobile";
+const PRESETS = [{ value: "react-vite", label: "React + Vite" }, { value: "nextjs", label: "Next.js" }, { value: "vanilla", label: "Vanilla web" }, { value: "mobile", label: "Mobile client" }];
+
 export function ClientPresetGuide({ application, redirects, scopes, onStatus }: { application: Application; redirects: RedirectUri[]; scopes: string[]; onStatus: (message: string) => void }) {
   const [preset, setPreset] = useState<Preset>("react-vite");
   const origin = application.origin_url?.replace(/\/$/, "") || "";
@@ -14,29 +24,29 @@ export function ClientPresetGuide({ application, redirects, scopes, onStatus }: 
     if (preset === "vanilla") return `const clientId = "${clientId}";\nconst redirectUri = "${redirect}";\n// Authorization Code + PKCE. Never embed a client secret.`;
     return `clientId: "${clientId}"\nredirectUri: "${redirect}"\n// Use the system browser + Authorization Code + PKCE.\n// Register a reverse-domain scheme or verified app link.`;
   }, [application.client_id, preset, redirect]);
-  const productionOriginIsConfigured = useMemo(() => {
-    try {
-      const parsed = new URL(origin);
-      const hostname = parsed.hostname.toLowerCase().replace(/\.$/, "");
-      const isExampleDomain = hostname === "example.com" || hostname.endsWith(".example.com");
-      return parsed.protocol === "https:" && hostname.length > 0 && !isExampleDomain;
-    } catch {
-      return false;
-    }
+  const httpsOrigin = useMemo(() => {
+    try { const u = new URL(origin); const h = u.hostname.toLowerCase().replace(/\.$/, ""); return u.protocol === "https:" && !!h && h !== "example.com" && !h.endsWith(".example.com"); } catch { return false; }
   }, [origin]);
   const checks = [
-    { label: "Production origin uses HTTPS", ok: productionOriginIsConfigured },
-    { label: "Callback URI registered exactly", ok: redirects.some((item) => item.uri === redirect) },
+    { label: "Production origin uses HTTPS", ok: httpsOrigin },
+    { label: "Callback URI registered exactly", ok: redirects.some((r) => r.uri === redirect) },
     { label: "openid scope enabled", ok: scopes.includes("openid") },
     { label: "Client type and redirect flow reviewed", ok: false },
     { label: "Callback handles state, PKCE and provider errors", ok: false }
   ];
-  return <section className="neo-drawer-section neo-preset-guide">
-    <p>Generate a starter configuration for your client stack. Confirm the actual issuer and callback route before launch.</p>
-    <label className="neo-field-label">Client preset<select value={preset} onChange={(event) => setPreset(event.target.value as Preset)}><option value="react-vite">React + Vite</option><option value="nextjs">Next.js</option><option value="vanilla">Vanilla web</option><option value="mobile">Mobile client</option></select></label>
-    <h3>Redirect URI</h3><div className="neo-preset-copy"><code>{redirect}</code><button className="neo-button neo-button-secondary" onClick={() => void copyText(redirect).then((ok) => onStatus(ok ? "Redirect URI copied." : "Clipboard unavailable. Select and copy the URI manually."))}>Copy</button></div>
-    <h3>SDK and environment starter</h3><pre className="neo-code-block"><code>{snippet}</code></pre><button className="neo-button neo-button-secondary" onClick={() => void copyText(snippet).then((ok) => onStatus(ok ? "Setup snippet copied." : "Clipboard unavailable. Select and copy the snippet manually."))}>Copy setup</button>
-    <h3>Pre-launch checklist</h3><ul className="neo-launch-checklist">{checks.map((check) => <li key={check.label}><span aria-hidden="true">{check.ok ? "✓" : "○"}</span><span>{check.label}</span><strong>{check.ok ? "Ready" : "Review"}</strong></li>)}</ul>
-    <p className="neo-muted">Review items require manual or integration-level verification. This guide does not claim to test an external callback.</p>
-  </section>;
+  const copy = (value: string, done: string, fail: string) => void copyText(value).then((ok) => onStatus(ok ? done : fail));
+
+  return <VStack gap={4}>
+    <Text color="secondary">Generate a starter configuration for your client stack. Confirm the actual issuer and callback route before launch.</Text>
+    <Selector label="Client preset" options={PRESETS} value={preset} onChange={(v) => v && setPreset(v as Preset)} />
+    <Heading level={3}>Redirect URI</Heading>
+    <CodeBlock code={redirect} language="text" />
+    <Button label="Copy redirect URI" onClick={() => copy(redirect, "Redirect URI copied.", "Clipboard unavailable. Select and copy the URI manually.")} />
+    <Heading level={3}>Environment starter</Heading>
+    <CodeBlock code={snippet} language="bash" />
+    <Button label="Copy setup" onClick={() => copy(snippet, "Setup snippet copied.", "Clipboard unavailable. Select and copy the snippet manually.")} />
+    <Heading level={3}>Pre-launch checklist</Heading>
+    <VStack gap={0}>{checks.map((c) => <Item key={c.label} label={c.label} startContent={<StatusDot variant={c.ok ? "success" : "warning"} label={c.ok ? "Ready" : "Needs review"} />} description={c.ok ? "Ready" : "Review"} />)}</VStack>
+    <Text type="supporting" color="secondary">Review items need manual or integration-level verification. This guide does not test an external callback.</Text>
+  </VStack>;
 }

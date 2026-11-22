@@ -1,60 +1,198 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { AlertDialog } from "@astryxdesign/core/AlertDialog";
+import { Avatar } from "@astryxdesign/core/Avatar";
+import { Badge } from "@astryxdesign/core/Badge";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Code } from "@astryxdesign/core/Code";
+import { Drawer } from "@astryxdesign/core/Drawer";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Icon } from "@astryxdesign/core/Icon";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Item } from "@astryxdesign/core/Item";
+import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
+import { Selector } from "@astryxdesign/core/Selector";
+import { StatusDot } from "@astryxdesign/core/StatusDot";
+import { Tab, TabList } from "@astryxdesign/core/TabList";
+import { Text } from "@astryxdesign/core/Text";
+import { TextArea } from "@astryxdesign/core/TextArea";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { Timestamp } from "@astryxdesign/core/Timestamp";
+import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { copyText } from "../lib/copy";
+import { M3Switch } from "../ui/m3e";
+import { Metric, eventDetail, eventLabel } from "../ui/blocks";
 import { ClientPresetGuide } from "./ClientPresetGuide";
-import type { AppBranding, AppCredential, Application, RedirectUri, SessionRecord, UptimeReport } from "../types";
+import type { ActivityEvent, AppBranding, AppCredential, Application, RedirectUri, SessionRecord, UptimeReport } from "../types";
+
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 type Props = { application: Application | null; onClose: () => void; onUpdate: (id: string, changes: Changes) => Promise<void>; onDelete: (id: string) => Promise<void> };
+type TabId = "overview" | "setup" | "redirects" | "scopes" | "credentials" | "branding" | "monitoring" | "events";
+const TABS: [TabId, string][] = [["overview", "Overview"], ["setup", "Setup"], ["redirects", "Redirect URIs"], ["scopes", "Scopes"], ["credentials", "Credentials"], ["branding", "Branding"], ["monitoring", "Monitoring"], ["events", "Events"]];
+const SCOPE_INFO = { openid: "Required for OIDC identity", profile: "Basic profile claims", email: "Email address and verification status" } as const;
+const HISTORY = [{ value: "7", label: "7 days" }, { value: "14", label: "14 days" }, { value: "30", label: "30 days" }];
+type Confirm = { title: string; description: string; action: string; run: () => Promise<void> | void };
+const message = (e: unknown, fallback: string) => e instanceof Error ? e.message : fallback;
+
 export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: Props) {
-  const [editing, setEditing] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const [tab, setTab] = useState<TabId>("overview");
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
   const [name, setName] = useState(""); const [description, setDescription] = useState(""); const [origin, setOrigin] = useState("");
-  const [uris, setUris] = useState<RedirectUri[]>([]); const [newUri, setNewUri] = useState(""); const [scopes, setScopes] = useState<string[]>(["openid", "profile", "email"]); const [tab, setTab] = useState<"overview"|"setup"|"redirects"|"scopes"|"credentials"|"branding"|"monitoring"|"events">("overview");
-  const [credentials, setCredentials] = useState<AppCredential[]>([]); const [appEvents, setAppEvents] = useState<import("../types").ActivityEvent[]>([]); const [copyStatus, setCopyStatus] = useState(""); const [sessions, setSessions] = useState<SessionRecord[]>([]); const [uptime, setUptime] = useState<UptimeReport | null>(null); const [uptimeDays, setUptimeDays] = useState(30); const [freshSecret, setFreshSecret] = useState(""); const [branding, setBranding] = useState<AppBranding>({ application_id: "" });
+  const [uris, setUris] = useState<RedirectUri[]>([]); const [newUri, setNewUri] = useState("");
+  const [scopes, setScopes] = useState<string[]>(["openid", "profile", "email"]);
+  const [credentials, setCredentials] = useState<AppCredential[]>([]); const [freshSecret, setFreshSecret] = useState("");
+  const [branding, setBranding] = useState<AppBranding>({ application_id: "" });
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [uptime, setUptime] = useState<UptimeReport | null>(null); const [uptimeDays, setUptimeDays] = useState(30);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
+
+  const id = application?.id;
   useEffect(() => {
     if (!application) return;
     let active = true;
-    const applicationId = application.id;
-    setName(application.name);
-    setDescription(application.description || "");
-    setOrigin(application.origin_url || "");
-    setEditing(false);
-    setError("");
-    setTab("overview");
-    setUris([]);
-    setScopes(["openid", "profile", "email"]);
-    setCredentials([]);
-    setBranding({ application_id: applicationId });
-    setFreshSecret("");
-    setCopyStatus("");
-    setUptime(null);
-    setSessions([]);
-    setAppEvents([]);
-
-    void api.applications.redirectUris(applicationId).then((data) => { if (active) setUris(data.redirect_uris || []); }).catch(() => { if (active) setUris([]); });
-    void api.applications.scopes(applicationId).then((data) => { if (active) setScopes(data.scopes?.length ? data.scopes : ["openid"]); }).catch(() => { if (active) setScopes(["openid", "profile", "email"]); });
-    void api.applications.credentials(applicationId).then((data) => { if (active) setCredentials(data.credentials || []); }).catch(() => { if (active) setCredentials([]); });
-    void api.applications.branding(applicationId).then((data) => { if (active) setBranding(data.branding); }).catch(() => { if (active) setBranding({ application_id: applicationId }); });
-    void api.applications.sessions(applicationId, "active", 50).then((data) => { if (active) setSessions(data.sessions || []); }).catch(() => { if (active) setSessions([]); });
-    void api.applications.activity(applicationId, 50).then((data) => { if (active) setAppEvents(data.events || []); }).catch(() => { if (active) setAppEvents([]); });
-    void api.applications.uptime(applicationId, 30).then((data) => { if (active) setUptime(data); }).catch(() => { if (active) setUptime(null); });
+    const appId = application.id;
+    setName(application.name); setDescription(application.description || ""); setOrigin(application.origin_url || "");
+    setEditing(false); setError(""); setStatus(""); setTab("overview"); setNewUri(""); setConfirm(null);
+    setUris([]); setScopes(["openid", "profile", "email"]); setCredentials([]); setBranding({ application_id: appId }); setFreshSecret("");
+    setUptime(null); setUptimeDays(30); setSessions([]); setEvents([]);
+    const ok = <T,>(p: Promise<T>, apply: (v: T) => void, fallback?: () => void) => p.then((v) => { if (active) apply(v); }).catch(() => { if (active) fallback?.(); });
+    void ok(api.applications.redirectUris(appId), (d) => setUris(d.redirect_uris || []));
+    void ok(api.applications.scopes(appId), (d) => setScopes(d.scopes?.length ? d.scopes : ["openid"]));
+    void ok(api.applications.credentials(appId), (d) => setCredentials(d.credentials || []));
+    void ok(api.applications.branding(appId), (d) => setBranding(d.branding ?? { application_id: appId }));
+    void ok(api.applications.sessions(appId, "active", 50), (d) => setSessions(d.sessions || []));
+    void ok(api.applications.activity(appId, 50), (d) => setEvents(d.events || []));
+    void ok(api.applications.uptime(appId, 30), (d) => setUptime(d));
     return () => { active = false; };
-  }, [application?.id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A freshly rotated secret is shown once; leaving the Credentials tab clears it.
+  const changeTab = (next: TabId) => { if (tab === "credentials" && next !== "credentials") setFreshSecret(""); setTab(next); setStatus(""); setError(""); };
   if (!application) return null;
-  const save = async () => { setBusy(true); setError(""); try { await onUpdate(application.id, { name, description, origin_url: origin }); setEditing(false); } catch (e) { setError(e instanceof Error ? e.message : "Update failed."); } finally { setBusy(false); } };
-  const addUri = async () => { if (!newUri.trim()) return; setBusy(true); setError(""); try { const result = await api.applications.addRedirectUri(application.id, newUri.trim()); setUris((current) => [...current, result.redirect_uri]); setNewUri(""); } catch (e) { setError(e instanceof Error ? e.message : "Could not add redirect URI."); } finally { setBusy(false); } };
-  const saveScopes = async () => { setBusy(true); setError(""); try { const result = await api.applications.updateScopes(application.id, scopes); setScopes(result.scopes); } catch (e) { setError(e instanceof Error ? e.message : "Could not save scopes."); } finally { setBusy(false); } };
-  const removeApp = async () => { if (!window.confirm(`Delete “${application.name}”? This revokes its Ace ID client and removes its configuration and activity.`)) return; setBusy(true); setError(""); try { await onDelete(application.id); } catch (e) { setError(e instanceof Error ? e.message : "Deletion failed."); } finally { setBusy(false); } };
-  return <div className="neo-overlay neo-drawer-overlay" role="presentation" onMouseDown={onClose}><aside className="neo-drawer" role="dialog" aria-modal="true" aria-labelledby="application-drawer-title" onMouseDown={(e) => e.stopPropagation()}>
-    <div className="neo-modal-head"><div><span className="neo-kicker">Application controls</span><h2 id="application-drawer-title">{application.name}</h2></div><button className="neo-icon-button" onClick={onClose} aria-label="Close">×</button></div>
-    <nav className="neo-tabs" aria-label="Application sections">{([ ["overview","Overview"],["redirects","Redirect URIs"],["scopes","Scopes"],["credentials","Credentials"],["branding","Branding"],["monitoring","Monitoring"],["events","Events"]] as const).map(([id,label]) => <button key={id} className={tab===id?"active":""} onClick={() => setTab(id)}>{label}</button>)}</nav>
-    {error && <div className="neo-form-error" role="alert">{error}</div>}{copyStatus && <div className="neo-save-status" role="status">{copyStatus}</div>}
-    {tab === "overview" && <>{editing ? <form className="neo-form neo-drawer-form" onSubmit={(e) => { e.preventDefault(); void save(); }}><label>Application name<input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required /></label><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} rows={3}/></label><label>Origin URL<input type="url" value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="https://app.example.com" /></label><div className="neo-modal-actions"><button type="button" className="neo-button neo-button-secondary" onClick={() => setEditing(false)}>Cancel</button><button className="neo-button neo-button-primary" disabled={busy}>{busy?"Saving…":"Save changes"}</button></div></form> : <><div className="neo-detail-list"><div><span>Description</span><strong>{application.description || "Not configured"}</strong></div><div><span>Origin URL</span><strong>{application.origin_url || "Not configured"}</strong></div><div><span>Type</span><strong>{application.application_type || "Web"}</strong></div><div><span>Client ID</span><code>{application.client_id || "Unavailable"}</code><button className="neo-button neo-button-secondary" onClick={() => void copyText(application.client_id || "").then((ok) => setCopyStatus(ok ? "Client ID copied." : "Clipboard unavailable. Select and copy the value manually."))}>Copy client ID</button></div><div><span>Application ID</span><code>{application.id}</code></div><div><span>Created</span><strong>{application.created_at ? new Date(application.created_at).toLocaleString() : "Unavailable"}</strong></div></div><div className="neo-drawer-actions"><button className="neo-button neo-button-secondary" onClick={() => setEditing(true)}>Edit application</button><button className="neo-button neo-button-danger" onClick={() => void removeApp()} disabled={busy}>Delete application</button></div></>}</>}
-    {tab === "setup" && <ClientPresetGuide application={application} redirects={uris} scopes={scopes} onStatus={setCopyStatus} />}
-    {tab === "redirects" && <section className="neo-drawer-section"><p>Exact redirect URI matching is required during OIDC authorization.</p><form className="neo-inline-form" onSubmit={(e) => { e.preventDefault(); void addUri(); }}><input type="url" value={newUri} onChange={(e) => setNewUri(e.target.value)} placeholder="https://app.example.com/callback" aria-label="New redirect URI" required/><button className="neo-button neo-button-primary" disabled={busy}>Add</button></form>{uris.length ? <div className="neo-config-list">{uris.map((uri) => <div key={uri.id}><code>{uri.uri}</code><button className="neo-icon-button" aria-label={`Remove ${uri.uri}`} disabled={busy} onClick={() => { if (!window.confirm("Remove this redirect URI?")) return; setBusy(true); void api.applications.removeRedirectUri(application.id, uri.id).then(() => setUris((current) => current.filter((item) => item.id !== uri.id))).catch((e) => setError(e instanceof Error ? e.message : "Could not remove URI.")).finally(() => setBusy(false)); }}>×</button></div>)}</div> : <div className="neo-state"><strong>No redirect URIs configured</strong><span>Add a callback URI to finish OAuth setup.</span></div>}</section>}
-    {tab === "scopes" && <section className="neo-drawer-section"><p>Grant only the identity claims your app needs. <code>openid</code> is required.</p>{(["openid","profile","email"] as const).map((scope) => <label className="neo-toggle" key={scope}><span><strong>{scope}</strong><small>{scope === "openid" ? "Required for OIDC identity" : scope === "profile" ? "Basic profile claims" : "Email address and verification status"}</small></span><input type="checkbox" checked={scopes.includes(scope)} disabled={scope === "openid" || busy} onChange={(e) => setScopes((current) => e.target.checked ? [...current, scope] : current.filter((value) => value !== scope))}/></label>)}<button className="neo-button neo-button-primary neo-full" disabled={busy} onClick={() => void saveScopes()}>{busy?"Saving…":"Save scopes"}</button></section>}
-    {tab === "credentials" && <section className="neo-drawer-section"><p>Secrets are stored as hashes. A newly rotated secret is shown once and cannot be retrieved later.</p>{freshSecret && <div className="neo-secret-panel"><strong>New client secret</strong><code>{freshSecret}</code><button className="neo-button neo-button-secondary" onClick={() => void copyText(freshSecret).then((ok) => setCopyStatus(ok ? "Client secret copied." : "Clipboard unavailable. Select and copy the secret manually."))}>Copy secret</button><small>Store it securely now. Leaving this view clears it from the screen.</small></div>}<button className="neo-button neo-button-primary" disabled={busy} onClick={() => { if (!window.confirm("Rotate credentials? All currently active credentials will be revoked.")) return; setBusy(true); setError(""); void api.applications.rotateCredentials(application.id).then((result) => { setCredentials((current) => [{ ...result.credential, secret: undefined }, ...current.map((item) => item.revoked_at ? item : { ...item, revoked_at: new Date().toISOString() })]); setFreshSecret(result.credential.secret || ""); }).catch((e) => setError(e instanceof Error ? e.message : "Credential rotation failed.")).finally(() => setBusy(false)); }}>{busy?"Working…":"Rotate client secret"}</button>{credentials.length ? <div className="neo-config-list">{credentials.map((credential) => <div key={credential.id}><span className={`neo-status-pill ${credential.revoked_at ? "is-revoked" : ""}`}>{credential.revoked_at ? "Revoked" : "Active"}</span><code>{credential.secret_prefix}…</code><button className="neo-icon-button" disabled={busy || Boolean(credential.revoked_at)} title="Revoke credential" onClick={() => { if (!window.confirm("Revoke this credential?")) return; setBusy(true); void api.applications.revokeCredential(application.id, credential.id).then(() => setCredentials((items) => items.map((item) => item.id === credential.id ? { ...item, revoked_at: new Date().toISOString() } : item))).catch((e) => setError(e instanceof Error ? e.message : "Could not revoke credential.")).finally(() => setBusy(false)); }}>×</button></div>)}</div> : <div className="neo-state"><strong>No credentials issued</strong><span>Rotate a client secret to create one.</span></div>}</section>}
-    {tab === "branding" && <section className="neo-drawer-section"><p>Customize the application name, logo, and accent color shown on supported identity screens.</p><label className="neo-field-label">Display name<input value={branding.display_name || ""} maxLength={120} onChange={(e) => setBranding((current) => ({ ...current, display_name: e.target.value }))} placeholder={application.name}/></label><label className="neo-field-label">Logo URL<input type="url" value={branding.logo_url || ""} onChange={(e) => setBranding((current) => ({ ...current, logo_url: e.target.value }))} placeholder="https://cdn.example.com/logo.png"/></label><label className="neo-field-label">Accent color<input type="text" value={branding.accent_color || ""} onChange={(e) => setBranding((current) => ({ ...current, accent_color: e.target.value }))} placeholder="#F97316" pattern="^#[0-9a-fA-F]{6}$"/></label><button className="neo-button neo-button-primary neo-full" disabled={busy} onClick={() => { setBusy(true); setError(""); void api.applications.updateBranding(application.id, { display_name: branding.display_name || null, logo_url: branding.logo_url || null, accent_color: branding.accent_color || null }).then((result) => setBranding(result.branding)).catch((e) => setError(e instanceof Error ? e.message : "Branding update failed.")).finally(() => setBusy(false)); }}>{busy?"Saving…":"Save branding"}</button></section>}
-    {tab === "events" && <section className="neo-drawer-section"><div className="neo-heading-actions"><strong>Recent application events</strong><button className="neo-button neo-button-secondary" onClick={() => void api.applications.activity(application.id, 50).then((data) => setAppEvents(data.events || [])).catch((e) => setError(e instanceof Error ? e.message : "Could not refresh events."))}>Refresh</button></div>{appEvents.length ? <div className="neo-event-list">{appEvents.map((event) => <article className="neo-event" key={event.id}><span className={`neo-event-dot ${event.success ? "is-success" : "is-failed"}`} aria-hidden="true"/><div className="neo-event-main"><strong>{event.event_type.replace(/[._]/g, " ")}</strong><span>{event.success ? "Succeeded" : "Failed"}</span>{event.metadata && <small>{Object.entries(event.metadata).slice(0, 3).map(([key, value]) => `${key}: ${String(value)}`).join(" · ")}</small>}</div><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></article>)}</div> : <div className="neo-state"><strong>No application events</strong><span>Security and configuration events will appear here as they occur.</span></div>}</section>}
-    {tab === "monitoring" && <section className="neo-drawer-section"><div className="neo-monitoring-toolbar"><label className="neo-field-label">History<select value={uptimeDays} onChange={(e) => { const days = Number(e.target.value); setUptimeDays(days); void api.applications.uptime(application.id, days).then(setUptime).catch((e) => setError(e instanceof Error ? e.message : "Could not load uptime.")); }}><option value={7}>7 days</option><option value={14}>14 days</option><option value={30}>30 days</option></select></label><button className="neo-button neo-button-primary" disabled={busy} onClick={() => { setBusy(true); setError(""); void api.applications.checkUptime(application.id).then(async () => { const [report, active] = await Promise.all([api.applications.uptime(application.id, uptimeDays), api.applications.sessions(application.id, "active", 50)]); setUptime(report); setSessions(active.sessions || []); }).catch((e) => setError(e instanceof Error ? e.message : "Uptime check failed.")).finally(() => setBusy(false)); }}>{busy?"Checking…":"Run uptime check"}</button></div><div className="neo-monitoring-stats"><div><span>Current status</span><strong className={`neo-uptime-state ${uptime?.summary.status || "no_data"}`}>{uptime?.summary.status?.replace("_", " ") || "No data"}</strong></div><div><span>Uptime</span><strong>{uptime?.summary.uptime_percent == null ? "—" : `${uptime.summary.uptime_percent}%`}</strong></div><div><span>Checks</span><strong>{uptime?.summary.total_checks ?? "—"}</strong></div><div><span>Active sessions</span><strong>{sessions.length}</strong></div></div><div className="neo-config-list">{uptime?.daily.map((day) => <div key={String(day.day)}><span>{new Date(day.day).toLocaleDateString()}</span><strong>{day.uptime_percent == null ? "No checks" : `${day.uptime_percent}%`}</strong><small>{day.checks} checks</small></div>)}</div><h3>Active sessions</h3>{sessions.length ? <div className="neo-config-list">{sessions.map((session) => <div key={session.id}><span>{session.display_name || session.email || session.username || session.user_id}</span><small>Last seen {session.last_seen_at ? new Date(session.last_seen_at).toLocaleString() : "unknown"}</small><span className="neo-status-pill">{session.status}</span></div>)}</div> : <div className="neo-state"><strong>No active sessions</strong><span>Sessions are shown only for users who consented to this application.</span></div>}</section>}
-  </aside></div>;
+
+  const run = async (work: () => Promise<void>, fallback: string) => { setBusy(true); setError(""); try { await work(); } catch (e) { setError(message(e, fallback)); } finally { setBusy(false); } };
+  const copy = (value: string, done: string, fail: string) => void copyText(value).then((ok) => setStatus(ok ? done : fail));
+  const ask = (c: Confirm) => setConfirm(c);
+
+  const save = () => run(async () => { await onUpdate(application.id, { name, description, origin_url: origin }); setEditing(false); }, "Update failed.");
+  const addUri = () => { if (newUri.trim()) void run(async () => { const r = await api.applications.addRedirectUri(application.id, newUri.trim()); setUris((c) => [...c, r.redirect_uri]); setNewUri(""); }, "Could not add redirect URI."); };
+  const saveScopes = () => run(async () => { const r = await api.applications.updateScopes(application.id, scopes); setScopes(r.scopes); setStatus("Scopes saved."); }, "Could not save scopes.");
+  const saveBranding = () => run(async () => { const r = await api.applications.updateBranding(application.id, { display_name: branding.display_name || null, logo_url: branding.logo_url || null, accent_color: branding.accent_color || null }); if (r.branding) setBranding(r.branding); setStatus("Branding saved."); }, "Branding update failed.");
+  const refreshEvents = () => run(async () => { const d = await api.applications.activity(application.id, 50); setEvents(d.events || []); }, "Could not refresh events.");
+  const loadUptime = (days: number) => run(async () => setUptime(await api.applications.uptime(application.id, days)), "Could not load uptime.");
+  const checkUptime = () => run(async () => { await api.applications.checkUptime(application.id); const [report, active] = await Promise.all([api.applications.uptime(application.id, uptimeDays), api.applications.sessions(application.id, "active", 50)]); setUptime(report); setSessions(active.sessions || []); }, "Uptime check failed.");
+  const rotate = () => run(async () => { const r = await api.applications.rotateCredentials(application.id); setCredentials((c) => [{ ...r.credential, secret: undefined }, ...c.map((x) => x.revoked_at ? x : { ...x, revoked_at: new Date().toISOString() })]); setFreshSecret(r.credential.secret || ""); }, "Credential rotation failed.");
+
+  const panels: Record<TabId, ReactNode> = {
+    overview: editing
+      ? <form onSubmit={(e) => { e.preventDefault(); void save(); }}><VStack gap={4}>
+        <TextInput label="Application name" isRequired value={name} onChange={setName} />
+        <TextArea label="Description" value={description} onChange={setDescription} />
+        <TextInput label="Origin URL" type="url" value={origin} onChange={setOrigin} placeholder="https://app.example.com" />
+        <HStack gap={2} hAlign="end"><Button label="Cancel" onClick={() => setEditing(false)} /><Button label="Save changes" type="submit" variant="primary" isLoading={busy} isDisabled={!name.trim()} /></HStack>
+      </VStack></form>
+      : <VStack gap={4}>
+        <MetadataList>
+          <MetadataListItem label="Description">{application.description || "Not configured"}</MetadataListItem>
+          <MetadataListItem label="Origin URL">{application.origin_url || "Not configured"}</MetadataListItem>
+          <MetadataListItem label="Type">{application.application_type || "Web"}</MetadataListItem>
+          <MetadataListItem label="Client ID"><Code>{application.client_id || "Unavailable"}</Code></MetadataListItem>
+          <MetadataListItem label="Application ID"><Code>{application.id}</Code></MetadataListItem>
+          <MetadataListItem label="Created">{application.created_at ? <Timestamp value={application.created_at} format="date_time" /> : "Unavailable"}</MetadataListItem>
+        </MetadataList>
+        <HStack gap={2} className="wrap">
+          <Button label="Copy client ID" isDisabled={!application.client_id} onClick={() => copy(application.client_id || "", "Client ID copied.", "Clipboard unavailable. Select and copy the value manually.")} />
+          <Button label="Edit application" onClick={() => setEditing(true)} />
+          <Button label="Delete application" variant="destructive" isDisabled={busy} onClick={() => ask({ title: `Delete “${application.name}”?`, description: "This revokes its Ace ID client and removes its configuration and activity. It cannot be undone.", action: "Delete application", run: () => run(() => onDelete(application.id), "Deletion failed.") })} />
+        </HStack>
+      </VStack>,
+    setup: <ClientPresetGuide application={application} redirects={uris} scopes={scopes} onStatus={setStatus} />,
+    redirects: <VStack gap={4}>
+      <Text color="secondary">Exact redirect URI matching is required during OIDC authorization.</Text>
+      <form onSubmit={(e) => { e.preventDefault(); addUri(); }}><HStack gap={2} vAlign="end">
+        <TextInput label="New redirect URI" isLabelHidden type="url" value={newUri} onChange={setNewUri} placeholder="https://app.example.com/callback" width="100%" />
+        <Button label="Add" type="submit" variant="primary" isLoading={busy} isDisabled={!newUri.trim()} />
+      </HStack></form>
+      {uris.length ? <VStack gap={0}>{uris.map((u) => <Item key={u.id} label={<Code>{u.uri}</Code>}
+        endContent={<IconButton label={`Remove ${u.uri}`} icon={<Icon icon="close" />} isDisabled={busy} onClick={() => ask({ title: "Remove this redirect URI?", description: u.uri, action: "Remove", run: () => run(async () => { await api.applications.removeRedirectUri(application.id, u.id); setUris((c) => c.filter((x) => x.id !== u.id)); }, "Could not remove URI.") })} />} />)}</VStack>
+        : <EmptyState isCompact title="No redirect URIs configured" description="Add a callback URI to finish OAuth setup." />}
+    </VStack>,
+    scopes: <VStack gap={3}>
+      <Text color="secondary">Grant only the identity claims your app needs. <Code>openid</Code> is required.</Text>
+      {(Object.keys(SCOPE_INFO) as (keyof typeof SCOPE_INFO)[]).map((scope) => <M3Switch key={scope} label={scope} description={SCOPE_INFO[scope]} checked={scopes.includes(scope)} disabled={scope === "openid" || busy}
+        onChange={(on) => setScopes((c) => on ? [...new Set([...c, scope])] : c.filter((v) => v !== scope))} />)}
+      <Button label="Save scopes" variant="primary" isLoading={busy} onClick={() => void saveScopes()} />
+    </VStack>,
+    credentials: <VStack gap={4}>
+      <Text color="secondary">Secrets are stored as hashes. A newly rotated secret is shown once and cannot be retrieved later.</Text>
+      {freshSecret && <Banner status="success" title="New client secret" description="Store it securely now. Leaving this tab clears it from the screen."
+        endContent={<Button label="Copy secret" onClick={() => copy(freshSecret, "Client secret copied.", "Clipboard unavailable. Select and copy the secret manually.")} />}><Code>{freshSecret}</Code></Banner>}
+      <HStack gap={2}><Button label="Rotate client secret" variant="primary" isLoading={busy} onClick={() => ask({ title: "Rotate credentials?", description: "All currently active credentials will be revoked.", action: "Rotate", run: () => void rotate() })} /></HStack>
+      {credentials.length ? <VStack gap={0}>{credentials.map((c) => <Item key={c.id} label={<Code>{c.secret_prefix}…</Code>}
+        startContent={<Badge variant={c.revoked_at ? "neutral" : "success"} label={c.revoked_at ? "Revoked" : "Active"} />}
+        description={<>Created <Timestamp value={c.created_at} format="relative" /></>}
+        endContent={<Button label="Revoke" variant="ghost" isDisabled={busy || Boolean(c.revoked_at)} onClick={() => ask({ title: "Revoke this credential?", description: "Clients using it will stop working.", action: "Revoke", run: () => run(async () => { await api.applications.revokeCredential(application.id, c.id); setCredentials((items) => items.map((x) => x.id === c.id ? { ...x, revoked_at: new Date().toISOString() } : x)); }, "Could not revoke credential.") })} />} />)}</VStack>
+        : <EmptyState isCompact title="No credentials issued" description="Rotate a client secret to create one." />}
+    </VStack>,
+    branding: <VStack gap={4}>
+      <Text color="secondary">Customize the name, logo, and accent color shown on supported identity screens.</Text>
+      <TextInput label="Display name" value={branding.display_name || ""} onChange={(v) => setBranding((b) => ({ ...b, display_name: v }))} placeholder={application.name} />
+      <TextInput label="Logo URL" type="url" value={branding.logo_url || ""} onChange={(v) => setBranding((b) => ({ ...b, logo_url: v }))} placeholder="https://cdn.example.com/logo.png" />
+      <TextInput label="Accent color" value={branding.accent_color || ""} onChange={(v) => setBranding((b) => ({ ...b, accent_color: v }))} placeholder="#F97316"
+        status={branding.accent_color && !/^#[0-9a-fA-F]{6}$/.test(branding.accent_color) ? { type: "error", message: "Use a 6-digit hex color like #F97316." } : undefined} />
+      <HStack gap={2}><Button label="Save branding" variant="primary" isLoading={busy} isDisabled={Boolean(branding.accent_color) && !/^#[0-9a-fA-F]{6}$/.test(branding.accent_color || "")} onClick={() => void saveBranding()} /></HStack>
+    </VStack>,
+    monitoring: <VStack gap={4}>
+      <HStack gap={2} vAlign="end" className="wrap">
+        <Selector label="History" options={HISTORY} value={String(uptimeDays)} onChange={(v) => { if (!v) return; const d = Number(v); setUptimeDays(d); void loadUptime(d); }} />
+        <Button label="Run uptime check" variant="primary" isLoading={busy} onClick={() => void checkUptime()} />
+      </HStack>
+      <Grid columns={{ minWidth: 130 }} gap={3}>
+        <Metric label="Status" value={<span className="cap">{uptime?.summary?.status?.replace("_", " ") || "No data"}</span>} />
+        <Metric label="Uptime" value={uptime?.summary?.uptime_percent == null ? "—" : `${uptime.summary.uptime_percent}%`} />
+        <Metric label="Checks" value={uptime?.summary?.total_checks ?? "—"} />
+        <Metric label="Sessions" value={sessions.length} />
+      </Grid>
+      {uptime?.daily?.length ? <VStack gap={0}>{uptime.daily.map((d) => <Item key={String(d.day)} label={new Date(d.day).toLocaleDateString()} description={`${d.checks} checks`} endContent={<Text weight="semibold" hasTabularNumbers>{d.uptime_percent == null ? "No checks" : `${d.uptime_percent}%`}</Text>} />)}</VStack> : null}
+      <Heading level={3}>Active sessions</Heading>
+      {sessions.length ? <VStack gap={0}>{sessions.map((s) => {
+        const who = s.display_name || s.email || s.username || s.user_id;
+        return <Item key={s.id} label={who} startContent={<Avatar name={who} src={s.avatar_url || undefined} size="sm" tooltip={false} />}
+          description={`Last seen ${s.last_seen_at ? new Date(s.last_seen_at).toLocaleString() : "unknown"}`} endContent={<Badge label={s.status} />} />;
+      })}</VStack> : <EmptyState isCompact title="No active sessions" description="Sessions are shown only for users who consented to this application." />}
+    </VStack>,
+    events: <VStack gap={3}>
+      <HStack gap={2} hAlign="between" vAlign="center"><Text weight="semibold">Recent application events</Text><Button label="Refresh" isLoading={busy} onClick={() => void refreshEvents()} /></HStack>
+      {events.length ? <VStack gap={0}>{events.map((e) => <Item key={e.id} label={eventLabel(e.event_type)} description={<>{e.success ? "Succeeded" : "Failed"}{eventDetail(e.metadata) && ` · ${eventDetail(e.metadata)}`}</>}
+        startContent={<StatusDot variant={e.success ? "success" : "error"} label={e.success ? "Succeeded" : "Failed"} />} endContent={<Timestamp value={e.created_at} format="auto" />} />)}</VStack>
+        : <EmptyState isCompact title="No application events" description="Security and configuration events will appear here as they occur." />}
+    </VStack>
+  };
+
+  return <>
+    <Drawer isOpen onOpenChange={(open) => { if (!open) onClose(); }} label={`${application.name} settings`} width={600} purpose="info" padding={0}>
+      <VStack gap={0}>
+        <HStack gap={3} vAlign="center" hAlign="between" padding={4}>
+          <HStack gap={3} vAlign="center"><Avatar name={application.name} shape="rounded" size="lg" tooltip={false} /><VStack gap={0}><Text type="label" color="secondary">Application controls</Text><Heading level={2}>{application.name}</Heading></VStack></HStack>
+          <IconButton label="Close" icon={<Icon icon="close" />} variant="ghost" onClick={onClose} />
+        </HStack>
+        <TabList value={tab} onChange={(v) => changeTab(v as TabId)} hasDivider isFullBleed>{TABS.map(([v, label]) => <Tab key={v} value={v} label={label} />)}</TabList>
+        <VStack gap={4} padding={4}>
+          {error && <Banner status="error" title="Something went wrong" description={error} isDismissable onDismiss={() => setError("")} />}
+          {status && <Banner status="success" title={status} isDismissable onDismiss={() => setStatus("")} />}
+          {panels[tab]}
+        </VStack>
+      </VStack>
+    </Drawer>
+    <AlertDialog isOpen={Boolean(confirm)} onOpenChange={(open) => { if (!open) setConfirm(null); }} title={confirm?.title || ""} description={confirm?.description || ""}
+      actionLabel={confirm?.action || "Confirm"} onAction={() => { const c = confirm; setConfirm(null); void c?.run(); }} />
+  </>;
 }

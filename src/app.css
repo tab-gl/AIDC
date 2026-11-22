@@ -1,0 +1,32 @@
+/* App-specific layout only. Components, tokens, typography and dark mode come from Astryx. */
+html, body, #root { min-height: 100%; }
+body { margin: 0; background: var(--astryx-color-background, Canvas); color: var(--astryx-color-text-primary, CanvasText); }
+m3e-theme { display: contents; }
+.page-header { flex-wrap: wrap; }
+.page-actions, .wrap, .toolbar { flex-wrap: wrap; }
+.toolbar > * { flex: 1 1 220px; }
+.cap { text-transform: capitalize; }
+
+/* M3E rows & loading */
+.m3-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 6px 0; cursor: pointer; }
+.m3-row-text { display: grid; gap: 2px; min-width: 0; }
+.m3-row-text small { color: var(--astryx-color-text-secondary, GrayText); }
+.m3-loading { display: inline-grid; place-items: center; }
+m3e-linear-progress-indicator { width: 100%; margin-top: 6px; }
+
+/* Daily sign-ins bars */
+.bars { display: flex; align-items: flex-end; gap: 8px; min-height: 180px; overflow-x: auto; padding-bottom: 4px; }
+.bar { flex: 1 0 36px; display: grid; grid-template-rows: auto 120px auto; justify-items: center; gap: 4px; }
+.bar-track { width: 100%; max-width: 40px; height: 120px; display: flex; align-items: flex-end; border-radius: 8px; background: var(--astryx-color-background-muted, rgba(127,127,127,.12)); overflow: hidden; }
+.bar-track span { width: 100%; border-radius: 8px 8px 0 0; background: var(--astryx-color-accent, currentColor); transition: height .3s ease; }
+:root[data-reduce-motion="true"] * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+
+/* Landing */
+.landing { min-height: 100dvh; display: flex; flex-direction: column; }
+.landing main { width: min(1120px, 100% - 32px); margin: 0 auto; flex: 1; }
+.landing-hero { padding: clamp(40px, 9vw, 112px) 0 clamp(32px, 6vw, 72px); }
+.landing-lede { max-width: 60ch; }
+.landing-section { padding: 40px 0; }
+.landing-intro { max-width: 70ch; margin-bottom: 24px; }
+.landing-cta { text-align: center; padding: 56px 0; }
+.landing-footer { padding: 24px 16px; text-align: center; }
