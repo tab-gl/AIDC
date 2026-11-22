@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "dist");
 const port = Number(process.env.PORT || 3000);
+const MAX_PROXY_BODY_BYTES = 1024 * 1024;
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 const HOP = new Set(["connection", "content-length", "host", "keep-alive", "transfer-encoding", "upgrade", "te", "trailer", "proxy-authorization", "proxy-authenticate", "accept-encoding"]);
 
@@ -14,6 +15,33 @@ function backend() {
   const u = new URL(raw);
   if (u.pathname !== "/" || u.search || u.hash || u.username || u.password) throw new Error("AIDC_BACKEND_URL must be a bare origin.");
   return u.origin;
+}
+
+function rejectLargeBody(req, res) {
+  res.writeHead(413, { "content-type": "application/json", connection: "close" });
+  res.end(JSON.stringify({ error: "Request body exceeds the 1 MiB limit.", code: "REQUEST_BODY_TOO_LARGE" }));
+  req.resume();
+}
+
+async function readProxyBody(req, res) {
+  const declaredLength = Number(req.headers["content-length"]);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_PROXY_BODY_BYTES) {
+    rejectLargeBody(req, res);
+    return null;
+  }
+
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    if (size + chunk.length > MAX_PROXY_BODY_BYTES) {
+      rejectLargeBody(req, res);
+      chunks.length = 0;
+      return null;
+    }
+    size += chunk.length;
+    chunks.push(chunk);
+  }
+  return chunks.length ? Buffer.concat(chunks, size) : undefined;
 }
 
 async function proxy(req, res) {
@@ -27,9 +55,9 @@ async function proxy(req, res) {
     headers.set("x-forwarded-host", req.headers.host || "");
     headers.set("x-forwarded-proto", req.headers["x-forwarded-proto"] || "https");
     headers.set("x-forwarded-for", [req.headers["x-forwarded-for"], req.socket.remoteAddress].filter(Boolean).join(", "));
-    const chunks = [];
-    if (!["GET", "HEAD"].includes(req.method)) for await (const c of req) chunks.push(c);
-    const up = await fetch(new URL(path + incoming.search, base), { method: req.method, headers, body: chunks.length ? Buffer.concat(chunks) : undefined, redirect: "manual" });
+    const body = ["GET", "HEAD"].includes(req.method) ? undefined : await readProxyBody(req, res);
+    if (body === null) return;
+    const up = await fetch(new URL(path + incoming.search, base), { method: req.method, headers, body, redirect: "manual" });
     const out = {};
     for (const [k, v] of up.headers) if (!["connection", "content-length", "content-encoding", "keep-alive", "transfer-encoding", "set-cookie"].includes(k)) out[k] = v;
     const cookies = up.headers.getSetCookie?.() ?? [];
