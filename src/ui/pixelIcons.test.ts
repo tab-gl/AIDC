@@ -16,14 +16,18 @@ describe("AIDC pixel icon sheet", () => {
     for (const name of ["home", "grid", "chart", "clock", "user", "gear", "search", "close", "chevron-down", "exchange", "external-link", "logout"])
       expect(PIXEL_ICON_NAMES).toContain(name);
   });
-  it("renders a themeable sprite mask and remains decorative by default", () => {
+  it("renders a crisp, themeable, decorative SVG by default", () => {
     const markup = renderToStaticMarkup(createElement(PixelIcon, { name: "home" }));
-    expect(markup).toContain("mask-image"); expect(markup).toContain("currentColor");
-    expect(markup).toContain('aria-hidden="true"'); expect(markup).not.toContain("role=");
+    expect(markup).toContain('shape-rendering="crispEdges"');
+    expect(markup).toContain('fill="currentColor"');
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain("mask-image");
+    expect(markup).not.toContain("role=");
   });
   it("exposes an accessible name when one is provided", () => {
     const markup = renderToStaticMarkup(createElement(PixelIcon, { name: "gear", size: 22, label: "Settings" }));
-    expect(markup).toContain('role="img"'); expect(markup).toContain('aria-label="Settings"');
-    expect(markup).toContain("width:22px");
+    expect(markup).toContain('role="img"');
+    expect(markup).toContain('aria-label="Settings"');
+    expect(markup).toContain('width="22"');
   });
 });
