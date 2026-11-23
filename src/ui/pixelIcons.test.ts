@@ -9,8 +9,15 @@ describe("AIDC pixel icon sheet", () => {
     expect(new Set(Object.values(PIXEL_ICON_INDEX)).size).toBe(48);
     for (const name of PIXEL_ICON_NAMES) {
       expect(PIXEL_ICON_INDEX[name], name).toBeGreaterThanOrEqual(0);
-      expect(PIXEL_ICON_INDEX[name], name).toBeLessThan(49);
+      expect(PIXEL_ICON_INDEX[name], name).toBeLessThan(56);
     }
+  });
+  it("uses the supplied 8-column, 7-row source order", () => {
+    expect(PIXEL_ICON_INDEX.user).toBe(0);
+    expect(PIXEL_ICON_INDEX["shield-key"]).toBe(1);
+    expect(PIXEL_ICON_INDEX.fingerprint).toBe(32);
+    expect(PIXEL_ICON_INDEX.pin).toBe(49);
+    expect(PIXEL_ICON_INDEX.loader).toBe(55);
   });
   it("keeps existing shell icon names compatible", () => {
     for (const name of ["home", "grid", "chart", "clock", "user", "gear", "search", "close", "chevron-down", "exchange", "external-link", "logout"])
