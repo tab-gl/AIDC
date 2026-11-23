@@ -1,15 +1,14 @@
-// Pixel glyphs traced directly from the supplied AIDC icon sheet.
-// The 7 × 7 transparent sprite keeps the original chunky, monochrome pixel style.
+// Pixel glyphs are ordered exactly as the supplied AIDC icon sheet: 8 columns × 7 rows.
+// Unused cells at the end of short rows remain transparent in the sprite.
 export const PIXEL_ICON_INDEX = {
-  "shield-key": 0, home: 1, user: 2, login: 3, logout: 4, grid: 5, key: 6,
-  gear: 7, link: 8, unlink: 9, devices: 10, trash: 11, bell: 12, "bell-off": 13,
-  edit: 14, pencil: 15, clock: 16, mail: 17, "clipboard-check": 18, "shield-check": 19,
-  "eye-off": 20, copy: 21, eye: 22, check: 23, close: 24, fingerprint: 25, qr: 26,
-  sun: 27, moon: 28, "external-link": 29, download: 30, upload: 31, refresh: 32,
-  exchange: 33, lock: 34, "user-plus": 35, "check-circle": 36, "x-circle": 37,
-  "arrow-right": 38, "chevron-down": 39, pin: 40, calendar: 41, alert: 42, globe: 43,
-  loader: 44, save: 45, folder: 46, image: 47,
-  shield: 0, chart: 5, search: 6, plus: 35, spinner: 44
+  user: 0, "shield-key": 1, login: 2, logout: 3, grid: 4, home: 5,
+  key: 8, link: 9, unlink: 10, devices: 11, gear: 12,
+  bell: 16, "bell-off": 17, mail: 18, pencil: 19, edit: 20, trash: 21, clock: 22,
+  eye: 24, "eye-off": 25, copy: 26, "clipboard-check": 27, check: 28, close: 29, "shield-check": 30,
+  fingerprint: 32, qr: 33, "external-link": 34, refresh: 35, download: 36, upload: 37, sun: 38, moon: 39,
+  "user-plus": 40, "check-circle": 41, "x-circle": 42, "chevron-down": 43, "arrow-right": 44, exchange: 45, lock: 46,
+  alert: 48, pin: 49, calendar: 50, globe: 51, image: 52, save: 53, folder: 54, loader: 55,
+  shield: 1, chart: 4, search: 8, plus: 40, spinner: 55
 } as const;
 export type PixelIconName = keyof typeof PIXEL_ICON_INDEX;
 export const PIXEL_ICON_NAMES = Object.keys(PIXEL_ICON_INDEX) as PixelIconName[];
