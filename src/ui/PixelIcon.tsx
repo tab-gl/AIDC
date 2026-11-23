@@ -3,18 +3,17 @@ import { PIXEL_ICON_INDEX, type PixelIconName } from "./pixelIcons";
 
 export type PixelIconProps = { name: PixelIconName; size?: number; className?: string; label?: string };
 
-/** Renders a glyph from the exact supplied pixel-art sheet as a themeable SVG alpha mask. */
+/** Renders the supplied monochrome pixel-art sprite without smoothing or external icon fonts. */
 export function PixelIcon({ name, size = 24, className, label }: PixelIconProps) {
   const index = PIXEL_ICON_INDEX[name];
   const scale = size / 24;
-  const column = index % 7;
-  const row = Math.floor(index / 7);
-  const spriteSize = 168 * scale;
-  const offset = 24 * scale;
+  const columns = 8;
+  const column = index % columns;
+  const row = Math.floor(index / columns);
   const style: CSSProperties = {
     maskImage: "url(/assets/pixel-icons.png)", WebkitMaskImage: "url(/assets/pixel-icons.png)",
-    maskSize: `${spriteSize}px ${spriteSize}px`, WebkitMaskSize: `${spriteSize}px ${spriteSize}px`,
-    maskPosition: `${-column * offset}px ${-row * offset}px`, WebkitMaskPosition: `${-column * offset}px ${-row * offset}px`,
+    maskSize: `${192 * scale}px ${168 * scale}px`, WebkitMaskSize: `${192 * scale}px ${168 * scale}px`,
+    maskPosition: `${-column * 24 * scale}px ${-row * 24 * scale}px`, WebkitMaskPosition: `${-column * 24 * scale}px ${-row * 24 * scale}px`,
     maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat", imageRendering: "pixelated"
   };
   return <svg xmlns="http://www.w3.org/2000/svg" className={className ? `pixel-icon ${className}` : "pixel-icon"}
