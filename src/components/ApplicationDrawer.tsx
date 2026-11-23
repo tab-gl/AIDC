@@ -15,7 +15,7 @@ import { Layout, LayoutContent } from "@astryxdesign/core/Layout";
 import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
 import { Selector } from "@astryxdesign/core/Selector";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Switch } from "@astryxdesign/core/Switch";
+import { Toggle } from "../ui/Toggle";
 import { Tab, TabList } from "@astryxdesign/core/TabList";
 import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
@@ -155,9 +155,9 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
     scopes: <VStack gap={3}>
       <Text color="secondary">Grant only the identity claims your app needs. <Code>openid</Code> is required.</Text>
       {!scopes.includes("openid") && <Banner status="warning" title="openid is not currently enabled" description="Save scopes to add the required OIDC scope." />}
-      {(Object.keys(SCOPE_INFO) as (keyof typeof SCOPE_INFO)[]).map((scope) => <Switch key={scope} label={scope} description={SCOPE_INFO[scope]} value={scope === "openid" || scopes.includes(scope)}
-        isDisabled={scope === "openid" || busy} disabledMessage={scope === "openid" ? "openid is required for OIDC." : undefined}
-        onChange={(on) => setScopes((c) => on ? [...new Set([...c, scope])] : c.filter((v) => v !== scope))} labelPosition="start" labelSpacing="spread" width="100%" />)}
+      {(Object.keys(SCOPE_INFO) as (keyof typeof SCOPE_INFO)[]).map((scope) => <Toggle key={scope} label={scope} description={SCOPE_INFO[scope]} value={scope === "openid" || scopes.includes(scope)}
+        disabled={scope === "openid" || busy}
+        onChange={(on) => setScopes((c) => on ? [...new Set([...c, scope])] : c.filter((v) => v !== scope))} />)}
       <Button label="Save scopes" variant="primary" isLoading={busy} onClick={() => void saveScopes()} />
     </VStack>,
     credentials: <VStack gap={4}>

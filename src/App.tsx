@@ -17,6 +17,7 @@ import { TopNav } from "@astryxdesign/core/TopNav";
 import { VStack } from "@astryxdesign/core/VStack";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { Landing } from "./components/Landing";
+import { CookieBanner } from "./components/CookieBanner";
 import { Overview } from "./views/Overview";
 import { Applications } from "./views/Applications";
 import { LoadingState } from "./ui/blocks";
@@ -213,7 +214,7 @@ export function App() {
   };
 
   // The existing AIDC charcoal/neutral palette is also the Material color seed.
-  const frame = (content: ReactNode) => <Theme theme={neutralTheme} mode={prefs.theme}><m3e-theme color="#1b1b1b" variant="monochrome" contrast={prefs.contrast} scheme={prefs.theme === "system" ? "auto" : prefs.theme}>{content}</m3e-theme></Theme>;
+  const frame = (content: ReactNode) => <Theme theme={neutralTheme} mode={prefs.theme}><m3e-theme color="#1b1b1b" variant="monochrome" contrast={prefs.contrast} scheme={prefs.theme === "system" ? "auto" : prefs.theme}>{content}<CookieBanner /></m3e-theme></Theme>;
 
   // Session checks and backend errors render without the authenticated shell, so no phantom
   // account menu or navigation is shown before the session is known.

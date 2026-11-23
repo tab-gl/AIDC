@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
-import { Grid } from "@astryxdesign/core/Grid";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Item } from "@astryxdesign/core/Item";
@@ -52,16 +51,16 @@ export function Overview({ applications, applicationsLoading, applicationsError,
       actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label="New application" variant="primary" onClick={onCreate} /></>} />
     {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}. Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
 
-    <Grid columns={{ minWidth: 200, max: 4, repeat: "fit" }} gap={4}>
+    <div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
       <Metric label="Available quota" value={signedIn && typeof remaining === "number" ? remaining : "—"} hint={typeof limit === "number" ? `${quota?.count ?? applications.length} of ${limit} applications used` : "Quota unavailable"}>
         {usage !== null && <ProgressBar label="Application quota used" value={usage} isLabelHidden />}
       </Metric>
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Across the apps you own." />
       <Metric label="Operational apps" value={uptime ? `${uptime.operational}/${uptime.total}` : "—"} hint="Passing their latest uptime check." />
-    </Grid>
+    </div>
 
-    <Grid columns={{ minWidth: 320, max: 2, repeat: "fit" }} gap={4}>
+    <div className="bento bento-2">
       <Card padding={4}>
         <VStack gap={3}>
           <Heading level={2}>Operational health</Heading>
@@ -80,7 +79,7 @@ export function Overview({ applications, applicationsLoading, applicationsError,
           <HStack gap={2}><Button label="Open event stream" onClick={onActivity} /><Button label="Manage applications" variant="ghost" onClick={onApplications} /></HStack>
         </VStack>
       </Card>
-    </Grid>
+    </div>
 
     {showTips && <Banner status="info" title="Security tip" description="Use exact HTTPS redirect URIs in production, keep origins aligned with the deployed application, and rotate client secrets immediately after exposure."
       endContent={<Button label="Review applications" onClick={onApplications} />} />}

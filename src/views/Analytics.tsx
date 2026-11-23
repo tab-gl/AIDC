@@ -3,7 +3,6 @@ import { Badge } from "@astryxdesign/core/Badge";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { EmptyState } from "@astryxdesign/core/EmptyState";
-import { Grid } from "@astryxdesign/core/Grid";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Item } from "@astryxdesign/core/Item";
@@ -49,14 +48,14 @@ export function Analytics() {
     <PageHeader eyebrow="Insights / Operations" title="Analytics" description="Authentication trends, active sessions, and application reliability."
       actions={<><Selector label="Time range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
     {error && <ErrorBanner message={error} onRetry={() => void load()} />}
-    <Grid columns={{ minWidth: 200, max: 5, repeat: "fit" }} gap={4}>
+    <div className="bento bento-5">
       <Metric label="Successful logins" value={logins?.total ?? "—"} hint={`Completed sign-ins over ${days} days.`} />
       <Metric label="Unique users" value={logins?.uniqueUsers ?? "—"} hint="Distinct accounts in the window." />
       <Metric label="Failed attempts" value={logins?.failedAttempts ?? "—"} hint="Failed authentication events." />
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Current sessions across owned apps." />
       <Metric label="Uptime coverage" value={uptime?.average_percent == null ? "—" : `${uptime.average_percent}%`} hint={uptime ? `${uptime.operational} of ${uptime.total} applications operational` : "No uptime data available."} />
-    </Grid>
-    <Grid columns={{ minWidth: 340, max: 2, repeat: "fit" }} gap={4}>
+    </div>
+    <div className="bento bento-2">
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Daily sign-ins</Heading>
         {loading && !logins ? <LoadingState title="Loading trends" /> : daily.length
@@ -80,6 +79,6 @@ export function Analytics() {
             endContent={<Text weight="semibold" hasTabularNumbers>{pct === null ? "—" : `${pct}%`}</Text>} />;
         }) : loading ? <LoadingState title="Loading reliability" /> : operations ? <EmptyState isCompact title="No reliability data" description="Uptime metrics appear after checks have been collected." /> : <Text color="secondary">Reliability data is unavailable.</Text>}
       </VStack></Card>
-    </Grid>
+    </div>
   </VStack>;
 }

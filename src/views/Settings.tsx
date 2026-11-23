@@ -8,7 +8,7 @@ import { Heading } from "@astryxdesign/core/Heading";
 import { Item } from "@astryxdesign/core/Item";
 import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
-import { Switch } from "@astryxdesign/core/Switch";
+import { Toggle } from "../ui/Toggle";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
@@ -82,8 +82,8 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
         <SegmentedControl label="Text size" value={prefs.textSize} onChange={(v) => update("textSize", v as Preferences["textSize"])}>
           <SegmentedControlItem value="standard" label="Standard" /><SegmentedControlItem value="large" label="Large" />
         </SegmentedControl>
-        <Switch label="Reduce motion" description="Respect motion-sensitive preferences." value={prefs.reduceMotion} onChange={(v) => update("reduceMotion", v)} labelPosition="start" labelSpacing="spread" width="100%" />
-        <Switch label="Show tips" description="Display contextual guidance when available." value={prefs.showTips} onChange={(v) => update("showTips", v)} labelPosition="start" labelSpacing="spread" width="100%" />
+        <Toggle label="Reduce motion" description="Respect motion-sensitive preferences." value={prefs.reduceMotion} onChange={(v) => update("reduceMotion", v)} />
+        <Toggle label="Show tips" description="Display contextual guidance when available." value={prefs.showTips} onChange={(v) => update("showTips", v)} />
       </VStack></Card>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Console behavior</Heading>
@@ -92,7 +92,7 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
           <SegmentedControlItem value="7" label="7 days" /><SegmentedControlItem value="14" label="14 days" /><SegmentedControlItem value="30" label="30 days" />
         </SegmentedControl>
         <Text type="supporting" color="secondary">Used when opening Activity or Analytics. You can still change the range there.</Text>
-        <Switch label="Haptic feedback" description="Brief vibration for supported devices after successful application changes." value={prefs.hapticFeedback} onChange={(v) => update("hapticFeedback", v)} labelPosition="start" labelSpacing="spread" width="100%" />
+        <Toggle label="Haptic feedback" description="Brief vibration for supported devices after successful application changes." value={prefs.hapticFeedback} onChange={(v) => update("hapticFeedback", v)} />
       </VStack></Card>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Integration health</Heading>
