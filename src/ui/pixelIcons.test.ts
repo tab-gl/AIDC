@@ -5,14 +5,14 @@ import { PIXEL_ICON_INDEX, PIXEL_ICON_NAMES } from "./pixelIcons";
 import { PixelIcon } from "./PixelIcon";
 
 describe("AIDC pixel icon sheet", () => {
-  it("maps all 48 supplied glyphs to valid sprite cells", () => {
-    expect(new Set(Object.values(PIXEL_ICON_INDEX)).size).toBe(48);
+  it("maps the 48 supplied glyphs plus 4 matching extras to valid sprite cells", () => {
+    expect(new Set(Object.values(PIXEL_ICON_INDEX)).size).toBe(52);
     for (const name of PIXEL_ICON_NAMES) {
       expect(PIXEL_ICON_INDEX[name], name).toBeGreaterThanOrEqual(0);
-      expect(PIXEL_ICON_INDEX[name], name).toBeLessThan(56);
+      expect(PIXEL_ICON_INDEX[name], name).toBeLessThan(64);
     }
   });
-  it("uses the supplied 8-column, 7-row source order", () => {
+  it("uses the supplied 8-column source order", () => {
     expect(PIXEL_ICON_INDEX.user).toBe(0);
     expect(PIXEL_ICON_INDEX["shield-key"]).toBe(1);
     expect(PIXEL_ICON_INDEX.fingerprint).toBe(32);
@@ -20,7 +20,7 @@ describe("AIDC pixel icon sheet", () => {
     expect(PIXEL_ICON_INDEX.loader).toBe(55);
   });
   it("keeps existing shell icon names compatible", () => {
-    for (const name of ["home", "grid", "chart", "clock", "user", "gear", "search", "close", "chevron-down", "exchange", "external-link", "logout"])
+    for (const name of ["home", "grid", "chart", "pulse", "plus", "clock", "user", "gear", "search", "close", "chevron-down", "exchange", "external-link", "logout"])
       expect(PIXEL_ICON_NAMES).toContain(name);
   });
   it("renders a crisp, themeable, decorative SVG by default", () => {

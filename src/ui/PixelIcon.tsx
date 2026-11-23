@@ -12,7 +12,7 @@ export function PixelIcon({ name, size = 24, className, label }: PixelIconProps)
   const row = Math.floor(index / columns);
   const style: CSSProperties = {
     maskImage: "url(/assets/pixel-icons.png)", WebkitMaskImage: "url(/assets/pixel-icons.png)",
-    maskSize: `${192 * scale}px ${168 * scale}px`, WebkitMaskSize: `${192 * scale}px ${168 * scale}px`,
+    maskSize: `${192 * scale}px ${192 * scale}px`, WebkitMaskSize: `${192 * scale}px ${192 * scale}px`,
     maskPosition: `${-column * 24 * scale}px ${-row * 24 * scale}px`, WebkitMaskPosition: `${-column * 24 * scale}px ${-row * 24 * scale}px`,
     maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat", imageRendering: "pixelated"
   };

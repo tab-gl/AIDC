@@ -15,8 +15,6 @@
     "@astryxdesign/core": "^0.7.17",
     "@astryxdesign/theme-neutral": "^0.7.17",
     "@fontsource/instrument-serif": "^5.3.0",
-    "@hugeicons/core-free-icons": "^4.3.5",
-    "@hugeicons/react": "^1.1.10",
     "@m3e/web": "^2.13.5",
     "@stylexjs/stylex": "^0.19.2",
     "lit": "^3.3.3",

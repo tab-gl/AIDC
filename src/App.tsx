@@ -1,6 +1,4 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Activity01Icon, Add01Icon, Analytics01Icon, Grid2X2Icon, Home01Icon, Settings01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { AppShell } from "@astryxdesign/core/AppShell";
 import { Avatar } from "@astryxdesign/core/Avatar";
 import { Banner } from "@astryxdesign/core/Banner";
@@ -42,10 +40,9 @@ const Analytics = lazy(() => import("./views/Analytics").then((m) => ({ default:
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
 const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users })));
 
-const ICONS = { overview: Home01Icon, applications: Grid2X2Icon, analytics: Analytics01Icon, activity: Activity01Icon, users: UserIcon, settings: Settings01Icon } satisfies Record<RouteId, typeof Home01Icon>;
-const navIcon = (id: RouteId) => <HugeiconsIcon icon={ICONS[id]} size={18} strokeWidth={1.7} aria-hidden="true" />;
+const navIcon = (id: RouteId) => <PixelIcon name={PIXEL_ROUTE_ICONS[id]} size={20} />;
 // Phone shell glyphs come from Ace ID's 24px pixel set.
-const PIXEL_ROUTE_ICONS: Record<RouteId, PixelIconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "clock", users: "user", settings: "gear" };
+const PIXEL_ROUTE_ICONS: Record<RouteId, PixelIconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "pulse", users: "user", settings: "gear" };
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 
 function connectionMessage(error: unknown): string {
@@ -228,7 +225,7 @@ export function App() {
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
-      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={1.7} aria-hidden="true" /><span>New application</span></HStack> }
+      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><PixelIcon name="plus" size={20} /><span>New application</span></HStack> }
     ];
     const find = (q: string) => items.filter((i) => i.label.toLowerCase().includes(q.trim().toLowerCase()));
     return { search: find, bootstrap: () => items, cancel: () => {} };
