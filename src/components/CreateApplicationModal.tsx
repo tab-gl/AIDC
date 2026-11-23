@@ -21,7 +21,7 @@ export function CreateApplicationModal({ open, busy, error, onClose, onCreate }:
     await onCreate({ name: name.trim(), description: description.trim(), origin_url: originUrl.trim() || undefined });
   };
 
-  return <Dialog isOpen={open} onOpenChange={(next) => { if (!next && !busy) onClose(); }} width={520} purpose="form" padding={0}>
+  return <Dialog className="sheet-drawer" isOpen={open} onOpenChange={(next) => { if (!next && !busy) onClose(); }} width={520} purpose="form" padding={0}>
     <DialogHeader title="Create an application" subtitle="Creates a real OAuth/OIDC client on the server. Client IDs are never fabricated locally." onOpenChange={(next) => { if (!next && !busy) onClose(); }} />
     <form onSubmit={submit}>
       <VStack gap={4} padding={4}>

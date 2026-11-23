@@ -213,7 +213,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
     : loading ? <LoadingState title={`Loading ${tab}`} /> : panels[tab];
 
   return <>
-    <Drawer isOpen onOpenChange={(open) => { if (!open && !busy) onClose(); }} label={`${application.name} settings`} width={600} purpose="info">
+    <Drawer className="sheet-drawer" isOpen onOpenChange={(open) => { if (!open && !busy) onClose(); }} label={`${application.name} settings`} width={600} purpose="info">
       <Layout
         header={<>
           <DrawerHeader title={application.name} subtitle="Application controls" startContent={<Avatar name={application.name} shape="rounded" size="lg" tooltip={false} />}

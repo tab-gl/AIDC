@@ -33,7 +33,7 @@ export function Users() {
   useEffect(() => { void search(""); return () => { seq.current += 1; }; }, []);
 
   return <VStack gap={5}>
-    <PageHeader eyebrow="Audience / Consent-based access" title="Users" description="Find identity users who have consented to an application you own. Results stay scoped to your tenant."
+    <PageHeader eyebrow="Audience" title="Users" description="Find identity users who have consented to an application you own. Results stay scoped to your tenant."
       actions={<Badge label={`${users.length} ${users.length === 1 ? "user" : "users"}`} />} />
     <Card padding={4}><VStack gap={4}>
       <form onSubmit={(e) => { e.preventDefault(); void search(query); }} role="search">

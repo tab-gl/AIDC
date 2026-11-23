@@ -18,6 +18,10 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { Landing } from "./components/Landing";
 import { CookieBanner } from "./components/CookieBanner";
+import { MobileNav } from "./components/MobileNav";
+import { SearchField, type SearchItem } from "./components/SearchField";
+import { Sheet } from "./components/Sheet";
+import { useIsMobile } from "./lib/useMedia";
 import { Overview } from "./views/Overview";
 import { Applications } from "./views/Applications";
 import { LoadingState } from "./ui/blocks";
@@ -48,6 +52,8 @@ function connectionMessage(error: unknown): string {
 
 export function App() {
   const prefs = usePreferences();
+  const isMobile = useIsMobile();
+  const [moreOpen, setMoreOpen] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<{ base: Preferences; values: Preferences } | null>(null);
   useEffect(() => {
     if (!settingsDraft) return;
@@ -153,6 +159,11 @@ export function App() {
       if ((error as { status?: number }).status !== 401) setNotice({ kind: "error", text: "Could not sign out. Please try again." });
     } finally { setLogoutBusy(false); }
   };
+  const switchAccount = async () => {
+    setMoreOpen(false);
+    try { await api.auth.logout(); } catch { /* continue: a stale session is replaced on sign-in */ }
+    window.location.assign(`${API_ORIGIN}/auth/login?switch=1`);
+  };
   const openCreate = () => { setCreateError(null); setCreateOpen(true); };
   const createApplication = async (input: { name: string; description: string; origin_url?: string }) => {
     const epoch = authEpoch.current;
@@ -207,6 +218,16 @@ export function App() {
     const find = (q: string) => items.filter((i) => i.label.toLowerCase().includes(q.trim().toLowerCase()));
     return { search: find, bootstrap: () => items, cancel: () => {} };
   }, []);
+  const searchItems = useMemo<SearchItem[]>(() => [
+    ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, hint: "Page" })),
+    { id: "action:create", label: "New application", hint: "Action" },
+    ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, hint: "Application" }))
+  ], [applications]);
+  const onSearchSelect = (value: string) => {
+    if (value === "action:create") openCreate();
+    else if (value.startsWith("route:")) navigate(value.slice(6) as RouteId);
+    else if (value.startsWith("app:")) setSelectedId(value.slice(4));
+  };
   const onCommand = (value: string) => {
     setCommandOpen(false);
     if (value === "action:create") window.setTimeout(openCreate, 120); // let the palette dialog finish closing first
@@ -239,18 +260,59 @@ export function App() {
     }
   })();
 
+  const overlays = <>
+    <Suspense fallback={null}>
+      {commandOpen && <CommandPalette isOpen onOpenChange={setCommandOpen} searchSource={searchSource} onValueChange={onCommand} label="Command palette" />}
+      {createOpen && <CreateApplicationModal open busy={createBusy} error={createError} onClose={() => !createBusy && setCreateOpen(false)} onCreate={createApplication} />}
+      {selected && <ApplicationDrawer application={selected} onClose={() => setSelectedId(null)} onUpdate={updateApplication} onDelete={deleteApplication} />}
+    </Suspense>
+  </>;
+
+  if (isMobile) {
+    const primary = routes.filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id));
+    const secondary = routes.filter((r) => !["overview", "applications", "analytics", "activity"].includes(r.id));
+    const go = (id: string) => { setMoreOpen(false); navigate(id as RouteId); };
+    return frame(<div className="m-shell">
+      <header className="m-top">
+        <a className="m-brand" href="#" onClick={(e) => { e.preventDefault(); navigate("overview"); }}><img src="/assets/icon.png" alt="" width={26} height={26} /><span>AIDC</span></a>
+        <div className="m-top-actions">
+          <SearchField items={searchItems} onSelect={onSearchSelect} />
+          <button type="button" className="m-avatar" aria-label="Account menu" onClick={() => setMoreOpen(true)}><Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} /></button>
+        </div>
+      </header>
+      <main className="m-main">
+        <VStack gap={4}>
+          {notice && <div role={notice.kind === "error" ? "alert" : "status"}><Banner status={notice.kind} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
+          <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
+        </VStack>
+      </main>
+      <MobileNav active={secondary.some((r) => r.id === route) ? "more" : route} onSelect={(id) => id === "more" ? setMoreOpen(true) : go(id)}
+        items={[...primary.map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: navIcon(r.id) })), { id: "more", label: "More", icon: navIcon("settings") }]} />
+      <Sheet open={moreOpen} title={userName} onClose={() => setMoreOpen(false)}>
+        <div className="sheet-list">
+          {secondary.map((r) => <button key={r.id} type="button" onClick={() => go(r.id)}>{navIcon(r.id)}<span>{r.label}</span></button>)}
+          <button type="button" onClick={() => void switchAccount()}><span>Switch account</span></button>
+          <a href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer"><span>Ace ID</span></a>
+          <button type="button" className="is-danger" disabled={logoutBusy} onClick={() => void signOut()}><span>{logoutBusy ? "Signing out…" : "Sign out"}</span></button>
+        </div>
+      </Sheet>
+      {overlays}
+    </div>);
+  }
+
   return frame(<>
     <AppShell contentPadding={5}
-      sideNav={<SideNav header={<SideNavHeading heading="AIDC" subheading="Developer console" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
-        <SideNavSection title="Console">
+      sideNav={<SideNav header={<SideNavHeading heading="AIDC" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
+        <SideNavSection title="Navigate">
           {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
         </SideNavSection>
       </SideNav>}
       topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
-        <Button label="Search" onClick={() => setCommandOpen(true)} icon={<Icon icon="search" />} />
+        <SearchField items={searchItems} onSelect={onSearchSelect} />
         <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Account menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
           <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
-          <DropdownMenuItem label="Account" icon="externalLink" href="https://identity.ace-base.cc/account" target="_blank" rel="noreferrer" />
+          <DropdownMenuItem label="Switch account" icon="refresh" onClick={() => void switchAccount()} />
+          <DropdownMenuItem label="Account" icon="externalLink" href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
           <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
         </DropdownMenu>
       </HStack>} />}>
@@ -259,10 +321,6 @@ export function App() {
         <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
       </VStack>
     </AppShell>
-    <Suspense fallback={null}>
-      {commandOpen && <CommandPalette isOpen onOpenChange={setCommandOpen} searchSource={searchSource} onValueChange={onCommand} label="Command palette" />}
-      {createOpen && <CreateApplicationModal open busy={createBusy} error={createError} onClose={() => !createBusy && setCreateOpen(false)} onCreate={createApplication} />}
-      {selected && <ApplicationDrawer application={selected} onClose={() => setSelectedId(null)} onUpdate={updateApplication} onDelete={deleteApplication} />}
-    </Suspense>
+    {overlays}
   </>);
 }

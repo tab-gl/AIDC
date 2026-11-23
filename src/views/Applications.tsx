@@ -21,7 +21,7 @@ export function Applications({ applications, loading, error, signedIn, onRetry, 
   }, [applications, query]);
 
   return <VStack gap={5}>
-    <PageHeader eyebrow="Workspace / Identity clients" title="Applications" description="Manage OAuth and OpenID Connect clients, redirect URIs, credentials, and branding."
+    <PageHeader eyebrow="Workspace" title="Applications" description="Manage OAuth and OpenID Connect clients, redirect URIs, credentials, and branding."
       actions={<><Badge label={`${applications.length} total`} />{signedIn && <Button label="Create application" variant="primary" onClick={onCreate} />}</>} />
     {applications.length > 0 && <TextInput label="Search applications" isLabelHidden type="search" startIcon="search" hasClear value={query} onChange={setQuery} placeholder="Search by name, origin, description, or ID" />}
     <AsyncState loading={loading} error={error} loadingTitle="Loading applications" onRetry={onRetry} empty={!loading && !error && !applications.length}

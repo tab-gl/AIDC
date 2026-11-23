@@ -47,7 +47,7 @@ export function Overview({ applications, applicationsLoading, applicationsError,
   const health = (ok: boolean | null) => <StatusDot variant={ok === null ? "neutral" : ok ? "success" : "error"} label={ok === null ? "Unknown" : ok ? "Healthy" : "Degraded"} />;
 
   return <VStack gap={6}>
-    <PageHeader eyebrow="AIDC / Console" title="Manage identity apps" description="Applications, usage, provider health, and recent events."
+    <PageHeader eyebrow="Overview" title="Manage identity apps" description="Applications, usage, provider health, and recent events."
       actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label="New application" variant="primary" onClick={onCreate} /></>} />
     {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}. Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
 

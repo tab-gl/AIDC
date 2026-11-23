@@ -45,7 +45,7 @@ export function Analytics() {
   const rows = Array.isArray(uptime?.applications) ? uptime.applications as Array<Record<string, unknown>> : [];
 
   return <VStack gap={5}>
-    <PageHeader eyebrow="Insights / Operations" title="Analytics" description="Authentication trends, active sessions, and application reliability."
+    <PageHeader eyebrow="Insights" title="Analytics" description="Authentication trends, active sessions, and application reliability."
       actions={<><Selector label="Time range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
     {error && <ErrorBanner message={error} onRetry={() => void load()} />}
     <div className="bento bento-5">
