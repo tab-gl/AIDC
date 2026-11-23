@@ -336,3 +336,45 @@ test("settings controls fit a narrow viewport", async ({ page }) => {
   const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
   expect(widths.content).toBeLessThanOrEqual(widths.viewport);
 });
+
+test("phone shell floats the navigation and keeps settings behind the profile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page);
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  await expect(nav).toBeVisible();
+  // Settings is not a destination any more, and the header no longer duplicates the account menu.
+  await expect(nav.getByRole("button", { name: "Settings", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  await expect(nav.getByRole("button")).toHaveCount(5);
+  const analytics = nav.getByRole("button", { name: "Analytics" });
+  await analytics.click();
+  await expect(analytics).toHaveAttribute("aria-current", "page");
+  await expect(analytics.locator(".mobile-nav-label")).toHaveText("Analytics");
+  await expect(page.getByRole("heading", { name: "Analytics", level: 1 })).toBeVisible();
+  const profile = nav.getByRole("button", { name: /account and settings/i });
+  await profile.click();
+  const sheet = page.getByRole("dialog", { name: "Account" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText("Test Developer")).toBeVisible();
+  await expect(profile).toHaveAttribute("aria-expanded", "true");
+  await sheet.getByRole("button", { name: /^Settings/ }).click();
+  await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+  await expect(page).toHaveURL(/#settings$/);
+  await expect(profile).toHaveClass(/is-active/);
+});
+
+test("floating navigation fits the narrowest phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await mockApi(page);
+  await page.goto("/#analytics");
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  await expect(nav).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Analytics" })).toHaveAttribute("aria-current", "page");
+  const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
+  expect(widths.content).toBeLessThanOrEqual(widths.viewport);
+  const box = await nav.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(widths.viewport);
+});
