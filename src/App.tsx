@@ -18,7 +18,9 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { Landing } from "./components/Landing";
 import { CookieBanner } from "./components/CookieBanner";
-import { MobileNav } from "./components/MobileNav";
+import { PixelIcon } from "./ui/PixelIcon";
+import type { PixelIconName } from "./ui/pixelIcons";
+import { MobileNav, type MobileNavItem } from "./components/MobileNav";
 import { SearchField, type SearchItem } from "./components/SearchField";
 import { Sheet } from "./components/Sheet";
 import { useIsMobile } from "./lib/useMedia";
@@ -42,6 +44,8 @@ const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users
 
 const ICONS = { overview: Home01Icon, applications: Grid2X2Icon, analytics: Analytics01Icon, activity: Activity01Icon, users: UserIcon, settings: Settings01Icon } satisfies Record<RouteId, typeof Home01Icon>;
 const navIcon = (id: RouteId) => <HugeiconsIcon icon={ICONS[id]} size={18} strokeWidth={1.7} aria-hidden="true" />;
+// Phone shell glyphs come from Ace ID's 24px pixel set.
+const PIXEL_ROUTE_ICONS: Record<RouteId, PixelIconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "clock", users: "user", settings: "gear" };
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 
 function connectionMessage(error: unknown): string {
@@ -53,7 +57,7 @@ function connectionMessage(error: unknown): string {
 export function App() {
   const prefs = usePreferences();
   const isMobile = useIsMobile();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<{ base: Preferences; values: Preferences } | null>(null);
   useEffect(() => {
     if (!settingsDraft) return;
@@ -84,7 +88,7 @@ export function App() {
 
   const clearAuthenticatedState = useCallback(() => {
     authEpoch.current += 1;
-    setUser(null); setApplications([]); setQuota(null); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null);
+    setUser(null); setApplications([]); setQuota(null); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null); setAccountOpen(false);
   }, []);
   const loadQuota = useCallback(async () => {
     const seq = ++quotaSeq.current;
@@ -133,6 +137,8 @@ export function App() {
     return () => { window.removeEventListener("hashchange", onHash); window.removeEventListener("aidc-auth-required", onAuthRequired); };
   }, [clearAuthenticatedState]);
   useEffect(() => { if (user) { void loadApplications(); void loadQuota(); } }, [user, loadApplications, loadQuota]);
+  // Hash navigation does not reset scroll; a new page should start at its masthead.
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "auto" }); }, [route]);
   useEffect(() => {
     if (!user) return;
     const refresh = () => { if (document.visibilityState === "visible") void loadQuota(); };
@@ -160,7 +166,7 @@ export function App() {
     } finally { setLogoutBusy(false); }
   };
   const switchAccount = async () => {
-    setMoreOpen(false);
+    setAccountOpen(false);
     try { await api.auth.logout(); } catch { /* continue: a stale session is replaced on sign-in */ }
     window.location.assign(`${API_ORIGIN}/auth/login?switch=1`);
   };
@@ -210,6 +216,15 @@ export function App() {
   };
 
   const userName = user?.name || user?.email || "Developer";
+
+  // Stable identities keep the floating bar out of re-renders it has nothing to do with
+  // (quota and health polling, notices, drawers); the icon set and destinations never change.
+  const navItems = useMemo<MobileNavItem[]>(() => routes
+    .filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id))
+    .map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: PIXEL_ROUTE_ICONS[r.id] })), []);
+  const navAccount = useMemo(() => ({ name: userName, avatarUrl: user?.picture || user?.avatar_url || undefined }), [userName, user]);
+  const selectRoute = useCallback((id: string) => { setAccountOpen(false); navigate(id as RouteId); }, []);
+  const openAccount = useCallback(() => setAccountOpen(true), []);
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
@@ -269,31 +284,77 @@ export function App() {
   </>;
 
   if (isMobile) {
-    const primary = routes.filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id));
-    const secondary = routes.filter((r) => !["overview", "applications", "analytics", "activity"].includes(r.id));
-    const go = (id: string) => { setMoreOpen(false); navigate(id as RouteId); };
+    // Secondary pages (Users, Settings) are opened from the account sheet, so the profile slot
+    // carries their selected state instead of a bar destination.
+    const onPrimary = navItems.some((r) => r.id === route);
+    const feedback = (duration = 4) => { if (prefs.hapticFeedback) haptic(duration); };
+    const accountRow = (id: RouteId, icon: PixelIconName, label: string, hint: string) => (
+      <button
+        key={id}
+        type="button"
+        className={`sheet-row${route === id ? " is-current" : ""}`}
+        onClick={() => { feedback(); selectRoute(id); }}
+      >
+        <span className="sheet-row-icon"><PixelIcon name={icon} size={22} /></span>
+        <span className="sheet-row-text"><span className="sheet-row-label">{label}</span><span className="sheet-row-hint">{hint}</span></span>
+        <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+      </button>
+    );
     return frame(<div className="m-shell">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => { event.preventDefault(); const main = document.getElementById("main-content"); main?.focus({ preventScroll: true }); main?.scrollIntoView({ block: "start" }); }}
+      >Skip to content</a>
       <header className="m-top">
         <a className="m-brand" href="#" onClick={(e) => { e.preventDefault(); navigate("overview"); }}><img src="/assets/icon.png" alt="" width={26} height={26} /><span>AIDC</span></a>
         <div className="m-top-actions">
           <SearchField items={searchItems} onSelect={onSearchSelect} />
-          <button type="button" className="m-avatar" aria-label="Account menu" onClick={() => setMoreOpen(true)}><Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} /></button>
         </div>
       </header>
-      <main className="m-main">
+      <main className="m-main" id="main-content" tabIndex={-1}>
         <VStack gap={4}>
           {notice && <div role={notice.kind === "error" ? "alert" : "status"}><Banner status={notice.kind} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
           <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
         </VStack>
       </main>
-      <MobileNav active={secondary.some((r) => r.id === route) ? "more" : route} onSelect={(id) => id === "more" ? setMoreOpen(true) : go(id)}
-        items={[...primary.map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: navIcon(r.id) })), { id: "more", label: "More", icon: navIcon("settings") }]} />
-      <Sheet open={moreOpen} title={userName} onClose={() => setMoreOpen(false)}>
+      <MobileNav
+        active={onPrimary ? route : null}
+        accountActive={!onPrimary}
+        accountOpen={accountOpen}
+        account={navAccount}
+        hapticsEnabled={prefs.hapticFeedback}
+        pinned={accountOpen}
+        onAccount={openAccount}
+        onSelect={selectRoute}
+        items={navItems}
+      />
+      <Sheet open={accountOpen} title="Account" description="Signed in with Ace ID on this device." onClose={() => setAccountOpen(false)}>
+        <div className="sheet-identity">
+          <Avatar name={userName} src={navAccount.avatarUrl} size={40} tooltip={false} />
+          <div className="sheet-identity-text">
+            <span className="sheet-identity-name">{userName}</span>
+            {user.email && <span className="sheet-identity-email">{user.email}</span>}
+          </div>
+          <span className="sheet-identity-badge">Ace ID</span>
+        </div>
         <div className="sheet-list">
-          {secondary.map((r) => <button key={r.id} type="button" onClick={() => go(r.id)}>{navIcon(r.id)}<span>{r.label}</span></button>)}
-          <button type="button" onClick={() => void switchAccount()}><span>Switch account</span></button>
-          <a href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer"><span>Ace ID</span></a>
-          <button type="button" className="is-danger" disabled={logoutBusy} onClick={() => void signOut()}><span>{logoutBusy ? "Signing out…" : "Sign out"}</span></button>
+          {accountRow("settings", "gear", "Settings", "Theme, contrast, motion and haptics")}
+          {accountRow("users", "user", "Users", "People who consented to your applications")}
+          <button type="button" className="sheet-row" onClick={() => { feedback(); void switchAccount(); }}>
+            <span className="sheet-row-icon"><PixelIcon name="exchange" size={22} /></span>
+            <span className="sheet-row-text"><span className="sheet-row-label">Switch account</span><span className="sheet-row-hint">Sign in with a different Ace ID</span></span>
+            <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+          </button>
+          <a className="sheet-row" href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" onClick={() => feedback()}>
+            <span className="sheet-row-icon"><PixelIcon name="external-link" size={22} /></span>
+            <span className="sheet-row-text"><span className="sheet-row-label">Ace ID account</span><span className="sheet-row-hint">Name, security and connected apps</span></span>
+            <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+          </a>
+          <button type="button" className="sheet-row is-danger" disabled={logoutBusy} onClick={() => { feedback(6); void signOut(); }}>
+            <span className="sheet-row-icon"><PixelIcon name="logout" size={22} /></span>
+            <span className="sheet-row-text"><span className="sheet-row-label">{logoutBusy ? "Signing out…" : "Sign out"}</span><span className="sheet-row-hint">Ends this console session</span></span>
+          </button>
         </div>
       </Sheet>
       {overlays}
