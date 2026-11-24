@@ -1,11 +1,11 @@
 import { memo, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { Avatar } from "@astryxdesign/core/Avatar";
-import { PixelIcon } from "../ui/PixelIcon";
-import type { PixelIconName } from "../ui/pixelIcons";
+import { Icon } from "../ui/Icon";
+import type { IconName } from "../ui/Icon";
 import { haptic } from "../lib/haptics";
 import GlassSurface from "../ui/GlassSurface";
 
-export type MobileNavItem = { id: string; label: string; icon: PixelIconName };
+export type MobileNavItem = { id: string; label: string; icon: IconName };
 export type MobileAccount = { name: string; avatarUrl?: string };
 
 type Props = {
@@ -114,7 +114,7 @@ export const MobileNav = memo(function MobileNav({ items, active, onSelect, acco
                 onPointerDown={tap}
                 onClick={(event) => { press(event); onSelect(item.id); }}
               >
-                <span className="mobile-nav-icon"><PixelIcon name={item.icon} size={26} filled={isActive} /></span>
+                <span className="mobile-nav-icon"><Icon name={item.icon} size={26} filled={isActive} /></span>
                 <span className="mobile-nav-label" aria-hidden="true"><span>{item.label}</span></span>
               </button>
             );

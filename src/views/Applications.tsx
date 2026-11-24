@@ -10,7 +10,7 @@ import { TextInput } from "@astryxdesign/core/TextInput";
 import { VStack } from "@astryxdesign/core/VStack";
 import { Card } from "@astryxdesign/core/Card";
 import { ErrorBanner, LoadingState, PageHeader } from "../ui/blocks";
-import { PixelIcon } from "../ui/PixelIcon";
+import { Icon } from "../ui/Icon";
 import { APPLICATION_LIMIT } from "../lib/limits";
 import type { Application } from "../types";
 
@@ -34,7 +34,7 @@ export function Applications({ applications, loading, error, signedIn, onRetry, 
   return <VStack gap={5}>
     <PageHeader eyebrow="Workspace" title="Applications" description="Manage OAuth and OpenID Connect clients, redirect URIs, credentials, and branding."
       actions={<><Badge label={loading && !applications.length ? "Counting…" : `${applications.length}/${APPLICATION_LIMIT} total`} /><Button label="Refresh" onClick={onRetry} isLoading={revalidating} isDisabled={loading} />{signedIn && <Button label={atLimit ? "Limit reached" : "Create application"} variant="primary" onClick={onCreate} isDisabled={loading || Boolean(error) || atLimit} />}</>} />
-    {applications.length > 0 && <TextInput label="Search applications" isLabelHidden type="search" startIcon={<PixelIcon name="search" size={18} />} hasClear value={query} onChange={setQuery} placeholder="Search by name, origin, description, or ID" />}
+    {applications.length > 0 && <TextInput label="Search applications" isLabelHidden type="search" startIcon={<Icon name="search" size={18} />} hasClear value={query} onChange={setQuery} placeholder="Search by name, origin, description, or ID" />}
     {error && <ErrorBanner title="Applications could not be refreshed" message={error} onRetry={onRetry} />}
     {needle && applications.length > 0 && <Text type="supporting" color="secondary" aria-live="polite">{filtered.length} of {applications.length} applications match “{query.trim()}”.</Text>}
 

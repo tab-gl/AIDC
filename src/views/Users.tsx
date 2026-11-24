@@ -12,7 +12,7 @@ import { TextInput } from "@astryxdesign/core/TextInput";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { ErrorBanner, LoadingState, PageHeader } from "../ui/blocks";
-import { PixelIcon } from "../ui/PixelIcon";
+import { Icon } from "../ui/Icon";
 import type { UserRecord } from "../types";
 
 const DEBOUNCE_MS = 320;
@@ -73,7 +73,7 @@ export function Users() {
     <Card padding={4}><VStack gap={4}>
       <form onSubmit={(e) => { e.preventDefault(); void run(query); }} role="search">
         <HStack gap={2} vAlign="end" wrap="wrap">
-          <StackItem size="fill"><TextInput label="Search authorized users" isLabelHidden type="search" startIcon={<PixelIcon name="search" size={18} />} hasClear value={query} onChange={setQuery} placeholder="Search email, username, name, or ID" width="100%" /></StackItem>
+          <StackItem size="fill"><TextInput label="Search authorized users" isLabelHidden type="search" startIcon={<Icon name="search" size={18} />} hasClear value={query} onChange={setQuery} placeholder="Search email, username, name, or ID" width="100%" /></StackItem>
           <StackItem size="static"><Button label="Search" type="submit" variant="primary" isLoading={loading} /></StackItem>
         </HStack>
       </form>

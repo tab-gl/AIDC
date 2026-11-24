@@ -1,8 +1,9 @@
-import { useEffect, useId, useRef } from "react";
+import { useId } from "react";
 import { HStack } from "@astryxdesign/core/HStack";
 import { StackItem } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
+import { Switch } from "./glisse";
 
 type Props = {
   label: string;
@@ -12,35 +13,30 @@ type Props = {
   disabled?: boolean;
 };
 
-// Material 3 Expressive switch (m3e-switch) with a check and cross icon.
+/**
+ * glisse's iPhone-style switch: a glass thumb that stretches and refracts the track as it is
+ * dragged or held, and springs to the new side. It exposes role="switch" and aria-checked, and
+ * glisse honours prefers-reduced-motion, so the state change is instant for readers who ask
+ * for less movement.
+ */
 export function Toggle({ label, description, value, onChange, disabled }: Props) {
-  const ref = useRef<HTMLElement & { checked?: boolean }>(null);
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
   const id = useId();
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const handle = () => onChangeRef.current(Boolean(el.checked));
-    el.addEventListener("change", handle);
-    return () => el.removeEventListener("change", handle);
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (el && el.checked !== value) el.checked = value;
-  }, [value]);
-
   return (
     <HStack gap={4} vAlign="center" hAlign="between" width="100%">
       <StackItem size="fill">
         <VStack gap={1}>
           <Text id={`${id}-label`} weight="semibold">{label}</Text>
-          {description && <Text type="supporting" color="secondary">{description}</Text>}
+          {description && <Text id={`${id}-description`} type="supporting" color="secondary">{description}</Text>}
         </VStack>
       </StackItem>
-      <m3e-switch ref={ref} icons="both" aria-labelledby={`${id}-label`} disabled={disabled || undefined} />
+      <Switch
+        className="pref-switch"
+        checked={value}
+        onCheckedChange={onChange}
+        aria-labelledby={`${id}-label`}
+        aria-describedby={description ? `${id}-description` : undefined}
+        disabled={disabled || undefined}
+      />
     </HStack>
   );
 }

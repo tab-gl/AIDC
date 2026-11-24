@@ -7,7 +7,6 @@ import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Item } from "@astryxdesign/core/Item";
 import { ProgressBar } from "@astryxdesign/core/ProgressBar";
-import { Selector } from "@astryxdesign/core/Selector";
 import { StackItem } from "@astryxdesign/core/Stack";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
@@ -18,6 +17,7 @@ import { dayLabel } from "../lib/dates";
 import { RANGES } from "../lib/ranges";
 import { usePreferences } from "../lib/prefs";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
+import { GlassSegmented } from "../ui/GlassSegmented";
 import type { Application, LoginAnalytics, OperationsAnalytics } from "../types";
 
 type Props = { applications: Application[]; applicationsLoading: boolean; applicationsError: string | null };
@@ -61,7 +61,7 @@ export function Analytics({ applications, applicationsLoading, applicationsError
 
   return <VStack gap={5}>
     <PageHeader eyebrow="Insights" title="Analytics" description="Authentication trends, active sessions, and application reliability."
-      actions={<><Selector label="Time range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
+      actions={<><GlassSegmented hideLabel label="Time range" options={RANGES} value={String(days)} onChange={(v) => setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
     {error && <ErrorBanner title="Some analytics are unavailable" message={error} onRetry={() => void load()} />}
     <Text type="supporting" color="secondary">Showing the last {days} days.</Text>
     <div className="bento bento-5" aria-busy={loading || undefined}>
