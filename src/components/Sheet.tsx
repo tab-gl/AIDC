@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { PixelIcon } from "../ui/PixelIcon";
+import { Icon } from "../ui/Icon";
 import { useReducedMotion } from "../lib/prefs";
 
 type Props = {
@@ -157,7 +157,7 @@ export function Sheet({ open, title, description, onClose, children }: Props) {
               {description && <p id={descriptionId} className="sheet-description">{description}</p>}
             </div>
             <button type="button" className="sheet-close" aria-label="Close" onClick={onClose}>
-              <PixelIcon name="close" size={18} />
+              <Icon name="close" size={18} />
             </button>
           </div>
         </div>

@@ -6,9 +6,9 @@ import { Code } from "@astryxdesign/core/Code";
 import { Grid } from "@astryxdesign/core/Grid";
 import { Heading } from "@astryxdesign/core/Heading";
 import { Item } from "@astryxdesign/core/Item";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Toggle } from "../ui/Toggle";
+import { GlassSegmented, type GlassChoice } from "../ui/GlassSegmented";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
@@ -18,6 +18,10 @@ import type { DiscoveryStatus } from "../types";
 
 type Draft = { base: Preferences; values: Preferences };
 const same = (a: Preferences, b: Preferences) => JSON.stringify(a) === JSON.stringify(b);
+const THEMES: GlassChoice[] = [{ value: "system", label: "System" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }];
+const CONTRASTS: GlassChoice[] = [{ value: "standard", label: "Standard" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }];
+const TEXT_SIZES: GlassChoice[] = [{ value: "standard", label: "Standard" }, { value: "large", label: "Large" }];
+const RANGES: GlassChoice[] = [{ value: "7", label: "7 days" }, { value: "14", label: "14 days" }, { value: "30", label: "30 days" }];
 
 export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; draft: Draft | null; onDraftChange: (draft: Draft | null) => void }) {
   const prefs = draft?.values ?? saved;
@@ -72,25 +76,17 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Appearance</Heading>
         <Text color="secondary">Choose the canvas that suits your workspace.</Text>
-        <SegmentedControl label="Theme" value={prefs.theme} onChange={(v) => update("theme", v as Preferences["theme"])}>
-          <SegmentedControlItem value="system" label="System" /><SegmentedControlItem value="light" label="Light" /><SegmentedControlItem value="dark" label="Dark" />
-        </SegmentedControl>
-        <SegmentedControl label="Material contrast" value={prefs.contrast} onChange={(v) => update("contrast", v as Preferences["contrast"])}>
-          <SegmentedControlItem value="standard" label="Standard" /><SegmentedControlItem value="medium" label="Medium" /><SegmentedControlItem value="high" label="High" />
-        </SegmentedControl>
+        <GlassSegmented label="Theme" options={THEMES} value={prefs.theme} onChange={(v) => update("theme", v as Preferences["theme"])} />
+        <GlassSegmented label="Material contrast" options={CONTRASTS} value={prefs.contrast} onChange={(v) => update("contrast", v as Preferences["contrast"])} />
         <Text type="supporting" color="secondary">Adjusts contrast for Material components.</Text>
-        <SegmentedControl label="Text size" value={prefs.textSize} onChange={(v) => update("textSize", v as Preferences["textSize"])}>
-          <SegmentedControlItem value="standard" label="Standard" /><SegmentedControlItem value="large" label="Large" />
-        </SegmentedControl>
+        <GlassSegmented label="Text size" options={TEXT_SIZES} value={prefs.textSize} onChange={(v) => update("textSize", v as Preferences["textSize"])} />
         <Toggle label="Reduce motion" description="Respect motion-sensitive preferences." value={prefs.reduceMotion} onChange={(v) => update("reduceMotion", v)} />
         <Toggle label="Show tips" description="Display contextual guidance when available." value={prefs.showTips} onChange={(v) => update("showTips", v)} />
       </VStack></Card>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Console behavior</Heading>
         <Text color="secondary">Choose defaults for your workspace on this device.</Text>
-        <SegmentedControl label="Default reporting range" value={String(prefs.defaultRange)} onChange={(v) => update("defaultRange", Number(v) as Preferences["defaultRange"])}>
-          <SegmentedControlItem value="7" label="7 days" /><SegmentedControlItem value="14" label="14 days" /><SegmentedControlItem value="30" label="30 days" />
-        </SegmentedControl>
+        <GlassSegmented label="Default reporting range" options={RANGES} value={String(prefs.defaultRange)} onChange={(v) => update("defaultRange", Number(v) as Preferences["defaultRange"])} />
         <Text type="supporting" color="secondary">Used when opening Activity or Analytics. You can still change the range there.</Text>
         <Toggle label="Haptic feedback" description="Brief vibration for supported devices after successful application changes." value={prefs.hapticFeedback} onChange={(v) => update("hapticFeedback", v)} />
       </VStack></Card>

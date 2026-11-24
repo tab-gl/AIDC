@@ -13,10 +13,8 @@ import { HStack } from "@astryxdesign/core/HStack";
 import { Item } from "@astryxdesign/core/Item";
 import { Layout, LayoutContent } from "@astryxdesign/core/Layout";
 import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
-import { Selector } from "@astryxdesign/core/Selector";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Toggle } from "../ui/Toggle";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
 import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
 import { TextInput } from "@astryxdesign/core/TextInput";
@@ -27,12 +25,24 @@ import { copyText } from "../lib/copy";
 import { dayLabel } from "../lib/dates";
 import { ErrorBanner, LoadingState, Metric, eventDetail, eventLabel } from "../ui/blocks";
 import { ClientPresetGuide } from "./ClientPresetGuide";
+import { GlassSegmented } from "../ui/GlassSegmented";
+import { GlassTabs } from "../ui/GlassTabs";
+import type { IconName } from "../ui/Icon";
 import type { ActivityEvent, AppBranding, AppCredential, Application, RedirectUri, SessionRecord, UptimeReport } from "../types";
 
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 type Props = { application: Application | null; onClose: () => void; onUpdate: (id: string, changes: Changes) => Promise<void>; onDelete: (id: string) => Promise<void> };
 type TabId = "overview" | "setup" | "redirects" | "scopes" | "credentials" | "branding" | "monitoring" | "events";
-const TABS: [TabId, string][] = [["overview", "Overview"], ["setup", "Setup"], ["redirects", "Redirect URIs"], ["scopes", "Scopes"], ["credentials", "Credentials"], ["branding", "Branding"], ["monitoring", "Monitoring"], ["events", "Events"]];
+const TABS: { value: TabId; label: string; icon: IconName }[] = [
+  { value: "overview", label: "Overview", icon: "home" },
+  { value: "setup", label: "Setup", icon: "gear" },
+  { value: "redirects", label: "Redirect URIs", icon: "external-link" },
+  { value: "scopes", label: "Scopes", icon: "shield" },
+  { value: "credentials", label: "Credentials", icon: "key" },
+  { value: "branding", label: "Branding", icon: "palette" },
+  { value: "monitoring", label: "Monitoring", icon: "pulse" },
+  { value: "events", label: "Events", icon: "list" }
+];
 const SCOPE_INFO = { openid: "Required for OIDC identity", profile: "Basic profile claims", email: "Email address and verification status" } as const;
 const HISTORY = [{ value: "7", label: "7 days" }, { value: "14", label: "14 days" }, { value: "30", label: "30 days" }];
 type Confirm = { title: string; description: string; action: string; run: () => Promise<void> | void };
@@ -202,7 +212,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
     </VStack>,
     monitoring: <VStack gap={4}>
       <HStack gap={2} vAlign="end" wrap="wrap">
-        <Selector label="History" options={HISTORY} value={String(uptimeDays)} isDisabled={busy} onChange={(v) => { if (!v) return; const d = Number(v); setUptimeDays(d); void loadSection("monitoring", d); }} />
+        <GlassSegmented hideLabel label="History" options={HISTORY} value={String(uptimeDays)} onChange={(v) => { const d = Number(v); setUptimeDays(d); void loadSection("monitoring", d); }} />
         <Button label="Run uptime check" variant="primary" isLoading={busy} onClick={() => void checkUptime()} />
       </HStack>
       <Grid columns={{ minWidth: 130, max: 4, repeat: "fit" }} gap={3}>
@@ -239,13 +249,13 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
         header={<>
           <DrawerHeader title={application.name} subtitle="Application controls" startContent={<Avatar name={application.name} shape="rounded" size="lg" tooltip={false} />}
             onOpenChange={(open) => { if (!open && !busy) onClose(); }} />
-          <TabList role="tablist" aria-label="Application settings" value={tab} onChange={(v) => { if (!busy) changeTab(v as TabId); }} hasDivider isFullBleed>{TABS.map(([v, label]) => <Tab key={v} id={`${tabId}-tab-${v}`} panelId={`${tabId}-panel-${v}`} value={v} label={label} aria-disabled={busy && tab !== v} />)}</TabList>
+          <GlassTabs className="drawer-tabs" label="Application settings" items={TABS} value={tab} disabled={busy} onChange={(v) => { if (!busy) changeTab(v as TabId); }} />
         </>}
         content={<LayoutContent padding={4} label="Application details">
           <VStack gap={4}>
             {error && <div role="alert"><Banner status="error" title="Something went wrong" description={error} isDismissable onDismiss={() => setError("")} /></div>}
             {status && <div role="status"><Banner status="success" title={status} isDismissable onDismiss={() => setStatus("")} /></div>}
-            {TABS.map(([v]) => <div key={v} role="tabpanel" id={`${tabId}-panel-${v}`} aria-labelledby={`${tabId}-tab-${v}`} tabIndex={0} hidden={tab !== v}>{tab === v ? content : null}</div>)}
+            {TABS.map(({ value: v, label }) => <div key={v} role="tabpanel" id={`${tabId}-panel-${v}`} aria-label={label} tabIndex={0} hidden={tab !== v}>{tab === v ? content : null}</div>)}
           </VStack>
         </LayoutContent>}
       />

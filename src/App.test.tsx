@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { App } from "./App";
 
-// Integration coverage for both shells: the phone shell (floating pixel navigation and the
+// Integration coverage for both shells: the phone shell (floating icon navigation and the
 // account sheet that now owns Settings) and the desktop shell (unchanged side navigation).
 
 const MOBILE_QUERY = /max-width:\s*760px/;
@@ -75,7 +75,7 @@ describe("phone shell", () => {
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Ace ID menu" })).toBeNull();
     // The bar is drawn with the HackerNoon Pixel Icon Library.
-    expect(nav.querySelectorAll("i.pixel-icon.hn")).toHaveLength(4);
+    expect(nav.querySelectorAll("svg.icon")).toHaveLength(4);
   }, 20_000);
 
   it("moves the active state and label to the chosen destination", async () => {

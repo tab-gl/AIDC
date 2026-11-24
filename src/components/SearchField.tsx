@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { PixelIcon } from "../ui/PixelIcon";
+import { Icon } from "../ui/Icon";
 
 export type SearchItem = { id: string; label: string; hint?: string };
 
@@ -47,12 +47,12 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
   return (
     <div ref={root} className="search-field" role="search">
       <button ref={toggle} type="button" className="search-toggle" aria-label="Search" aria-expanded={open} onClick={() => setOpen(true)}>
-        <PixelIcon name="search" size={20} />
+        <Icon name="search" size={20} />
         <span className="search-toggle-text">Search</span>
       </button>
       {open && (
         <div className="search-expanded" onKeyDown={onKeyDown}>
-          <PixelIcon name="search" size={20} className="search-leading" />
+          <Icon name="search" size={20} className="search-leading" />
           <input
             ref={input}
             value={query}
@@ -72,7 +72,7 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
             type="search"
           />
           <button type="button" className="search-close" aria-label="Close search" onClick={() => close(true)}>
-            <PixelIcon name="close" size={16} />
+            <Icon name="close" size={16} />
           </button>
           <ul id={listId} className="search-results" role="listbox" aria-label="Search results">
             {results.length ? results.map((item, i) => (

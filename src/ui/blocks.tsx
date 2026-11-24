@@ -10,7 +10,8 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { useReducedMotion } from "../lib/prefs";
 
 // App-level compositions built from Astryx primitives. No hand-rolled controls live here:
-// switches, progress and loading indicators come from @astryxdesign/core and @m3e/web.
+// progress and loading indicators come from @astryxdesign/core and @m3e/web; the switches
+// and tabs now come from glisse (see src/ui/Toggle.tsx and GlassTabs.tsx).
 
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow: string; title: string; description?: string; actions?: ReactNode }) {
   return <HStack gap={4} hAlign="between" vAlign="end" wrap="wrap" className="console-page-header">

@@ -7,7 +7,6 @@ import { Center } from "@astryxdesign/core/Center";
 import { DropdownMenu, DropdownMenuItem } from "@astryxdesign/core/DropdownMenu";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
-import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { SideNav, SideNavHeading, SideNavSection } from "@astryxdesign/core/SideNav";
 import { Theme } from "@astryxdesign/core/theme";
@@ -16,8 +15,8 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
 import { Landing } from "./components/Landing";
 import { CookieBanner } from "./components/CookieBanner";
-import { PixelIcon } from "./ui/PixelIcon";
-import type { PixelIconName } from "./ui/pixelIcons";
+import { Icon } from "./ui/Icon";
+import type { IconName } from "./ui/Icon";
 import { MobileNav, type MobileNavItem } from "./components/MobileNav";
 import BranchedMenu from "./components/BranchedMenu";
 import { SearchField, type SearchItem } from "./components/SearchField";
@@ -42,9 +41,9 @@ const Analytics = lazy(() => import("./views/Analytics").then((m) => ({ default:
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
 const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users })));
 
-const navIcon = (id: RouteId, filled = false) => <PixelIcon name={PIXEL_ROUTE_ICONS[id]} size={20} filled={filled} />;
-// Phone shell glyphs come from Ace ID's 24px pixel set.
-const PIXEL_ROUTE_ICONS: Record<RouteId, PixelIconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "pulse", users: "user", settings: "gear" };
+const navIcon = (id: RouteId, filled = false) => <Icon name={ROUTE_ICONS[id]} size={20} filled={filled} />;
+// One Iconoir glyph per destination, shared by both shells.
+const ROUTE_ICONS: Record<RouteId, IconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "pulse", users: "user", settings: "gear" };
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 
 function connectionMessage(error: unknown): string {
@@ -268,15 +267,15 @@ export function App() {
   // (application counts and health polling, notices, drawers); the icon set and destinations never change.
   const navItems = useMemo<MobileNavItem[]>(() => routes
     .filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id))
-    .map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: PIXEL_ROUTE_ICONS[r.id] })), []);
+    .map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: ROUTE_ICONS[r.id] })), []);
   const navAccount = useMemo(() => ({ name: userName, avatarUrl: user?.picture || user?.avatar_url || undefined }), [userName, user]);
   const selectRoute = useCallback((id: string) => { setAccountOpen(false); navigate(id as RouteId); }, []);
   const openAccount = useCallback(() => setAccountOpen(true), []);
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
-      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><PixelIcon name="plus" size={20} /><span>New application</span></HStack> },
-      ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, element: <HStack gap={2} vAlign="center"><PixelIcon name="grid" size={20} /><span>{a.name}</span></HStack> }))
+      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><Icon name="plus" size={20} /><span>New application</span></HStack> },
+      ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, element: <HStack gap={2} vAlign="center"><Icon name="grid" size={20} /><span>{a.name}</span></HStack> }))
     ];
     const find = (q: string) => {
       const needle = q.trim().toLowerCase();
@@ -340,16 +339,16 @@ export function App() {
     // carries their selected state instead of a bar destination.
     const onPrimary = navItems.some((r) => r.id === route);
     const feedback = (duration = 4) => { if (prefs.hapticFeedback) haptic(duration); };
-    const accountRow = (id: RouteId, icon: PixelIconName, label: string, hint: string) => (
+    const accountRow = (id: RouteId, icon: IconName, label: string, hint: string) => (
       <button
         key={id}
         type="button"
         className={`sheet-row${route === id ? " is-current" : ""}`}
         onClick={() => { feedback(); selectRoute(id); }}
       >
-        <span className="sheet-row-icon"><PixelIcon name={icon} size={22} /></span>
+        <span className="sheet-row-icon"><Icon name={icon} size={22} /></span>
         <span className="sheet-row-text"><span className="sheet-row-label">{label}</span><span className="sheet-row-hint">{hint}</span></span>
-        <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+        <Icon name="chevron-right" size={16} className="sheet-row-caret" />
       </button>
     );
     return frame(<div className="m-shell">
@@ -394,17 +393,17 @@ export function App() {
           {accountRow("settings", "gear", "Settings", "Theme, contrast, motion and haptics")}
           {accountRow("users", "user", "Users", "People who consented to your applications")}
           <button type="button" className="sheet-row" onClick={() => { feedback(); void switchAccount(); }}>
-            <span className="sheet-row-icon"><PixelIcon name="exchange" size={22} /></span>
+            <span className="sheet-row-icon"><Icon name="exchange" size={22} /></span>
             <span className="sheet-row-text"><span className="sheet-row-label">Switch Ace ID</span><span className="sheet-row-hint">Sign in with a different Ace ID</span></span>
-            <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+            <Icon name="chevron-right" size={16} className="sheet-row-caret" />
           </button>
           <a className="sheet-row" href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" onClick={() => feedback()}>
-            <span className="sheet-row-icon"><PixelIcon name="external-link" size={22} /></span>
+            <span className="sheet-row-icon"><Icon name="external-link" size={22} /></span>
             <span className="sheet-row-text"><span className="sheet-row-label">Manage Ace ID</span><span className="sheet-row-hint">Name, security and connected apps</span></span>
-            <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
+            <Icon name="chevron-right" size={16} className="sheet-row-caret" />
           </a>
           <button type="button" className="sheet-row is-danger" disabled={logoutBusy} onClick={() => { feedback(6); void signOut(); }}>
-            <span className="sheet-row-icon"><PixelIcon name="logout" size={22} /></span>
+            <span className="sheet-row-icon"><Icon name="logout" size={22} /></span>
             <span className="sheet-row-text"><span className="sheet-row-label">{logoutBusy ? "Signing out…" : "Sign out"}</span><span className="sheet-row-hint">Ends this console session</span></span>
           </button>
         </div>
@@ -450,8 +449,8 @@ export function App() {
         <SearchField items={searchItems} onSelect={onSearchSelect} />
         <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Ace ID menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
           <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
-          <DropdownMenuItem label="Switch Ace ID" icon={<PixelIcon name="exchange" size={20} />} onClick={() => void switchAccount()} />
-          <DropdownMenuItem label="Manage Ace ID" icon={<PixelIcon name="external-link" size={20} />} href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
+          <DropdownMenuItem label="Switch Ace ID" icon={<Icon name="exchange" size={20} />} onClick={() => void switchAccount()} />
+          <DropdownMenuItem label="Manage Ace ID" icon={<Icon name="external-link" size={20} />} href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
           <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
         </DropdownMenu>
       </HStack>} />}>
