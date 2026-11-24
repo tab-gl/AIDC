@@ -9,7 +9,7 @@ import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Icon } from "@astryxdesign/core/Icon";
 import { IconButton } from "@astryxdesign/core/IconButton";
-import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from "@astryxdesign/core/SideNav";
+import { SideNav, SideNavHeading, SideNavSection } from "@astryxdesign/core/SideNav";
 import { Theme } from "@astryxdesign/core/theme";
 import { TopNav } from "@astryxdesign/core/TopNav";
 import { VStack } from "@astryxdesign/core/VStack";

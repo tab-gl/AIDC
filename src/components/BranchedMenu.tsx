@@ -1,6 +1,6 @@
 'use client';
 
-import React, { isValidElement, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import React, { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import './BranchedMenu.css';
 
 export interface BranchedMenuChild {
