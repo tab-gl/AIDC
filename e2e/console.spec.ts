@@ -139,7 +139,7 @@ test("application creation shows confirmation and refreshes the list", async ({ 
 test("saved theme and reduced motion reach both theme systems", async ({ page }) => {
   await mockApi(page);
   await page.goto("/#settings");
-  await page.getByText("Dark", { exact: true }).click();
+  await page.getByRole("radio", { name: "Dark" }).click();
   await page.getByRole("switch", { name: "Reduce motion" }).check();
   await page.getByRole("button", { name: "Sync preferences" }).click();
   await expect(page.getByText("Preferences saved on this device.")).toBeVisible();
