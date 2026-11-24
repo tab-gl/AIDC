@@ -76,6 +76,23 @@ describe("API requests", () => {
     await expect(result).rejects.toMatchObject({ name: "AbortError" });
   });
 
+
+  it("shares one in-flight read between simultaneous callers", async () => {
+    let release: (value: Response) => void = () => {};
+    const fetch = vi.fn(() => new Promise<Response>((resolve) => { release = resolve; }));
+    vi.stubGlobal("fetch", fetch);
+    const first = request<{ ok: boolean }>("/shared-read");
+    const second = request<{ ok: boolean }>("/shared-read");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    release(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    await expect(first).resolves.toEqual({ ok: true });
+    await expect(second).resolves.toEqual({ ok: true });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    // The next read is a fresh request rather than a cached response.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: false }), { status: 200 })));
+    await expect(request<{ ok: boolean }>("/shared-read")).resolves.toEqual({ ok: false });
+  });
+
   it("reports timeout if the response body is aborted while being read", async () => {
     vi.useFakeTimers();
     vi.stubGlobal("window", Object.assign(events, { setTimeout, clearTimeout }));

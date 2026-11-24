@@ -24,6 +24,7 @@ import { Timestamp } from "@astryxdesign/core/Timestamp";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { copyText } from "../lib/copy";
+import { dayLabel } from "../lib/dates";
 import { ErrorBanner, LoadingState, Metric, eventDetail, eventLabel } from "../ui/blocks";
 import { ClientPresetGuide } from "./ClientPresetGuide";
 import type { ActivityEvent, AppBranding, AppCredential, Application, RedirectUri, SessionRecord, UptimeReport } from "../types";
@@ -40,6 +41,17 @@ type SectionState = "idle" | "loading" | "ready" | "error";
 const initialSections = (): Record<Section, SectionState> => ({ redirects: "idle", scopes: "idle", credentials: "idle", branding: "idle", monitoring: "idle", events: "idle" });
 const sectionsForTab = (tab: TabId): Section[] => tab === "overview" ? [] : tab === "setup" ? ["redirects", "scopes"] : [tab];
 const message = (e: unknown, fallback: string) => e instanceof Error ? e.message : fallback;
+const isHttpUrl = (value: string) => {
+  if (!value) return false;
+  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }
+};
+// OAuth redirect URIs may use a custom scheme (com.example:/callback) as well as https.
+const hasScheme = (value: string) => /^[a-z][a-z0-9+.-]*:/i.test(value.trim());
+const formatDate = (value?: string | null) => {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleString();
+};
 
 export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: Props) {
   const tabId = useId();
@@ -109,8 +121,13 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
   const copy = (value: string, done: string, fail: string) => void copyText(value).then((ok) => { if (ok) { setError(""); setStatus(done); } else { setStatus(""); setError(fail); } });
   const ask = (c: Confirm) => setConfirm(c);
 
-  const save = () => run(async () => { await onUpdate(application.id, { name: name.trim(), description, origin_url: origin }); setEditing(false); setStatus("Application updated."); }, "Update failed.");
-  const addUri = () => { if (newUri.trim()) void run(async () => { const r = await api.applications.addRedirectUri(application.id, newUri.trim()); setUris((c) => [...c, r.redirect_uri]); setNewUri(""); setStatus("Redirect URI added."); }, "Could not add redirect URI."); };
+  const originValid = !origin.trim() || isHttpUrl(origin.trim());
+  const save = () => {
+    if (!name.trim() || !originValid) return;
+    return run(async () => { await onUpdate(application.id, { name: name.trim(), description, origin_url: origin.trim() || null }); setEditing(false); setStatus("Application updated."); }, "Update failed.");
+  };
+  const uriValid = hasScheme(newUri);
+  const addUri = () => { if (newUri.trim() && uriValid) void run(async () => { const r = await api.applications.addRedirectUri(application.id, newUri.trim()); setUris((c) => c.some((item) => item.uri === r.redirect_uri.uri) ? c : [...c, r.redirect_uri]); setNewUri(""); setStatus("Redirect URI added."); }, "Could not add redirect URI."); };
   const saveScopes = () => run(async () => { const r = await api.applications.updateScopes(application.id, [...new Set(["openid", ...scopes])]); setScopes(r.scopes); setStatus("Scopes saved."); }, "Could not save scopes.");
   const saveBranding = () => run(async () => { const r = await api.applications.updateBranding(application.id, { display_name: branding.display_name || null, logo_url: branding.logo_url || null, accent_color: branding.accent_color || null }); if (r.branding) setBranding(r.branding); setStatus("Branding saved."); }, "Branding update failed.");
   const refreshEvents = () => run(async () => { const d = await api.applications.activity(application.id, 50); setEvents(d.events || []); }, "Could not refresh events.");
@@ -122,8 +139,10 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
       ? <form onSubmit={(e) => { e.preventDefault(); void save(); }}><VStack gap={4}>
         <TextInput label="Application name" isRequired value={name} onChange={setName} />
         <TextArea label="Description" value={description} onChange={setDescription} />
-        <TextInput label="Origin URL" type="url" value={origin} onChange={setOrigin} placeholder="https://app.example.com" />
-        <HStack gap={2} hAlign="end"><Button label="Cancel" onClick={() => setEditing(false)} /><Button label="Save changes" type="submit" variant="primary" isLoading={busy} isDisabled={!name.trim()} /></HStack>
+        <TextInput label="Origin URL" type="url" inputMode="url" value={origin} onChange={setOrigin} placeholder="https://app.example.com"
+          description="The public base URL of the application."
+          status={originValid ? undefined : { type: "error", message: "Use a full http(s) URL, for example https://app.example.com." }} />
+        <HStack gap={2} hAlign="end"><Button label="Cancel" onClick={() => setEditing(false)} /><Button label="Save changes" type="submit" variant="primary" isLoading={busy} isDisabled={!name.trim() || !originValid} /></HStack>
       </VStack></form>
       : <VStack gap={4}>
         <MetadataList>
@@ -145,8 +164,10 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
     redirects: <VStack gap={4}>
       <Text color="secondary">Exact redirect URI matching is required during OIDC authorization.</Text>
       <form onSubmit={(e) => { e.preventDefault(); addUri(); }}><HStack gap={2} vAlign="end">
-        <TextInput label="New redirect URI" isLabelHidden type="url" value={newUri} onChange={setNewUri} placeholder="https://app.example.com/callback" width="100%" />
-        <Button label="Add" type="submit" variant="primary" isLoading={busy} isDisabled={!newUri.trim()} />
+        <TextInput label="New redirect URI" isLabelHidden type="url" inputMode="url" value={newUri} onChange={setNewUri} placeholder="https://app.example.com/callback" width="100%"
+          description="Exact match, including scheme and path. Custom schemes such as com.example:/callback are accepted."
+          status={newUri.trim() && !uriValid ? { type: "error", message: "Include a scheme, for example https:// or com.example:/." } : undefined} />
+        <Button label="Add" type="submit" variant="primary" isLoading={busy} isDisabled={!newUri.trim() || !uriValid} />
       </HStack></form>
       {uris.length ? <VStack gap={0}>{uris.map((u) => <Item key={u.id} label={<Code>{u.uri}</Code>}
         endContent={<Button label="Remove" variant="ghost" isDisabled={busy} onClick={() => ask({ title: "Remove this redirect URI?", description: u.uri, action: "Remove", run: () => run(async () => { await api.applications.removeRedirectUri(application.id, u.id); setUris((c) => c.filter((x) => x.id !== u.id)); setStatus("Redirect URI removed."); }, "Could not remove URI.") })} />} />)}</VStack>
@@ -185,17 +206,17 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
         <Button label="Run uptime check" variant="primary" isLoading={busy} onClick={() => void checkUptime()} />
       </HStack>
       <Grid columns={{ minWidth: 130, max: 4, repeat: "fit" }} gap={3}>
-        <Metric label="Status" value={<span style={{ textTransform: "capitalize" }}>{uptime?.summary?.status?.replace("_", " ") || "No data"}</span>} />
+        <Metric label="Status" value={<span style={{ textTransform: "capitalize" }}>{uptime?.summary?.status?.replace(/_/g, " ") || "No data"}</span>} />
         <Metric label="Uptime" value={uptime?.summary?.uptime_percent == null ? "—" : `${uptime.summary.uptime_percent}%`} />
         <Metric label="Checks" value={uptime?.summary?.total_checks ?? "—"} />
         <Metric label="Sessions" value={sessions.length} />
       </Grid>
-      {uptime?.daily?.length ? <VStack gap={0}>{uptime.daily.map((d) => <Item key={String(d.day)} label={new Date(d.day).toLocaleDateString()} description={`${d.checks} checks`} endContent={<Text weight="semibold" hasTabularNumbers>{d.uptime_percent == null ? "No checks" : `${d.uptime_percent}%`}</Text>} />)}</VStack> : null}
+      {uptime?.daily?.length ? <VStack gap={0}>{uptime.daily.map((d) => <Item key={String(d.day)} label={dayLabel(String(d.day))} description={`${d.checks} checks`} endContent={<Text weight="semibold" hasTabularNumbers>{d.uptime_percent == null ? "No checks" : `${d.uptime_percent}%`}</Text>} />)}</VStack> : null}
       <Heading level={3}>Active sessions</Heading>
       {sessions.length ? <VStack gap={0}>{sessions.map((s) => {
         const who = s.display_name || s.email || s.username || s.user_id;
         return <Item key={s.id} label={who} startContent={<Avatar name={who} src={s.avatar_url || undefined} size="sm" tooltip={false} />}
-          description={`Last seen ${s.last_seen_at ? new Date(s.last_seen_at).toLocaleString() : "unknown"}`} endContent={<Badge label={s.status} />} />;
+          description={`Last seen ${formatDate(s.last_seen_at)}`} endContent={<Badge label={s.status} />} />;
       })}</VStack> : <EmptyState isCompact title="No active sessions" description="Sessions are shown only for users who consented to this application." />}
     </VStack>,
     events: <VStack gap={3}>

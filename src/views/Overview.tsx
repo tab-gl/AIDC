@@ -39,10 +39,12 @@ export function Overview({ applications, applicationsLoading, applicationsError,
     const [a, o, d, h] = await Promise.allSettled([api.activity.list(6), api.analytics.operations(30), api.integration.discovery(), api.health.get()]);
     if (id !== seq.current) return;
     setUnavailable([a.status === "rejected" && "activity", o.status === "rejected" && "operations", d.status === "rejected" && "discovery", h.status === "rejected" && "health"].filter((item): item is string => Boolean(item)));
-    setEvents(a.status === "fulfilled" ? a.value.events || [] : []);
-    setOperations(o.status === "fulfilled" ? o.value : null);
-    setDiscovery(d.status === "fulfilled" ? d.value : null);
-    setApiHealthy(h.status === "fulfilled" ? Boolean(h.value.ok) : false);
+    // A failed refresh keeps the last good value on screen; the warning banner explains it
+    // instead of replacing real data with dashes the user cannot act on.
+    if (a.status === "fulfilled") setEvents(a.value.events || []);
+    if (o.status === "fulfilled") setOperations(o.value);
+    if (d.status === "fulfilled") setDiscovery(d.value);
+    if (h.status === "fulfilled") setApiHealthy(Boolean(h.value.ok));
     setRefreshing(false);
   }, [signedIn]);
   useEffect(() => { void refresh(); return () => { seq.current += 1; }; }, [refresh]);
@@ -51,10 +53,10 @@ export function Overview({ applications, applicationsLoading, applicationsError,
   const identityStatus = discovery?.status || "unknown";
   const health = (ok: boolean | null) => <StatusDot variant={ok === null ? "neutral" : ok ? "success" : "error"} label={ok === null ? "Unknown" : ok ? "Healthy" : "Degraded"} />;
 
-  return <VStack gap={6}>
+  return <VStack gap={6} aria-busy={refreshing || undefined}>
     <PageHeader eyebrow="Overview" title="Manage identity apps" description="Applications, usage, provider health, and recent events."
       actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label={used >= limit ? "Limit reached" : "New application"} variant="primary" onClick={onCreate} isDisabled={!countReady || used >= limit} /></>} />
-    {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}. Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
+    {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}.${events.length ? " The last known values are still shown." : ""} Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
 
     <Reveal><div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />

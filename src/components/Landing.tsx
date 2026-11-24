@@ -1,4 +1,3 @@
-import LiquidGlass from "liquid-glass-react";
 import { Button } from "@astryxdesign/core/Button";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -6,6 +5,7 @@ import { Link } from "@astryxdesign/core/Link";
 import { Text } from "@astryxdesign/core/Text";
 import { Reveal, useSpotlight } from "../ui/motion";
 import { PixelBlast } from "../ui/PixelBlast";
+import GlassSurface from "../ui/GlassSurface";
 
 export const DOCS_URL = "https://docs.ace-base.cc/projects/aidc";
 // A slow marquee of the standards the console speaks, between the hero and the bento.
@@ -27,22 +27,45 @@ function Tile({ className, delay = 0, number, kicker, title, text, children }: T
 
 export function Landing({ onSignIn }: { onSignIn: () => void }) {
   return <div className="landing">
+    <a
+      className="skip-link"
+      href="#landing-main"
+      onClick={(event) => { event.preventDefault(); const main = document.getElementById("landing-main"); main?.focus({ preventScroll: true }); main?.scrollIntoView({ block: "start" }); }}
+    >Skip to content</a>
     <header className="landing-nav-wrap">
-      <LiquidGlass className="landing-glass" cornerRadius={999} padding="8px 10px 8px 20px" blurAmount={0.1} displacementScale={70} saturation={150} aberrationIntensity={1.5} elasticity={0.12} style={{ position: "fixed", top: "34px", left: "50%" }}>
+      {/* ReactBits Glass Surface: real refraction at the rim, frosted elsewhere. */}
+      <GlassSurface
+        className="landing-glass"
+        width="100%"
+        height={60}
+        borderRadius={999}
+        borderWidth={0.06}
+        blur={9}
+        brightness={54}
+        opacity={0.9}
+        displace={1.2}
+        backgroundOpacity={0.08}
+        saturation={1.5}
+        distortionScale={-90}
+        redOffset={0}
+        greenOffset={8}
+        blueOffset={16}
+        renderer="auto"
+      >
         <nav className="landing-nav" aria-label="Primary">
           <HStack gap={2} vAlign="center" className="landing-brand">
             <img src="/assets/icon.png" alt="" width={28} height={28} />
             <Text weight="semibold">AIDC</Text>
             <span className="landing-brand-description">Ace Identity Developer Console</span>
           </HStack>
-          <HStack gap={3} vAlign="center">
+          <HStack gap={3} vAlign="center" className="landing-nav-actions">
             <span className="landing-nav-docs"><Link href={DOCS_URL}>Documentation</Link></span>
             <Button label="Sign in" variant="primary" onClick={onSignIn} />
           </HStack>
         </nav>
-      </LiquidGlass>
+      </GlassSurface>
     </header>
-    <main className="landing-main">
+    <main className="landing-main" id="landing-main" tabIndex={-1}>
       <section className="landing-hero" aria-labelledby="landing-title">
         <PixelBlast className="landing-hero-field" />
         <div className="landing-hero-copy">
