@@ -5,6 +5,7 @@ m3e-theme { display: contents; }
 
 /* Editorial typography: keep Astryx's Figtree body and use Instrument Serif for headings. */
 [data-astryx-theme="neutral"] {
+  --font-family-body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-family-heading: "Instrument Serif", Georgia, serif;
   --text-heading-1-weight: 400;
   --text-heading-2-weight: 400;
@@ -456,3 +457,7 @@ m3e-theme { display: contents; }
   .landing-hero { padding: 40px 0 56px; }
   .landing-cta { flex-direction: column; align-items: flex-start; }
 }
+
+/* React Bits Branched Menu inherits AIDC theme tokens and Figtree. */
+.branched-menu { font-family: var(--font-family-body); }
+.branched-menu button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 6px; }

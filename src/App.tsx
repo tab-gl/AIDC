@@ -19,6 +19,7 @@ import { CookieBanner } from "./components/CookieBanner";
 import { PixelIcon } from "./ui/PixelIcon";
 import type { PixelIconName } from "./ui/pixelIcons";
 import { MobileNav, type MobileNavItem } from "./components/MobileNav";
+import BranchedMenu from "./components/BranchedMenu";
 import { SearchField, type SearchItem } from "./components/SearchField";
 import { Sheet } from "./components/Sheet";
 import { useIsMobile } from "./lib/useMedia";
@@ -367,7 +368,33 @@ export function App() {
     <AppShell contentPadding={5}
       sideNav={<SideNav header={<SideNavHeading heading="AIDC" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
         <SideNavSection title="Navigate">
-          {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id, route === r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
+          <BranchedMenu
+            key={route}
+            width={224}
+            rowHeight={38}
+            indent={36}
+            fontSize={13}
+            color="var(--color-text-primary)"
+            accentColor="var(--color-accent)"
+            lineColor="var(--color-border)"
+            defaultOpen={[0, 1, 2]}
+            defaultActive={route}
+            items={[
+              { label: "Workspace", children: [
+                { value: "overview", label: "Overview" },
+                { value: "applications", label: "Applications" }
+              ] },
+              { label: "Insights", children: [
+                { value: "analytics", label: "Analytics" },
+                { value: "activity", label: "Activity" }
+              ] },
+              { label: "Manage", children: [
+                { value: "users", label: "Users" },
+                { value: "settings", label: "Settings" }
+              ] }
+            ]}
+            onSelect={(value) => navigate(value as RouteId)}
+          />
         </SideNavSection>
       </SideNav>}
       topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
