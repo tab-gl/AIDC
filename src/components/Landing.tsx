@@ -6,6 +6,7 @@ import { Link } from "@astryxdesign/core/Link";
 import { Text } from "@astryxdesign/core/Text";
 import { TopNav } from "@astryxdesign/core/TopNav";
 import { Reveal, useSpotlight } from "../ui/motion";
+import { PixelBlast } from "../ui/PixelBlast";
 
 export const DOCS_URL = "https://docs.ace-base.cc/projects/aidc";
 const FEATURES = [
@@ -20,7 +21,7 @@ function Feature({ feature, index }: { feature: (typeof FEATURES)[number]; index
   const spotlight = useSpotlight<HTMLElement>();
   return <Reveal delay={index * 90}>
     <article ref={spotlight.ref} onPointerMove={spotlight.onPointerMove} className="landing-feature spotlight">
-      <div className="landing-feature-index"><span>{feature.number} / {feature.kicker}</span><span aria-hidden="true">↗</span></div>
+      <div className="landing-feature-index"><span>{feature.number} @ {feature.kicker}</span><span aria-hidden="true">↗</span></div>
       <Heading level={3} className="landing-feature-title">{feature.title}</Heading>
       <Text color="secondary" className="landing-feature-copy">{feature.text}</Text>
     </article>
@@ -39,11 +40,12 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
     </HStack>} />
     <main className="landing-main">
       <div className="landing-masthead" aria-label="The Ace Base, identity tools">
-        <span>The Ace Base <span aria-hidden="true">/</span> Identity tools</span>
+        <span>The Ace Base <span aria-hidden="true">@</span> Identity tools</span>
         <span>For developers, by design</span>
       </div>
 
       <section className="landing-hero" aria-labelledby="landing-title">
+        <PixelBlast className="landing-hero-field" />
         <div className="landing-hero-copy">
           <Reveal><p className="landing-eyebrow"><span className="landing-eyebrow-dot" aria-hidden="true" /> Identity control, clearly</p></Reveal>
           <Reveal delay={70}>
@@ -59,10 +61,10 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
         </div>
         <aside className="landing-hero-note" aria-label="About AIDC">
           <Reveal delay={150}>
-            <span className="landing-note-index">A note on identity <span>01 / 03</span></span>
+            <span className="landing-note-index">A note on identity <span>01 @ 03</span></span>
             <p className="landing-note-quote">A clearer way to <em>connect.</em></p>
             <p className="landing-note-copy">Ace ID handles identity.<br />AIDC handles your apps.</p>
-            <span className="landing-note-mark" aria-hidden="true">A / I</span>
+            <span className="landing-note-mark" aria-hidden="true">A @ I</span>
           </Reveal>
         </aside>
       </section>
@@ -76,7 +78,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
       </div>
 
       <section aria-labelledby="capabilities" className="landing-section">
-        <Reveal><div className="landing-section-label"><span>01 / The essentials</span><span>Made for the work</span></div></Reveal>
+        <Reveal><div className="landing-section-label"><span>01 @ The essentials</span><span>Made for the work</span></div></Reveal>
         <div className="landing-intro">
           <Reveal><Heading level={2} type="display-2" id="capabilities" className="landing-section-title">Everything your app needs. <em>Nothing pretending to be you.</em></Heading></Reveal>
           <Reveal delay={90}><Text color="secondary" className="landing-intro-copy">AIDC manages app configuration. Ace ID remains the identity provider. That boundary is deliberate.</Text></Reveal>
@@ -89,7 +91,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
       <Reveal>
         <section className="landing-cta" aria-labelledby="landing-cta-title">
           <div>
-            <p className="landing-eyebrow">02 / Ready when you are</p>
+            <p className="landing-eyebrow">02 @ Ready when you are</p>
             <Heading level={2} type="display-2" id="landing-cta-title" className="landing-cta-title">Ship the app.<br /><em>Trust the identity layer.</em></Heading>
           </div>
           <Button label="Enter the console" variant="primary" size="lg" onClick={onSignIn} />
@@ -97,7 +99,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
       </Reveal>
     </main>
     <footer className="landing-footer">
-      <span>AIDC <span aria-hidden="true">/</span> The Ace Base</span>
+      <span>AIDC <span aria-hidden="true">@</span> The Ace Base</span>
       <span>Identity by Ace ID. Application control by AIDC.</span>
       <span>© {new Date().getFullYear()}</span>
     </footer>
