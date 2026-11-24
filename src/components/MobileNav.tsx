@@ -93,7 +93,7 @@ export const MobileNav = memo(function MobileNav({ items, active, onSelect, acco
               onPointerDown={tap}
               onClick={(event) => { press(event); onSelect(item.id); }}
             >
-              <span className="mobile-nav-icon"><PixelIcon name={item.icon} size={26} /></span>
+              <span className="mobile-nav-icon"><PixelIcon name={item.icon} size={26} filled={isActive} /></span>
               <span className="mobile-nav-label" aria-hidden="true"><span>{item.label}</span></span>
             </button>
           );

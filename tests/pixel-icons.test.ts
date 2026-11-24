@@ -40,4 +40,11 @@ describe("pixel icon library", () => {
     expect(markup).toContain('aria-label="Settings"');
     expect(markup).toContain("font-size:22px");
   });
+  it("ships a solid glyph for every navigation icon so the current tab can be filled", () => {
+    for (const name of ["home", "grid", "chart", "pulse", "user", "gear"] as const) {
+      const glyph = PIXEL_ICON_GLYPHS[name];
+      expect(iconFontCss.includes(`.hn-${glyph}-solid:before`), `${name} -> ${glyph}-solid`).toBe(true);
+      expect(renderToStaticMarkup(createElement(PixelIcon, { name, filled: true }))).toContain(`hn-${glyph}-solid`);
+    }
+  });
 });

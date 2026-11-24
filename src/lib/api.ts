@@ -11,7 +11,7 @@ function csrfToken(): string | null {
 }
 
 type RequestOptions = RequestInit & { base?: boolean; authRedirect?: boolean };
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function requestOnce<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const method = (options.method || "GET").toUpperCase();
   const useApiBase = (options as RequestInit & { base?: boolean }).base !== false;
   const fetchOptions = { ...options };
@@ -135,3 +135,39 @@ export const api = {
     get: () => request<{ ok: boolean }>("/health")
   }
 };
+
+
+// Reads share a small request budget and retry transient server failures, so a burst of
+// parallel calls on page load does not surface as errors when the backend is momentarily busy.
+const MAX_IN_FLIGHT = 3;
+const RETRY_DELAYS_MS = [400, 1200];
+let inFlight = 0;
+const waiting: Array<() => void> = [];
+const release = () => { inFlight -= 1; waiting.shift()?.(); };
+const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve) => {
+  const timer = window.setTimeout(resolve, ms);
+  signal?.addEventListener("abort", () => { window.clearTimeout(timer); resolve(); }, { once: true });
+});
+const isTransient = (error: unknown) => {
+  const status = (error as ApiError | undefined)?.status;
+  return status === undefined ? (error as Error)?.name !== "AbortError" : status >= 500 || status === 429;
+};
+
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  if (method !== "GET") return requestOnce<T>(path, options);
+  // Take a free slot synchronously so the request starts in the same tick, as before.
+  if (inFlight < MAX_IN_FLIGHT) inFlight += 1;
+  else await new Promise<void>((resolve) => { waiting.push(() => { inFlight += 1; resolve(); }); });
+  try {
+    for (let attempt = 0; ; attempt += 1) {
+      try { return await requestOnce<T>(path, options); }
+      catch (error) {
+        const delay = RETRY_DELAYS_MS[attempt];
+        if (delay === undefined || options.signal?.aborted || !isTransient(error)) throw error;
+        await sleep(delay, options.signal ?? undefined);
+        if (options.signal?.aborted) throw error;
+      }
+    }
+  } finally { release(); }
+}

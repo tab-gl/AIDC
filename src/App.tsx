@@ -40,7 +40,7 @@ const Analytics = lazy(() => import("./views/Analytics").then((m) => ({ default:
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
 const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users })));
 
-const navIcon = (id: RouteId) => <PixelIcon name={PIXEL_ROUTE_ICONS[id]} size={20} />;
+const navIcon = (id: RouteId, filled = false) => <PixelIcon name={PIXEL_ROUTE_ICONS[id]} size={20} filled={filled} />;
 // Phone shell glyphs come from Ace ID's 24px pixel set.
 const PIXEL_ROUTE_ICONS: Record<RouteId, PixelIconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "pulse", users: "user", settings: "gear" };
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
@@ -362,7 +362,7 @@ export function App() {
     <AppShell contentPadding={5}
       sideNav={<SideNav header={<SideNavHeading heading="AIDC" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
         <SideNavSection title="Navigate">
-          {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
+          {routes.map((r) => <SideNavItem key={r.id} label={r.label} icon={navIcon(r.id, route === r.id)} isSelected={route === r.id} href={r.id === "overview" ? "#" : `#${r.id}`} onClick={(e) => { e.preventDefault(); navigate(r.id); }} />)}
         </SideNavSection>
       </SideNav>}
       topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
