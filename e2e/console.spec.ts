@@ -50,7 +50,7 @@ test("loads the signed-in console and filters applications", async ({ page }) =>
   await mockApi(page);
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
-  await page.getByRole("link", { name: "Applications" }).first().click();
+  await page.getByRole("button", { name: "Applications" }).first().click();
   await expect(page.getByRole("heading", { name: "Applications", level: 1 })).toBeVisible();
   await expect(page.getByText("Example identity app")).toBeVisible();
   const search = page.getByRole("searchbox", { name: "Search applications" });
@@ -278,7 +278,7 @@ test("settings drafts survive navigation, revert, and sync useful defaults", asy
   await theme.getByRole("radio", { name: "Dark" }).click();
   await expect(page.getByText(/Unsynced changes/)).toBeVisible();
   await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "auto");
-  await page.getByRole("link", { name: "Applications" }).first().click();
+  await page.getByRole("button", { name: "Applications" }).first().click();
   await page.getByRole("link", { name: "Settings" }).first().click();
   await expect(page.getByText(/Unsynced changes/)).toBeVisible();
   await expect(theme.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
@@ -388,7 +388,7 @@ test("enforces the fixed seven-application limit without a quota API request", a
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Limit reached" }).first()).toBeDisabled();
-  await page.getByRole("link", { name: "Applications" }).first().click();
+  await page.getByRole("button", { name: "Applications" }).first().click();
   await expect(page.getByRole("button", { name: "Limit reached" })).toBeDisabled();
   expect(quotaRequests).toBe(0);
 });

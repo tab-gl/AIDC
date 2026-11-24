@@ -112,7 +112,7 @@ describe("desktop shell", () => {
   it("still uses the side navigation and account menu", async () => {
     setViewport(1280);
     render(<App />);
-    expect(await screen.findByRole("link", { name: "Applications" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Applications" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Ace ID menu" })).toBeTruthy();
     expect(screen.queryByRole("navigation", { name: "Primary" })).toBeNull();
     expect(screen.getAllByRole("link", { name: "Settings" }).length).toBeGreaterThan(0);
@@ -126,7 +126,7 @@ describe("fixed application limit", () => {
     mockApi(7);
     render(<App />);
     await screen.findByRole("button", { name: "Ace ID menu" });
-    fireEvent.click(screen.getByRole("link", { name: "Applications" }));
+    fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     const limitButton = await screen.findByRole("button", { name: "Limit reached" });
     expect(limitButton.hasAttribute("disabled")).toBe(true);
     expect(vi.mocked(globalThis.fetch).mock.calls.some(([input]) => String(input).includes("/api/quota"))).toBe(false);
