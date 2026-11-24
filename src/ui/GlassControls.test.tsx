@@ -76,6 +76,17 @@ describe("GlassTabs", () => {
     expect(onChange).toHaveBeenLastCalledWith("events");
   });
 
+  it("publishes the measured slot as a px --lg-tab-width", () => {
+    // glisse lays its lens copies out at --lg-tab-width; a percentage resolves against a
+    // different box in each copy and scrambles the selected label, so GlassTabs must publish
+    // pixels. The bar's 4px inset is read from glisse's stylesheet, so subtract it twice.
+    const width = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(568);
+    render(<GlassTabs label="Application settings" items={items} value="overview" onChange={() => {}} />);
+    const bar = document.querySelector<HTMLElement>(".lg-tab-bar");
+    expect(bar?.style.getPropertyValue("--lg-tab-width")).toBe(`${(568 - 8) / items.length}px`);
+    width.mockRestore();
+  });
+
   it("marks itself disabled while a mutation is in flight", () => {
     render(<GlassTabs label="Application settings" items={items} value="overview" onChange={() => {}} disabled />);
     expect(screen.getByRole("tablist").getAttribute("aria-disabled")).toBe("true");

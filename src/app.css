@@ -511,7 +511,7 @@ m3e-theme { display: contents; }
 }
 .glass-tabs { font-family: var(--font-family-body); }
 /* The application drawer carries eight sections, so the slots share the width evenly instead
-   of the library's fixed 72px. glisse measures each tab, so the lens still lands exactly. */
+   of the library's fixed 72px. GlassTabs publishes the measured slot as --lg-tab-width. */
 [data-astryx-theme] .drawer-tabs.glass-tabs {
   display: flex;
   width: 100%;
@@ -519,14 +519,14 @@ m3e-theme { display: contents; }
   /* The library's [data-icons] rule is more specific than a lone class, so match it. */
   --lg-tab-height: 50px;
   --lg-lens-grow-y: 14px;
-  /* glisse sizes the lens and its label copies from --lg-tab-width. The real slots are
-     flexible, so express one slot as a share of the bar instead of the fixed 72px. */
-  --lg-tab-width: calc((100% - 2 * var(--lg-tab-inset)) / 8);
 }
+.glass-tabs-host { width: 100%; min-width: 0; }
 .drawer-tabs .lg-tab-lensed { right: var(--lg-tab-inset); }
 .drawer-tabs .lg-tab-labels { flex: 1; }
 .drawer-tabs[aria-disabled="true"] { pointer-events: none; opacity: 0.62; }
-.drawer-tabs :is(.lg-tab, .lg-tab-copy) { flex: 1 1 0; width: auto; min-width: 0; padding: 0 2px; }
+/* Only the real buttons flex; the lens copies must keep glisse's one-slot width so the
+   tint row can slide the selected label into the lens. */
+.drawer-tabs .lg-tab { flex: 1 1 0; width: auto; min-width: 0; padding: 0 2px; }
 .drawer-tabs .lg-tab-icon > svg { width: 19px; height: 19px; }
 .drawer-tabs .lg-tab-label { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.15; }
 @media (max-width: 560px) {

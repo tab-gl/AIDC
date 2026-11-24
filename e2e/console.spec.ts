@@ -66,7 +66,7 @@ test("returns to the signed-out overview when an authenticated API call expires"
   await mockApi(page, { expireAnalytics: true });
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
-  await page.getByRole("link", { name: "Analytics" }).first().click();
+  await page.getByRole("button", { name: "Analytics" }).first().click();
   await expect(page.getByRole("button", { name: /continue with ace id/i }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
 });
@@ -90,24 +90,26 @@ test("preserves the create form when the server rejects an application request",
 
 test("failed scope loading cannot overwrite settings and can be retried", async ({ page }) => {
   await mockApi(page);
-  let attempts = 0;
+  // Reads retry transient failures twice, so keep failing until the test asks for the retry.
+  let failing = true;
   let writes = 0;
   await page.route(`**/api/applications/${app.id}/scopes`, async (route) => {
     if (route.request().method() === "PUT") {
       writes++;
       await route.fulfill({ json: { scopes: JSON.parse(route.request().postData() || "{}").scopes } });
-    } else if (++attempts === 1) {
+    } else if (failing) {
       await route.fulfill({ status: 503, json: { error: "Scopes unavailable" } });
     } else {
       await route.fulfill({ json: { scopes: ["openid", "email"] } });
     }
   });
   await page.goto("/#applications");
-  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("main").getByRole("button", { name: "Manage" }).click();
   await page.getByRole("tab", { name: "Scopes" }).click();
   await expect(page.getByText(/could not load scopes/i)).toBeVisible();
   await expect(page.getByRole("button", { name: "Save scopes" })).toHaveCount(0);
   expect(writes).toBe(0);
+  failing = false;
   await page.getByRole("button", { name: "Retry" }).click();
   await expect(page.getByRole("switch", { name: "email" })).toBeChecked();
   await page.getByRole("button", { name: "Save scopes" }).click();
@@ -139,7 +141,7 @@ test("application creation shows confirmation and refreshes the list", async ({ 
 test("saved theme and reduced motion reach both theme systems", async ({ page }) => {
   await mockApi(page);
   await page.goto("/#settings");
-  await page.getByText("Dark", { exact: true }).click();
+  await page.getByRole("radio", { name: "Dark" }).click();
   await page.getByRole("switch", { name: "Reduce motion" }).check();
   await page.getByRole("button", { name: "Sync preferences" }).click();
   await expect(page.getByText("Preferences saved on this device.")).toBeVisible();
@@ -163,7 +165,7 @@ test("loads drawer sections on demand and keeps the saved app open during a stal
     await route.fulfill({ json: { application: { ...app, name: "Updated app" } } });
   });
   await page.goto("/#applications");
-  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("main").getByRole("button", { name: "Manage" }).click();
   await expect(page.getByRole("button", { name: "Edit application" })).toBeVisible();
   expect(scopeReads).toBe(0);
   await page.getByRole("button", { name: "Edit application" }).click();
@@ -237,7 +239,7 @@ test("redirect URIs can be added and removed only after confirmation", async ({ 
     await route.fulfill({ json: { deleted: true } });
   });
   await page.goto("/#applications");
-  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("main").getByRole("button", { name: "Manage" }).click();
   await page.getByRole("tab", { name: "Redirect URIs" }).click();
   await page.getByRole("textbox", { name: "New redirect URI" }).fill(uri);
   await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -258,7 +260,7 @@ test("rotated credentials are visible once and cleared on leaving the tab", asyn
   await page.route(`**/api/applications/${app.id}/credentials`, (route) => route.fulfill({ json: { credentials: [] } }));
   await page.route(`**/api/applications/${app.id}/credentials/rotate`, (route) => route.fulfill({ json: { credential: { id: "credential-1", application_id: app.id, secret_prefix: "secret", secret: "secret-once-only", created_at: "2026-10-01T12:00:00Z" } } }));
   await page.goto("/#applications");
-  await page.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("main").getByRole("button", { name: "Manage" }).click();
   await page.getByRole("tab", { name: "Credentials" }).click();
   await page.getByRole("button", { name: "Rotate client secret" }).click();
   await page.getByRole("alertdialog", { name: "Rotate credentials?" }).getByRole("button", { name: "Rotate", exact: true }).click();
@@ -292,7 +294,7 @@ test("settings drafts survive navigation, revert, and sync useful defaults", asy
   await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
   await expect(page.locator("m3e-theme")).toHaveJSProperty("contrast", "high");
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("aidc-neo-preferences-v1") || "{}"))).toMatchObject({ defaultRange: 30, hapticFeedback: false });
-  await page.getByRole("link", { name: "Analytics" }).first().click();
+  await page.getByRole("button", { name: "Analytics" }).first().click();
   await expect.poll(() => analyticsRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
   await page.getByRole("button", { name: "Settings" }).first().click();
   await page.getByRole("button", { name: "Restore defaults" }).click();

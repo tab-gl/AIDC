@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { TabBar } from "./glisse";
 import { Icon, type IconName } from "./Icon";
 
@@ -20,16 +21,36 @@ type Props = {
  * Home/End keys), so panels stay labelled and reachable by assistive technology.
  */
 export function GlassTabs({ label, items, value, onChange, className, disabled }: Props) {
-  return <TabBar
-    aria-label={label}
-    aria-disabled={disabled || undefined}
-    className={["glass-tabs", className].filter(Boolean).join(" ")}
-    items={items.map((item) => ({
-      value: item.value,
-      label: item.label,
-      icon: item.icon ? <Icon name={item.icon} size={20} /> : undefined
-    }))}
-    value={value}
-    onValueChange={onChange}
-  />;
+  const host = useRef<HTMLDivElement>(null);
+  // glisse sizes its lens copies from --lg-tab-width, so the bar has to publish the slot in
+  // pixels. A percentage resolves against different boxes in each copy and scrambles them.
+  useLayoutEffect(() => {
+    const bar = host.current?.querySelector<HTMLElement>(".lg-tab-bar");
+    if (!bar) return;
+    const size = () => {
+      const inset = parseFloat(getComputedStyle(bar).getPropertyValue("--lg-tab-inset")) || 0;
+      const slot = (bar.clientWidth - 2 * inset) / Math.max(items.length, 1);
+      if (slot > 0) bar.style.setProperty("--lg-tab-width", `${slot}px`);
+    };
+    size();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(size);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [items.length]);
+
+  return <div ref={host} className="glass-tabs-host">
+    <TabBar
+      aria-label={label}
+      aria-disabled={disabled || undefined}
+      className={["glass-tabs", className].filter(Boolean).join(" ")}
+      items={items.map((item) => ({
+        value: item.value,
+        label: item.label,
+        icon: item.icon ? <Icon name={item.icon} size={20} /> : undefined
+      }))}
+      value={value}
+      onValueChange={onChange}
+    />
+  </div>;
 }
