@@ -126,7 +126,8 @@ describe("fixed application limit", () => {
     mockApi(7);
     render(<App />);
     await screen.findByRole("button", { name: "Ace ID menu" });
-    const limitButton = screen.getByRole("button", { name: "Limit reached" });
+    fireEvent.click(screen.getByRole("link", { name: "Applications" }));
+    const limitButton = await screen.findByRole("button", { name: "Limit reached" });
     expect(limitButton.hasAttribute("disabled")).toBe(true);
     expect(vi.mocked(globalThis.fetch).mock.calls.some(([input]) => String(input).includes("/api/quota"))).toBe(false);
   }, 20_000);
