@@ -59,7 +59,7 @@ describe("floating navigation", () => {
   it("keeps settings out of the bar and behind the profile photo", () => {
     setup();
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
-    const profile = screen.getByRole("button", { name: /account and settings/i });
+    const profile = screen.getByRole("button", { name: /ace id and settings/i });
     expect(profile.getAttribute("aria-haspopup")).toBe("dialog");
     expect(profile.getAttribute("aria-expanded")).toBe("false");
   });
@@ -76,7 +76,7 @@ describe("floating navigation", () => {
 
   it("opens the account sheet from the profile photo", () => {
     const { onAccount, onSelect } = setup({ accountOpen: true });
-    const profile = screen.getByRole("button", { name: /account and settings/i });
+    const profile = screen.getByRole("button", { name: /ace id and settings/i });
     expect(profile.getAttribute("aria-expanded")).toBe("true");
     fireEvent.click(profile);
     expect(onAccount).toHaveBeenCalledTimes(1);
@@ -93,14 +93,14 @@ describe("floating navigation", () => {
 
   it("marks the profile slot when settings is the current page", () => {
     setup({ active: null, accountActive: true });
-    const profile = screen.getByRole("button", { name: /account and settings/i });
+    const profile = screen.getByRole("button", { name: /ace id and settings/i });
     expect(profile.className).toContain("is-active");
   });
 
   it("walks the bar with the arrow keys", () => {
     setup();
     const overview = screen.getByRole("button", { name: "Overview" });
-    const profile = screen.getByRole("button", { name: /account and settings/i });
+    const profile = screen.getByRole("button", { name: /ace id and settings/i });
     overview.focus();
     fireEvent.keyDown(overview, { key: "ArrowRight" });
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "Apps" }));

@@ -46,7 +46,7 @@ export function Analytics() {
   const peak = Math.max(1, ...daily.map((i) => i.count));
   const uptime = operations?.uptime;
   const rows = Array.isArray(uptime?.applications) ? uptime.applications as Array<Record<string, unknown>> : [];
-  // Quota comes straight from Ace ID's entitlement decision; there is no plan tier to label here.
+  // One flat application limit per Ace ID; there are no plans or subscriptions.
   const limit = typeof quota?.limit === "number" ? quota.limit : null;
   const used = typeof quota?.count === "number" ? quota.count : null;
   const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null && used !== null ? Math.max(limit - used, 0) : null;
@@ -58,20 +58,20 @@ export function Analytics() {
     {error && <ErrorBanner message={error} onRetry={() => void load()} />}
     <div className="bento bento-5">
       <Metric label="Successful logins" value={logins?.total ?? "—"} hint={`Completed sign-ins over ${days} days.`} />
-      <Metric label="Unique users" value={logins?.uniqueUsers ?? "—"} hint="Distinct accounts in the window." />
+      <Metric label="Unique users" value={logins?.uniqueUsers ?? "—"} hint="Distinct Ace IDs in the window." />
       <Metric label="Failed attempts" value={logins?.failedAttempts ?? "—"} hint="Failed authentication events." />
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Current sessions across owned apps." />
       <Metric label="Uptime coverage" value={uptime?.average_percent == null ? "—" : `${uptime.average_percent}%`} hint={uptime ? `${uptime.operational} of ${uptime.total} applications operational` : "No uptime data available."} />
     </div>
     <Card padding={4}><VStack gap={2}>
-      <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application quota</Heading>{quota?.status && quota.status !== "active" && <Badge label={`Subscription ${quota.status}`} />}</HStack>
+      <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application quota</Heading></HStack>
       {limit !== null && used !== null ? <>
         <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
           <Text type="supporting" color="secondary">{used} of {limit} applications used</Text>
           <Text type="supporting" color="secondary" hasTabularNumbers>{remaining} remaining</Text>
         </HStack>
         <ProgressBar label="Application quota used" value={usage ?? 0} isLabelHidden />
-      </> : <Text color="secondary">{loading ? "Loading quota…" : "Quota is unavailable. Ace ID did not return an application limit."}</Text>}
+      </> : <Text color="secondary">{loading ? "Loading quota…" : "Quota is unavailable. The application limit could not be loaded."}</Text>}
     </VStack></Card>
     <div className="bento bento-2">
       <Card padding={4}><VStack gap={3}>

@@ -74,7 +74,7 @@ describe("phone shell", () => {
     }
     expect(nav.querySelectorAll("button[aria-current]")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Account menu" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ace ID menu" })).toBeNull();
     // The bar is drawn with the HackerNoon Pixel Icon Library.
     expect(nav.querySelectorAll("i.pixel-icon.hn")).toHaveLength(4);
   }, 20_000);
@@ -94,10 +94,10 @@ describe("phone shell", () => {
   it("opens the account sheet from the profile photo and reaches settings from it", async () => {
     setViewport(390);
     render(<App />);
-    const profile = await screen.findByRole("button", { name: /account and settings/i });
+    const profile = await screen.findByRole("button", { name: /ace id and settings/i });
     expect(profile.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(profile);
-    const dialog = await screen.findByRole("dialog", { name: "Account" });
+    const dialog = await screen.findByRole("dialog", { name: "Ace ID" });
     expect(dialog.textContent).toContain("Ada Lovelace");
     expect(dialog.textContent).toContain("ada@example.test");
     expect(profile.getAttribute("aria-expanded")).toBe("true");
@@ -105,7 +105,7 @@ describe("phone shell", () => {
     await waitFor(() => expect(screen.getByRole("heading", { name: "Settings", level: 1 })).toBeTruthy(), { timeout: 5_000 });
     expect(window.location.hash).toBe("#settings");
     // A settings page is not a bar destination; the profile slot carries the state instead.
-    await waitFor(() => expect(screen.getByRole("button", { name: /account and settings/i }).className).toContain("is-active"));
+    await waitFor(() => expect(screen.getByRole("button", { name: /ace id and settings/i }).className).toContain("is-active"));
   }, 20_000);
 });
 
@@ -114,7 +114,7 @@ describe("desktop shell", () => {
     setViewport(1280);
     render(<App />);
     expect(await screen.findByRole("link", { name: "Applications" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Account menu" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ace ID menu" })).toBeTruthy();
     expect(screen.queryByRole("navigation", { name: "Primary" })).toBeNull();
     expect(screen.getAllByRole("link", { name: "Settings" }).length).toBeGreaterThan(0);
   }, 20_000);

@@ -47,7 +47,7 @@ async function mockApi(page: import("@playwright/test").Page, options: { expireA
 test("loads the signed-in console and filters applications", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
   await page.getByRole("link", { name: "Applications" }).first().click();
   await expect(page.getByRole("heading", { name: "Applications", level: 1 })).toBeVisible();
   await expect(page.getByText("Example identity app")).toBeVisible();
@@ -63,17 +63,17 @@ test("loads the signed-in console and filters applications", async ({ page }) =>
 test("returns to the signed-out overview when an authenticated API call expires", async ({ page }) => {
   await mockApi(page, { expireAnalytics: true });
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
   await page.getByRole("link", { name: "Analytics" }).first().click();
   await expect(page.getByRole("button", { name: /continue with ace id/i }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
 });
 
 
 test("preserves the create form when the server rejects an application request", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
   await page.getByRole("button", { name: "New application" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Create an application" });
   await dialog.getByLabel("Application name").fill("Keep this value");
@@ -212,10 +212,10 @@ test("invalid session responses show a recoverable error", async ({ page }) => {
   await page.route("**/api/me", (route) => route.fulfill({ json: recovered ? { user: { id: "dev-1", name: "Developer" } } : {} }));
   await page.goto("/");
   await expect(page.getByText(/invalid session response/i)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
   recovered = true;
   await page.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
 });
 
 test("redirect URIs can be added and removed only after confirmation", async ({ page }) => {
@@ -345,16 +345,16 @@ test("phone shell floats the navigation and keeps settings behind the profile", 
   await expect(nav).toBeVisible();
   // Settings is not a destination any more, and the header no longer duplicates the account menu.
   await expect(nav.getByRole("button", { name: "Settings", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Account menu" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
   await expect(nav.getByRole("button")).toHaveCount(5);
   const analytics = nav.getByRole("button", { name: "Analytics" });
   await analytics.click();
   await expect(analytics).toHaveAttribute("aria-current", "page");
   await expect(analytics.locator(".mobile-nav-label")).toHaveText("Analytics");
   await expect(page.getByRole("heading", { name: "Analytics", level: 1 })).toBeVisible();
-  const profile = nav.getByRole("button", { name: /account and settings/i });
+  const profile = nav.getByRole("button", { name: /ace id and settings/i });
   await profile.click();
-  const sheet = page.getByRole("dialog", { name: "Account" });
+  const sheet = page.getByRole("dialog", { name: "Ace ID" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByText("Test Developer")).toBeVisible();
   await expect(profile).toHaveAttribute("aria-expanded", "true");

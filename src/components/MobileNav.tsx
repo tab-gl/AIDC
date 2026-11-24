@@ -103,7 +103,7 @@ export const MobileNav = memo(function MobileNav({ items, active, onSelect, acco
       <button
         type="button"
         className={`mobile-nav-account${accountActive ? " is-active" : ""}`}
-        aria-label={`Account and settings${account.name ? ` (${account.name})` : ""}`}
+        aria-label={`Ace ID and settings${account.name ? ` (${account.name})` : ""}`}
         aria-haspopup="dialog"
         aria-expanded={accountOpen}
         onPointerDown={tap}

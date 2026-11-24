@@ -326,7 +326,7 @@ export function App() {
         onSelect={selectRoute}
         items={navItems}
       />
-      <Sheet open={accountOpen} title="Account" description="Signed in with Ace ID on this device." onClose={() => setAccountOpen(false)}>
+      <Sheet open={accountOpen} title="Ace ID" description="Signed in on this device." onClose={() => setAccountOpen(false)}>
         <div className="sheet-identity">
           <Avatar name={userName} src={navAccount.avatarUrl} size={40} tooltip={false} />
           <div className="sheet-identity-text">
@@ -340,12 +340,12 @@ export function App() {
           {accountRow("users", "user", "Users", "People who consented to your applications")}
           <button type="button" className="sheet-row" onClick={() => { feedback(); void switchAccount(); }}>
             <span className="sheet-row-icon"><PixelIcon name="exchange" size={22} /></span>
-            <span className="sheet-row-text"><span className="sheet-row-label">Switch account</span><span className="sheet-row-hint">Sign in with a different Ace ID</span></span>
+            <span className="sheet-row-text"><span className="sheet-row-label">Switch Ace ID</span><span className="sheet-row-hint">Sign in with a different Ace ID</span></span>
             <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
           </button>
           <a className="sheet-row" href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" onClick={() => feedback()}>
             <span className="sheet-row-icon"><PixelIcon name="external-link" size={22} /></span>
-            <span className="sheet-row-text"><span className="sheet-row-label">Ace ID account</span><span className="sheet-row-hint">Name, security and connected apps</span></span>
+            <span className="sheet-row-text"><span className="sheet-row-label">Manage Ace ID</span><span className="sheet-row-hint">Name, security and connected apps</span></span>
             <PixelIcon name="chevron-down" size={16} className="sheet-row-caret" />
           </a>
           <button type="button" className="sheet-row is-danger" disabled={logoutBusy} onClick={() => { feedback(6); void signOut(); }}>
@@ -367,10 +367,10 @@ export function App() {
       </SideNav>}
       topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
         <SearchField items={searchItems} onSelect={onSearchSelect} />
-        <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Account menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
+        <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Ace ID menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
           <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
-          <DropdownMenuItem label="Switch account" icon={<PixelIcon name="exchange" size={20} />} onClick={() => void switchAccount()} />
-          <DropdownMenuItem label="Account" icon={<PixelIcon name="external-link" size={20} />} href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
+          <DropdownMenuItem label="Switch Ace ID" icon={<PixelIcon name="exchange" size={20} />} onClick={() => void switchAccount()} />
+          <DropdownMenuItem label="Manage Ace ID" icon={<PixelIcon name="external-link" size={20} />} href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
           <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
         </DropdownMenu>
       </HStack>} />}>
