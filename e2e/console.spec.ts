@@ -279,7 +279,7 @@ test("settings drafts survive navigation, revert, and sync useful defaults", asy
   await expect(page.getByText(/Unsynced changes/)).toBeVisible();
   await expect(page.locator("m3e-theme")).toHaveJSProperty("scheme", "auto");
   await page.getByRole("button", { name: "Applications" }).first().click();
-  await page.getByRole("link", { name: "Settings" }).first().click();
+  await page.getByRole("button", { name: "Settings" }).first().click();
   await expect(page.getByText(/Unsynced changes/)).toBeVisible();
   await expect(theme.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("button", { name: "Revert changes" }).click();
@@ -294,7 +294,7 @@ test("settings drafts survive navigation, revert, and sync useful defaults", asy
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("aidc-neo-preferences-v1") || "{}"))).toMatchObject({ defaultRange: 30, hapticFeedback: false });
   await page.getByRole("link", { name: "Analytics" }).first().click();
   await expect.poll(() => analyticsRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
-  await page.getByRole("link", { name: "Settings" }).first().click();
+  await page.getByRole("button", { name: "Settings" }).first().click();
   await page.getByRole("button", { name: "Restore defaults" }).click();
   await expect(page.getByText(/Unsynced changes/)).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");

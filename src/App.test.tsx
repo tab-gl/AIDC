@@ -115,7 +115,7 @@ describe("desktop shell", () => {
     expect(await screen.findByRole("button", { name: "Applications" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Ace ID menu" })).toBeTruthy();
     expect(screen.queryByRole("navigation", { name: "Primary" })).toBeNull();
-    expect(screen.getAllByRole("link", { name: "Settings" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Settings" }).length).toBeGreaterThan(0);
   }, 20_000);
 });
 
@@ -128,7 +128,7 @@ describe("fixed application limit", () => {
     await screen.findByRole("button", { name: "Ace ID menu" });
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     const limitButton = await screen.findByRole("button", { name: "Limit reached" });
-    expect(limitButton.hasAttribute("disabled")).toBe(true);
+    expect(limitButton.getAttribute("aria-disabled")).toBe("true");
     expect(vi.mocked(globalThis.fetch).mock.calls.some(([input]) => String(input).includes("/api/quota"))).toBe(false);
   }, 20_000);
 });
