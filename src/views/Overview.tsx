@@ -11,13 +11,14 @@ import { Text } from "@astryxdesign/core/Text";
 import { Timestamp } from "@astryxdesign/core/Timestamp";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
+import { APPLICATION_LIMIT } from "../lib/limits";
 import { Metric, PageHeader, eventLabel } from "../ui/blocks";
 import { Reveal } from "../ui/motion";
-import type { ActivityEvent, Application, DiscoveryStatus, OperationsAnalytics, Quota } from "../types";
+import type { ActivityEvent, Application, DiscoveryStatus, OperationsAnalytics } from "../types";
 
-type Props = { applications: Application[]; applicationsLoading: boolean; applicationsError: string | null; quota: Quota | null; signedIn: boolean; showTips: boolean; onApplications: () => void; onActivity: () => void; onSettings: () => void; onCreate: () => void };
+type Props = { applications: Application[]; applicationsLoading: boolean; applicationsError: string | null; signedIn: boolean; showTips: boolean; onApplications: () => void; onActivity: () => void; onSettings: () => void; onCreate: () => void };
 
-export function Overview({ applications, applicationsLoading, applicationsError, quota, signedIn, showTips, onApplications, onActivity, onSettings, onCreate }: Props) {
+export function Overview({ applications, applicationsLoading, applicationsError, signedIn, showTips, onApplications, onActivity, onSettings, onCreate }: Props) {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
   const [discovery, setDiscovery] = useState<DiscoveryStatus | null>(null);
@@ -25,10 +26,11 @@ export function Overview({ applications, applicationsLoading, applicationsError,
   const [refreshing, setRefreshing] = useState(false);
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const seq = useRef(0);
-  const limit = typeof quota?.limit === "number" ? quota.limit : null;
-  const used = typeof quota?.count === "number" ? quota.count : applications.length;
-  const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null ? Math.max(limit - used, 0) : null;
-  const usage = limit !== null && limit > 0 && remaining !== null ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
+  const limit = APPLICATION_LIMIT;
+  const used = applications.length;
+  const countReady = signedIn && !applicationsLoading && !applicationsError;
+  const remaining = countReady ? Math.max(limit - used, 0) : null;
+  const usage = countReady ? Math.min(100, Math.max(0, (used / limit) * 100)) : null;
 
   const refresh = useCallback(async () => {
     const id = ++seq.current;
@@ -51,14 +53,14 @@ export function Overview({ applications, applicationsLoading, applicationsError,
 
   return <VStack gap={6}>
     <PageHeader eyebrow="Overview" title="Manage identity apps" description="Applications, usage, provider health, and recent events."
-      actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label="New application" variant="primary" onClick={onCreate} /></>} />
+      actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label={used >= limit ? "Limit reached" : "New application"} variant="primary" onClick={onCreate} isDisabled={!countReady || used >= limit} /></>} />
     {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}. Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
 
     <Reveal><div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
-      <Metric label="Available quota" value={signedIn && remaining !== null ? remaining : "—"}
-        hint={!signedIn ? "Sign in to load your quota." : limit !== null ? `${used} of ${limit} applications used` : "Quota unavailable"}>
-        {usage !== null && <ProgressBar label="Application quota used" value={usage} isLabelHidden />}
+      <Metric label="Available projects" value={remaining !== null ? remaining : "—"}
+        hint={!signedIn ? "Sign in to load your workspace." : applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : `${used} of ${limit} applications used`}>
+        {usage !== null && <ProgressBar label="Projects used" value={usage} isLabelHidden />}
       </Metric>
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Across the apps you own." />
       <Metric label="Operational apps" value={uptime ? `${uptime.operational}/${uptime.total}` : "—"} hint="Passing their latest uptime check." />

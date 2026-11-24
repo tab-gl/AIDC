@@ -28,12 +28,11 @@ function json(body: unknown) {
   return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 }
 
-function mockApi() {
+function mockApi(applicationCount = 0) {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes("/api/me")) return json({ user: { id: "dev-1", name: "Ada Lovelace", email: "ada@example.test" } });
-    if (url.includes("/api/applications")) return json({ applications: [] });
-    if (url.includes("/api/quota")) return json({ quota: { count: 0, limit: 5, remaining: 5 } });
+    if (url.includes("/api/applications")) return json({ applications: Array.from({ length: applicationCount }, (_, index) => ({ id: `app-${index + 1}`, name: `Application ${index + 1}` })) });
     if (url.includes("/api/activity")) return json({ events: [] });
     if (url.includes("/api/integration/discovery")) return json({ status: "ready" });
     if (url.includes("/api/health")) return json({ ok: true });
@@ -117,5 +116,18 @@ describe("desktop shell", () => {
     expect(screen.getByRole("button", { name: "Ace ID menu" })).toBeTruthy();
     expect(screen.queryByRole("navigation", { name: "Primary" })).toBeNull();
     expect(screen.getAllByRole("link", { name: "Settings" }).length).toBeGreaterThan(0);
+  }, 20_000);
+});
+
+
+describe("fixed application limit", () => {
+  it("caps each Ace ID at seven applications without requesting a quota endpoint", async () => {
+    setViewport(1280);
+    mockApi(7);
+    render(<App />);
+    await screen.findByRole("button", { name: "Ace ID menu" });
+    const limitButton = screen.getByRole("button", { name: "Limit reached" });
+    expect(limitButton.hasAttribute("disabled")).toBe(true);
+    expect(vi.mocked(globalThis.fetch).mock.calls.some(([input]) => String(input).includes("/api/quota"))).toBe(false);
   }, 20_000);
 });

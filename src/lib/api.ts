@@ -1,4 +1,4 @@
-import type { ActivityEvent, ApiError, Application, DiscoveryStatus, LoginAnalytics, OperationsAnalytics, Quota, RedirectUri, User, AppCredential, AppBranding, SessionRecord, UptimeReport, UserRecord } from "../types";
+import type { ActivityEvent, ApiError, Application, DiscoveryStatus, LoginAnalytics, OperationsAnalytics, RedirectUri, User, AppCredential, AppBranding, SessionRecord, UptimeReport, UserRecord } from "../types";
 
 export const API_ORIGIN = (import.meta.env.VITE_AIDC_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
 const API_BASE = `${API_ORIGIN}/api`;
@@ -95,7 +95,7 @@ export const api = {
       description: string;
       origin_url?: string;
       application_type?: string;
-    }) => request<{ application: Application; quota?: Quota }>("/applications", {
+    }) => request<{ application: Application }>("/applications", {
       method: "POST",
       body: JSON.stringify(input)
     }),
@@ -127,9 +127,6 @@ export const api = {
   integration: { discovery: () => request<DiscoveryStatus>("/integration/discovery") },
   users: {
     search: (q = "", limit = 20) => request<{ users: UserRecord[] }>(`/users/search?q=${encodeURIComponent(q.slice(0, 120))}&limit=${Math.min(50, Math.max(1, limit))}`)
-  },
-  quota: {
-    get: () => request<{ quota: Quota }>("/quota")
   },
   health: {
     get: () => request<{ ok: boolean }>("/health")

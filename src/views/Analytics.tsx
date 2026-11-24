@@ -13,18 +13,20 @@ import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
+import { APPLICATION_LIMIT } from "../lib/limits";
 import { dayLabel } from "../lib/dates";
 import { RANGES } from "../lib/ranges";
 import { usePreferences } from "../lib/prefs";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
-import type { LoginAnalytics, OperationsAnalytics, Quota } from "../types";
+import type { Application, LoginAnalytics, OperationsAnalytics } from "../types";
 
-export function Analytics() {
+type Props = { applications: Application[]; applicationsLoading: boolean; applicationsError: string | null };
+
+export function Analytics({ applications, applicationsLoading, applicationsError }: Props) {
   const { defaultRange } = usePreferences();
   const [days, setDays] = useState<number>(defaultRange);
   const [logins, setLogins] = useState<LoginAnalytics | null>(null);
   const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
-  const [quota, setQuota] = useState<Quota | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const seq = useRef(0);
@@ -32,11 +34,10 @@ export function Analytics() {
   const load = useCallback(async () => {
     const id = ++seq.current;
     setLoading(true); setError(""); setLogins(null); setOperations(null);
-    const [l, o, q] = await Promise.allSettled([api.analytics.logins(days), api.analytics.operations(days), api.quota.get()]);
+    const [l, o] = await Promise.allSettled([api.analytics.logins(days), api.analytics.operations(days)]);
     if (id !== seq.current) return;
     setLogins(l.status === "fulfilled" ? l.value : null);
     setOperations(o.status === "fulfilled" ? o.value : null);
-    setQuota(q.status === "fulfilled" ? q.value.quota ?? null : null);
     if (l.status === "rejected" || o.status === "rejected") setError(l.status === "rejected" && o.status === "rejected" ? "Analytics could not be loaded. Check the API connection and retry." : `${l.status === "rejected" ? "Sign-in analytics" : "Operations analytics"} could not be loaded. Other results are available.`);
     setLoading(false);
   }, [days]);
@@ -46,11 +47,11 @@ export function Analytics() {
   const peak = Math.max(1, ...daily.map((i) => i.count));
   const uptime = operations?.uptime;
   const rows = Array.isArray(uptime?.applications) ? uptime.applications as Array<Record<string, unknown>> : [];
-  // One flat application limit per Ace ID; there are no plans or subscriptions.
-  const limit = typeof quota?.limit === "number" ? quota.limit : null;
-  const used = typeof quota?.count === "number" ? quota.count : null;
-  const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null && used !== null ? Math.max(limit - used, 0) : null;
-  const usage = limit !== null && limit > 0 && remaining !== null ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
+  const limit = APPLICATION_LIMIT;
+  const used = applications.length;
+  const countReady = !applicationsLoading && !applicationsError;
+  const remaining = Math.max(limit - used, 0);
+  const usage = Math.min(100, Math.max(0, (used / limit) * 100));
 
   return <VStack gap={5}>
     <PageHeader eyebrow="Insights" title="Analytics" description="Authentication trends, active sessions, and application reliability."
@@ -64,14 +65,14 @@ export function Analytics() {
       <Metric label="Uptime coverage" value={uptime?.average_percent == null ? "—" : `${uptime.average_percent}%`} hint={uptime ? `${uptime.operational} of ${uptime.total} applications operational` : "No uptime data available."} />
     </div>
     <Card padding={4}><VStack gap={2}>
-      <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application quota</Heading></HStack>
-      {limit !== null && used !== null ? <>
+      <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Project limit</Heading></HStack>
+      {countReady ? <>
         <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
           <Text type="supporting" color="secondary">{used} of {limit} applications used</Text>
           <Text type="supporting" color="secondary" hasTabularNumbers>{remaining} remaining</Text>
         </HStack>
-        <ProgressBar label="Application quota used" value={usage ?? 0} isLabelHidden />
-      </> : <Text color="secondary">{loading ? "Loading quota…" : "Quota is unavailable. The application limit could not be loaded."}</Text>}
+        <ProgressBar label="Projects used" value={usage} isLabelHidden />
+      </> : <Text color="secondary">{applicationsLoading ? "Loading applications…" : "Application count is unavailable."}</Text>}
     </VStack></Card>
     <div className="bento bento-2">
       <Card padding={4}><VStack gap={3}>

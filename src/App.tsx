@@ -26,11 +26,12 @@ import { Overview } from "./views/Overview";
 import { Applications } from "./views/Applications";
 import { LoadingState } from "./ui/blocks";
 import { API_ORIGIN, api } from "./lib/api";
+import { APPLICATION_LIMIT } from "./lib/limits";
 import { reconcileApplications } from "./lib/applications";
 import { haptic } from "./lib/haptics";
 import { navigate, readRoute, routes, type RouteId } from "./lib/navigation";
 import { usePreferences, type Preferences } from "./lib/prefs";
-import type { Application, Quota, User } from "./types";
+import type { Application, User } from "./types";
 
 const CommandPalette = lazy(() => import("@astryxdesign/core/CommandPalette").then((m) => ({ default: m.CommandPalette })));
 const ApplicationDrawer = lazy(() => import("./components/ApplicationDrawer").then((m) => ({ default: m.ApplicationDrawer })));
@@ -69,7 +70,6 @@ export function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [applicationsError, setApplicationsError] = useState<string | null>(null);
-  const [quota, setQuota] = useState<Quota | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -80,18 +80,11 @@ export function App() {
   const authEpoch = useRef(0);
   const bootSeq = useRef(0);
   const appsSeq = useRef(0);
-  const quotaSeq = useRef(0);
   const selected = useMemo(() => applications.find((a) => a.id === selectedId) ?? null, [applications, selectedId]);
 
   const clearAuthenticatedState = useCallback(() => {
     authEpoch.current += 1;
-    setUser(null); setApplications([]); setQuota(null); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null); setAccountOpen(false);
-  }, []);
-  const loadQuota = useCallback(async () => {
-    const seq = ++quotaSeq.current;
-    const epoch = authEpoch.current;
-    try { const d = await api.quota.get(); if (seq === quotaSeq.current && epoch === authEpoch.current) setQuota(d.quota ?? null); }
-    catch { if (seq === quotaSeq.current && epoch === authEpoch.current) setQuota(null); }
+    setUser(null); setApplications([]); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null); setAccountOpen(false);
   }, []);
   const loadApplications = useCallback(async (reconcile?: { upsert?: Application; removedId?: string }) => {
     const seq = ++appsSeq.current;
@@ -133,16 +126,9 @@ export function App() {
     window.addEventListener("aidc-auth-required", onAuthRequired);
     return () => { window.removeEventListener("hashchange", onHash); window.removeEventListener("aidc-auth-required", onAuthRequired); };
   }, [clearAuthenticatedState]);
-  useEffect(() => { if (user) { void loadApplications(); void loadQuota(); } }, [user, loadApplications, loadQuota]);
+  useEffect(() => { if (user) void loadApplications(); }, [user, loadApplications]);
   // Hash navigation does not reset scroll; a new page should start at its masthead.
   useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "auto" }); }, [route]);
-  useEffect(() => {
-    if (!user) return;
-    const refresh = () => { if (document.visibilityState === "visible") void loadQuota(); };
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => { window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
-  }, [user, loadQuota]);
   useEffect(() => {
     if (!user) return;
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCommandOpen(true); } };
@@ -167,9 +153,28 @@ export function App() {
     try { await api.auth.logout(); } catch { /* continue: a stale session is replaced on sign-in */ }
     window.location.assign(`${API_ORIGIN}/auth/login?switch=1`);
   };
-  const openCreate = () => { setCreateError(null); setCreateOpen(true); };
+  const openCreate = () => {
+    if (applicationsLoading || applicationsError) {
+      setNotice({ kind: "error", text: "Refresh your application list before creating a project." });
+      return;
+    }
+    if (applications.length >= APPLICATION_LIMIT) {
+      setNotice({ kind: "error", text: `Each Ace ID can own up to ${APPLICATION_LIMIT} applications.` });
+      return;
+    }
+    setCreateError(null);
+    setCreateOpen(true);
+  };
   const createApplication = async (input: { name: string; description: string; origin_url?: string }) => {
     const epoch = authEpoch.current;
+    if (applicationsLoading || applicationsError) {
+      setCreateError("Refresh your application list before creating a project.");
+      return;
+    }
+    if (applications.length >= APPLICATION_LIMIT) {
+      setCreateError(`Each Ace ID can own up to ${APPLICATION_LIMIT} applications.`);
+      return;
+    }
     setCreateBusy(true); setCreateError(null);
     try {
       const d = await api.applications.create({ ...input, application_type: "web" });
@@ -181,7 +186,7 @@ export function App() {
       setApplications((c) => [d.application, ...c.filter((a) => a.id !== d.application.id)]);
       setCreateOpen(false);
       setNotice({ kind: "success", text: `Application “${d.application.name}” created.` });
-      void loadApplications({ upsert: d.application }); void loadQuota();
+      void loadApplications({ upsert: d.application });
     } catch (error) {
       if (epoch !== authEpoch.current) return;
       const t = error as { message?: string; data?: { error?: string } };
@@ -209,13 +214,13 @@ export function App() {
     setApplications((items) => items.filter((i) => i.id !== id));
     setSelectedId(null);
     setNotice({ kind: "success", text: "Application deleted." });
-    void loadApplications({ removedId: id }); void loadQuota();
+    void loadApplications({ removedId: id });
   };
 
   const userName = user?.name || user?.email || "Developer";
 
   // Stable identities keep the floating bar out of re-renders it has nothing to do with
-  // (quota and health polling, notices, drawers); the icon set and destinations never change.
+  // (application counts and health polling, notices, drawers); the icon set and destinations never change.
   const navItems = useMemo<MobileNavItem[]>(() => routes
     .filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id))
     .map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: PIXEL_ROUTE_ICONS[r.id] })), []);
@@ -263,9 +268,9 @@ export function App() {
 
   const page = (() => {
     switch (route) {
-      case "overview": return <Overview applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} quota={quota} signedIn showTips={prefs.showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreate} />;
+      case "overview": return <Overview applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} signedIn showTips={prefs.showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreate} />;
       case "applications": return <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn onRetry={() => void loadApplications()} onCreate={openCreate} onOpen={(a) => setSelectedId(a.id)} />;
-      case "analytics": return <Analytics />;
+      case "analytics": return <Analytics applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} />;
       case "activity": return <Activity />;
       case "users": return <Users />;
       case "settings": return <Settings saved={prefs} draft={settingsDraft} onDraftChange={setSettingsDraft} />;

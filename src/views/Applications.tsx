@@ -9,6 +9,7 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { Card } from "@astryxdesign/core/Card";
 import { AsyncState, PageHeader } from "../ui/blocks";
 import { PixelIcon } from "../ui/PixelIcon";
+import { APPLICATION_LIMIT } from "../lib/limits";
 import type { Application } from "../types";
 
 type Props = { applications: Application[]; loading: boolean; error: string | null; signedIn: boolean; onRetry: () => void; onCreate: () => void; onOpen: (application: Application) => void };
@@ -23,7 +24,7 @@ export function Applications({ applications, loading, error, signedIn, onRetry, 
 
   return <VStack gap={5}>
     <PageHeader eyebrow="Workspace" title="Applications" description="Manage OAuth and OpenID Connect clients, redirect URIs, credentials, and branding."
-      actions={<><Badge label={`${applications.length} total`} />{signedIn && <Button label="Create application" variant="primary" onClick={onCreate} />}</>} />
+      actions={<><Badge label={`${applications.length}/${APPLICATION_LIMIT} total`} />{signedIn && <Button label={applications.length >= APPLICATION_LIMIT ? "Limit reached" : "Create application"} variant="primary" onClick={onCreate} isDisabled={loading || Boolean(error) || applications.length >= APPLICATION_LIMIT} />}</>} />
     {applications.length > 0 && <TextInput label="Search applications" isLabelHidden type="search" startIcon={<PixelIcon name="search" size={18} />} hasClear value={query} onChange={setQuery} placeholder="Search by name, origin, description, or ID" />}
     <AsyncState loading={loading} error={error} loadingTitle="Loading applications" onRetry={onRetry} empty={!loading && !error && !applications.length}
       emptyTitle={signedIn ? "Your workspace starts here" : "Sign in to view applications"}

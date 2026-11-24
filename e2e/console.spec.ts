@@ -12,18 +12,20 @@ const app = {
   updated_at: "2026-10-01T12:00:00.000Z"
 };
 
-async function mockApi(page: import("@playwright/test").Page, options: { expireAnalytics?: boolean } = {}) {
+async function mockApi(page: import("@playwright/test").Page, options: { expireAnalytics?: boolean; applicationCount?: number; onQuotaRequest?: () => void } = {}) {
+  const applications = Array.from({ length: options.applicationCount ?? 1 }, (_, index) => index === 0 ? app : { ...app, id: `${app.id}-${index}`, name: `Example identity app ${index + 1}` });
   await page.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
     if (path === "/api/me") {
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ user: { id: "dev-1", email: "dev@example.test", name: "Test Developer" } }) });
     } else if (path === "/api/applications" && route.request().method() === "GET") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ applications: [app] }) });
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ applications }) });
     } else if (path === "/api/applications" && route.request().method() === "POST") {
       await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Application service unavailable" }) });
     } else if (path === "/api/quota") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ quota: { count: 1, limit: 8, remaining: 7 } }) });
+      options.onQuotaRequest?.();
+      await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "Not found" }) });
     } else if (path === "/api/analytics/logins" && options.expireAnalytics) {
       await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Session expired" }) });
     } else if (path === "/api/analytics/logins") {
@@ -377,4 +379,16 @@ test("floating navigation fits the narrowest phone", async ({ page }) => {
   expect(box).not.toBeNull();
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
   expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(widths.viewport);
+});
+
+
+test("enforces the fixed seven-application limit without a quota API request", async ({ page }) => {
+  let quotaRequests = 0;
+  await mockApi(page, { applicationCount: 7, onQuotaRequest: () => { quotaRequests++; } });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Limit reached" }).first()).toBeDisabled();
+  await page.getByRole("link", { name: "Applications" }).first().click();
+  await expect(page.getByRole("button", { name: "Limit reached" })).toBeDisabled();
+  expect(quotaRequests).toBe(0);
 });
