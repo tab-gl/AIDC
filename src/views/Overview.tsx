@@ -12,6 +12,7 @@ import { Timestamp } from "@astryxdesign/core/Timestamp";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { Metric, PageHeader, eventLabel } from "../ui/blocks";
+import { Reveal } from "../ui/motion";
 import type { ActivityEvent, Application, DiscoveryStatus, OperationsAnalytics, Quota } from "../types";
 
 type Props = { applications: Application[]; applicationsLoading: boolean; applicationsError: string | null; quota: Quota | null; signedIn: boolean; showTips: boolean; onApplications: () => void; onActivity: () => void; onSettings: () => void; onCreate: () => void };
@@ -55,7 +56,7 @@ export function Overview({ applications, applicationsLoading, applicationsError,
       actions={<><Button label="Refresh" onClick={() => void refresh()} isLoading={refreshing} /><Button label="New application" variant="primary" onClick={onCreate} /></>} />
     {unavailable.length > 0 && <Banner status="warning" title="Some information is unavailable" description={`Could not load ${unavailable.join(", ")}. Try refreshing.`} endContent={<Button label="Retry" onClick={() => void refresh()} isLoading={refreshing} />} />}
 
-    <div className="bento bento-4">
+    <Reveal><div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
       <Metric label="Available quota" value={signedIn && remaining !== null ? remaining : "—"}
         hint={!signedIn ? "Sign in to load your quota." : subscriptionInactive ? `${plan ? `${plan} ` : "Your "}subscription is ${quota?.status}.` : limit !== null ? `${used} of ${limit} applications used${plan ? ` · ${plan} plan` : ""}` : "Quota unavailable"}>
@@ -63,9 +64,9 @@ export function Overview({ applications, applicationsLoading, applicationsError,
       </Metric>
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Across the apps you own." />
       <Metric label="Operational apps" value={uptime ? `${uptime.operational}/${uptime.total}` : "—"} hint="Passing their latest uptime check." />
-    </div>
+    </div></Reveal>
 
-    <div className="bento bento-2">
+    <Reveal delay={70}><div className="bento bento-2">
       <Card padding={4}>
         <VStack gap={3}>
           <Heading level={2}>Operational health</Heading>
@@ -84,9 +85,9 @@ export function Overview({ applications, applicationsLoading, applicationsError,
           <HStack gap={2}><Button label="Open event stream" onClick={onActivity} /><Button label="Manage applications" variant="ghost" onClick={onApplications} /></HStack>
         </VStack>
       </Card>
-    </div>
+    </div></Reveal>
 
-    {showTips && <Banner status="info" title="Security tip" description="Use exact HTTPS redirect URIs in production, keep origins aligned with the deployed application, and rotate client secrets immediately after exposure."
-      endContent={<Button label="Review applications" onClick={onApplications} />} />}
+    {showTips && <Reveal delay={120}><Banner status="info" title="Security tip" description="Use exact HTTPS redirect URIs in production, keep origins aligned with the deployed application, and rotate client secrets immediately after exposure."
+      endContent={<Button label="Review applications" onClick={onApplications} />} /></Reveal>}
   </VStack>;
 }

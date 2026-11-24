@@ -312,7 +312,7 @@ export function App() {
       <main className="m-main" id="main-content" tabIndex={-1}>
         <VStack gap={4}>
           {notice && <div role={notice.kind === "error" ? "alert" : "status"}><Banner status={notice.kind} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
-          <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
+          <Suspense fallback={<LoadingState title="Loading" />}><div key={route} className="route-enter">{page}</div></Suspense>
         </VStack>
       </main>
       <MobileNav
@@ -376,7 +376,7 @@ export function App() {
       </HStack>} />}>
       <VStack gap={4}>
         {notice && <div role={notice.kind === "error" ? "alert" : "status"}><Banner status={notice.kind} title={notice.text} isDismissable onDismiss={() => setNotice(null)} /></div>}
-        <Suspense fallback={<LoadingState title="Loading" />}>{page}</Suspense>
+        <Suspense fallback={<LoadingState title="Loading" />}><div key={route} className="route-enter">{page}</div></Suspense>
       </VStack>
     </AppShell>
     {overlays}

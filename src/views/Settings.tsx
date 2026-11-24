@@ -94,6 +94,7 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
         <Text type="supporting" color="secondary">Used when opening Activity or Analytics. You can still change the range there.</Text>
         <Toggle label="Haptic feedback" description="Brief vibration for supported devices after successful application changes." value={prefs.hapticFeedback} onChange={(v) => update("hapticFeedback", v)} />
       </VStack></Card>
+      <VStack gap={4}>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Integration health</Heading>
         <Text color="secondary">Live checks from the AIDC server. Configuration secrets are never returned to this page.</Text>
@@ -109,6 +110,7 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
         <Text color="secondary">Ace ID owns developer authentication and session issuance. AIDC validates Ace ID sessions and does not issue a separate developer identity.</Text>
         <Text type="label">Server managed</Text>
       </VStack></Card>
+      </VStack>
     </Grid>
   </VStack>;
 }
