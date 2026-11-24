@@ -17,13 +17,14 @@ import { dayLabel } from "../lib/dates";
 import { RANGES } from "../lib/ranges";
 import { usePreferences } from "../lib/prefs";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
-import type { LoginAnalytics, OperationsAnalytics } from "../types";
+import type { LoginAnalytics, OperationsAnalytics, Quota } from "../types";
 
 export function Analytics() {
   const { defaultRange } = usePreferences();
   const [days, setDays] = useState<number>(defaultRange);
   const [logins, setLogins] = useState<LoginAnalytics | null>(null);
   const [operations, setOperations] = useState<OperationsAnalytics | null>(null);
+  const [quota, setQuota] = useState<Quota | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const seq = useRef(0);
@@ -31,10 +32,11 @@ export function Analytics() {
   const load = useCallback(async () => {
     const id = ++seq.current;
     setLoading(true); setError(""); setLogins(null); setOperations(null);
-    const [l, o] = await Promise.allSettled([api.analytics.logins(days), api.analytics.operations(days)]);
+    const [l, o, q] = await Promise.allSettled([api.analytics.logins(days), api.analytics.operations(days), api.quota.get()]);
     if (id !== seq.current) return;
     setLogins(l.status === "fulfilled" ? l.value : null);
     setOperations(o.status === "fulfilled" ? o.value : null);
+    setQuota(q.status === "fulfilled" ? q.value.quota ?? null : null);
     if (l.status === "rejected" || o.status === "rejected") setError(l.status === "rejected" && o.status === "rejected" ? "Analytics could not be loaded. Check the API connection and retry." : `${l.status === "rejected" ? "Sign-in analytics" : "Operations analytics"} could not be loaded. Other results are available.`);
     setLoading(false);
   }, [days]);
@@ -44,6 +46,11 @@ export function Analytics() {
   const peak = Math.max(1, ...daily.map((i) => i.count));
   const uptime = operations?.uptime;
   const rows = Array.isArray(uptime?.applications) ? uptime.applications as Array<Record<string, unknown>> : [];
+  // Quota comes straight from Ace ID's entitlement decision; there is no plan tier to label here.
+  const limit = typeof quota?.limit === "number" ? quota.limit : null;
+  const used = typeof quota?.count === "number" ? quota.count : null;
+  const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null && used !== null ? Math.max(limit - used, 0) : null;
+  const usage = limit !== null && limit > 0 && remaining !== null ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
 
   return <VStack gap={5}>
     <PageHeader eyebrow="Insights" title="Analytics" description="Authentication trends, active sessions, and application reliability."
@@ -56,6 +63,16 @@ export function Analytics() {
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Current sessions across owned apps." />
       <Metric label="Uptime coverage" value={uptime?.average_percent == null ? "—" : `${uptime.average_percent}%`} hint={uptime ? `${uptime.operational} of ${uptime.total} applications operational` : "No uptime data available."} />
     </div>
+    <Card padding={4}><VStack gap={2}>
+      <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application quota</Heading>{quota?.status && quota.status !== "active" && <Badge label={`Subscription ${quota.status}`} />}</HStack>
+      {limit !== null && used !== null ? <>
+        <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
+          <Text type="supporting" color="secondary">{used} of {limit} applications used</Text>
+          <Text type="supporting" color="secondary" hasTabularNumbers>{remaining} remaining</Text>
+        </HStack>
+        <ProgressBar label="Application quota used" value={usage ?? 0} isLabelHidden />
+      </> : <Text color="secondary">{loading ? "Loading quota…" : "Quota is unavailable. Ace ID did not return an application limit."}</Text>}
+    </VStack></Card>
     <div className="bento bento-2">
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Daily sign-ins</Heading>

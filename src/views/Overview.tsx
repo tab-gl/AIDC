@@ -29,7 +29,6 @@ export function Overview({ applications, applicationsLoading, applicationsError,
   const used = typeof quota?.count === "number" ? quota.count : applications.length;
   const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null ? Math.max(limit - used, 0) : null;
   const usage = limit !== null && limit > 0 && remaining !== null ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
-  const plan = quota?.name || quota?.plan || null;
   const subscriptionInactive = Boolean(quota?.status && quota.status !== "active");
 
   const refresh = useCallback(async () => {
@@ -59,7 +58,7 @@ export function Overview({ applications, applicationsLoading, applicationsError,
     <Reveal><div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
       <Metric label="Available quota" value={signedIn && remaining !== null ? remaining : "—"}
-        hint={!signedIn ? "Sign in to load your quota." : subscriptionInactive ? `${plan ? `${plan} ` : "Your "}subscription is ${quota?.status}.` : limit !== null ? `${used} of ${limit} applications used${plan ? ` · ${plan} plan` : ""}` : "Quota unavailable"}>
+        hint={!signedIn ? "Sign in to load your quota." : subscriptionInactive ? `Subscription ${quota?.status}. Renew it in Ace ID to add applications.` : limit !== null ? `${used} of ${limit} applications used` : "Quota unavailable"}>
         {usage !== null && <ProgressBar label="Application quota used" value={usage} isLabelHidden />}
       </Metric>
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Across the apps you own." />

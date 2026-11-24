@@ -106,7 +106,7 @@ export function Settings({ saved, draft, onDraftChange }: { saved: Preferences; 
         <Button label="Run diagnostics" isLoading={checking} onClick={() => void check()} />
       </VStack></Card>
       <Card padding={4}><VStack gap={2}>
-        <Heading level={2}>Ace ID / OIDC</Heading>
+        <Heading level={2}>Ace ID @ OIDC</Heading>
         <Text color="secondary">Ace ID owns developer authentication and session issuance. AIDC validates Ace ID sessions and does not issue a separate developer identity.</Text>
         <Text type="label">Server managed</Text>
       </VStack></Card>

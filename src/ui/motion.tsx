@@ -1,38 +1,27 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { motion } from "motion/react";
+import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useReducedMotion } from "../lib/prefs";
 
 /**
  * Motion primitives shared by the landing page and the console.
  *
- * The behaviour is adapted from two copy-paste animation collections rather than
- * added as dependencies: Animata's reveal and border-trail (animata.design) and
- * Skiper UI's pointer spotlight (skiper-ui.com). Both publish Tailwind and
- * framer-motion source; AIDC is Astryx plus plain CSS, so each effect is rebuilt
- * here with IntersectionObserver and CSS, and respects the saved reduced-motion
- * preference and the system setting.
+ * Reveal and the pointer spotlight are adapted from two copy-paste animation
+ * collections: Animata's reveal and border-trail (animata.design) and Skiper UI's
+ * pointer spotlight (skiper-ui.com). The reveal now runs on motion.dev (motion/react),
+ * which also honours the saved reduced-motion preference and the system setting.
  */
 
 /** Fades and lifts its children in the first time they scroll into view. */
 export function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   const reducedMotion = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    // Without an observer (tests, older browsers) or with motion reduced, show the content at once.
-    if (!element || reducedMotion || typeof IntersectionObserver === "undefined") { setShown(true); return; }
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      setShown(true);
-      observer.disconnect();
-    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [reducedMotion]);
-
-  return <div ref={ref} className={`motion-reveal${shown ? " is-shown" : ""}${className ? ` ${className}` : ""}`}
-    style={shown && delay ? { transitionDelay: `${delay}ms` } : undefined}>{children}</div>;
+  return <motion.div
+    className={`motion-reveal${className ? ` ${className}` : ""}`}
+    initial={reducedMotion ? false : { opacity: 0, y: 14 }}
+    whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+    animate={reducedMotion ? { opacity: 1, y: 0 } : undefined}
+    viewport={{ once: true, margin: "0px 0px -6% 0px", amount: 0.06 }}
+    transition={{ duration: 0.55, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
+  >{children}</motion.div>;
 }
 
 /** Tracks the pointer inside a card so CSS can paint a soft spotlight beneath it. */

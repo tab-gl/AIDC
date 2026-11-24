@@ -38,15 +38,22 @@ m3e-theme { display: contents; }
 }
 .landing-masthead { display: flex; justify-content: space-between; gap: 1rem; padding: 23px 0; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); }
 .landing-masthead span span { padding: 0 .4rem; }
-.landing-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 290px); gap: clamp(48px, 6vw, 100px); align-items: end; padding: clamp(56px, 5.5vw, 92px) 0 clamp(56px, 5.5vw, 96px); }
-.landing-hero-copy { min-width: 0; }
+.landing-hero { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 290px); gap: clamp(48px, 6vw, 100px); align-items: end; padding: clamp(56px, 5.5vw, 92px) 0 clamp(56px, 5.5vw, 96px); }
+.landing-hero-copy { min-width: 0; position: relative; z-index: 1; }
+/* ReactBits Pixel Blast field behind the hero copy; it fades out along a soft mask. */
+.landing-hero-field {
+  position: absolute; inset: -12% -6% -6%; z-index: 0; pointer-events: none; opacity: .75;
+  -webkit-mask-image: radial-gradient(120% 90% at 18% 40%, #000 8%, transparent 72%);
+  mask-image: radial-gradient(120% 90% at 18% 40%, #000 8%, transparent 72%);
+}
+.pixel-blast, .pixel-blast-canvas { display: block; width: 100%; height: 100%; }
 .landing-eyebrow { display: flex; align-items: center; gap: .6rem; margin: 0 0 30px; color: var(--color-text-secondary); font: 600 .6875rem/1.4 var(--font-family-body); letter-spacing: .12em; text-transform: uppercase; }
 .landing-eyebrow-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-primary); }
 .landing .landing-hero-title { max-width: 13ch; margin: 0; font-family: var(--font-family-heading); font-size: clamp(4.1rem, 7.7vw, 8rem); font-weight: 400; line-height: .94; letter-spacing: -.025em; text-wrap: balance; }
 .landing-hero-title em, .landing-section-title em, .landing-cta-title em, .landing-note-quote em { font-weight: 400; }
 .landing .landing-lede { display: block; max-width: 48ch; margin-top: 32px; font-size: clamp(1rem, 1.25vw, 1.15rem); font-weight: 400; line-height: 1.7; }
 .landing-actions { margin-top: 32px; }
-.landing-hero-note { min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; border-left: 1px solid var(--color-border); padding: 0 0 0 clamp(24px, 3vw, 48px); }
+.landing-hero-note { position: relative; z-index: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; border-left: 1px solid var(--color-border); padding: 0 0 0 clamp(24px, 3vw, 48px); }
 .landing-note-index { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); padding-bottom: 16px; }
 .landing-note-quote { font: 400 clamp(2.3rem, 3.5vw, 3.75rem)/.98 var(--font-family-heading); letter-spacing: -.02em; margin: 28px 0; }
 .landing-note-copy { color: var(--color-text-secondary); font: 400 .875rem/1.7 var(--font-family-body); margin: 0; }
@@ -70,6 +77,7 @@ m3e-theme { display: contents; }
   .landing-nav { padding: 14px 20px; }
   .landing-masthead > :last-child, .landing-section-label > :last-child { display: none; }
   .landing-hero { grid-template-columns: minmax(0, 1fr); gap: 48px; padding: 72px 0 80px; }
+  .landing-hero-field { inset: -8% -14% -4%; opacity: .55; }
   .landing .landing-hero-title { font-size: clamp(3.6rem, 11.5vw, 5.5rem); }
   .landing .landing-lede { margin-top: 26px; }
   .landing-hero-note { border-left: 0; border-top: 1px solid var(--color-border); padding: 18px 0 0; }
@@ -87,11 +95,11 @@ m3e-theme { display: contents; }
 }
 
 /* ---------- Motion ----------
-   Reveal, marquee, spotlight and border-trail are adapted from Animata and Skiper UI.
-   Both publish Tailwind and framer-motion source, so the effects are rebuilt here in plain
-   CSS to keep the Astryx stack and stay inside the reduced-motion rules below. */
-.motion-reveal { min-width: 0; opacity: 0; transform: translateY(14px); transition: opacity .55s cubic-bezier(.22, 1, .36, 1), transform .55s cubic-bezier(.22, 1, .36, 1); }
-.motion-reveal.is-shown { opacity: 1; transform: none; }
+   Reveal, pointer spotlight and border trail are adapted from Animata and Skiper UI;
+   the reveal animates through motion.dev in src/ui/motion.tsx. The dithered field under
+   the hero is adapted from ReactBits' Pixel Blast. All of it stays inside the
+   reduced-motion rules below. */
+.motion-reveal { min-width: 0; }
 
 /* A hairlined strip of the standards the console speaks, scrolling slowly. */
 .landing-marquee {
@@ -130,11 +138,9 @@ m3e-theme { display: contents; }
 @keyframes route-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .motion-reveal { opacity: 1; transform: none; transition: none; }
   .landing-marquee-track, .landing-cta::after, .route-enter { animation: none; }
   .spotlight::after { display: none; }
 }
-:root[data-reduce-motion="true"] .motion-reveal { opacity: 1; transform: none; transition: none; }
 :root[data-reduce-motion="true"] .landing-marquee-track,
 :root[data-reduce-motion="true"] .landing-cta::after,
 :root[data-reduce-motion="true"] .route-enter { animation: none; }
