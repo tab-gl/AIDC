@@ -369,8 +369,8 @@ export function App() {
         <SearchField items={searchItems} onSelect={onSearchSelect} />
         <DropdownMenu placement="below" alignment="end" renderTrigger={(props) => <IconButton {...props} label="Account menu" variant="ghost" icon={<Avatar name={userName} src={user.picture || user.avatar_url || undefined} size="sm" tooltip={false} />} />}>
           <DropdownMenuItem label={userName} description="Signed in with Ace ID" isDisabled />
-          <DropdownMenuItem label="Switch account" icon="refresh" onClick={() => void switchAccount()} />
-          <DropdownMenuItem label="Account" icon="externalLink" href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
+          <DropdownMenuItem label="Switch account" icon={<PixelIcon name="exchange" size={20} />} onClick={() => void switchAccount()} />
+          <DropdownMenuItem label="Account" icon={<PixelIcon name="external-link" size={20} />} href="https://identity.ace-base.cc/me" target="_blank" rel="noreferrer" />
           <DropdownMenuItem label={logoutBusy ? "Signing out…" : "Sign out"} variant="destructive" isDisabled={logoutBusy} onClick={() => void signOut()} />
         </DropdownMenu>
       </HStack>} />}>

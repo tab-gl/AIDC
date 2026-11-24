@@ -1,10 +1,10 @@
 export const routes = [
-  { id: "overview", label: "Overview", icon: "◇" },
-  { id: "applications", label: "Applications", icon: "▦" },
-  { id: "analytics", label: "Analytics", icon: "↗" },
-  { id: "activity", label: "Activity", icon: "◷" },
-  { id: "users", label: "Users", icon: "◎" },
-  { id: "settings", label: "Settings", icon: "⚙" }
+  { id: "overview", label: "Overview" },
+  { id: "applications", label: "Applications" },
+  { id: "analytics", label: "Analytics" },
+  { id: "activity", label: "Activity" },
+  { id: "users", label: "Users" },
+  { id: "settings", label: "Settings" }
 ] as const;
 export type RouteId = (typeof routes)[number]["id"];
 export function readRoute(): RouteId {

@@ -13,6 +13,7 @@ import { Timestamp } from "@astryxdesign/core/Timestamp";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
 import { ErrorBanner, LoadingState, Metric, PageHeader, eventDetail, eventLabel } from "../ui/blocks";
+import { PixelIcon } from "../ui/PixelIcon";
 import { RANGES } from "../lib/ranges";
 import { usePreferences } from "../lib/prefs";
 import type { ActivityEvent, LoginAnalytics, OperationsAnalytics } from "../types";
@@ -57,7 +58,7 @@ export function Activity() {
     <PageHeader eyebrow="Observability" title="Activity" description="Real application events and login trends, scoped to applications you own."
       actions={<><Selector label="Range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
     {error && <ErrorBanner message={error} onRetry={() => void load()} />}
-    <Grid columns={{ minWidth: 190, max: 5, repeat: "fit" }} gap={4}>
+    <Grid columns={{ minWidth: 132, max: 5, repeat: "fit" }} gap={4}>
       <Metric label="Logins" value={analytics?.total ?? "—"} hint="Successful sessions in the window." />
       <Metric label="Failed attempts" value={analytics?.failedAttempts ?? "—"} hint="Failed logins on your apps." />
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Current sessions on your apps." />
@@ -66,7 +67,7 @@ export function Activity() {
     </Grid>
     <Card padding={4}><VStack gap={3}>
       <HStack gap={3} vAlign="end" wrap="wrap">
-        <StackItem size="fill"><TextInput label="Search events" isLabelHidden type="search" startIcon="search" hasClear value={search} onChange={setSearch} placeholder="Search events" /></StackItem>
+        <StackItem size="fill"><TextInput label="Search events" isLabelHidden type="search" startIcon={<PixelIcon name="search" size={18} />} hasClear value={search} onChange={setSearch} placeholder="Search events" /></StackItem>
         <StackItem size="static"><Selector label="Filter" variant="secondary" options={FILTERS} value={filter} onChange={(v) => v && setFilter(v)} /></StackItem>
       </HStack>
       {loading ? <LoadingState title="Loading activity" /> : eventsUnavailable ? null : filtered.length

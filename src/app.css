@@ -142,6 +142,8 @@ m3e-theme { display: contents; }
 .bento-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 1100px) {
   .bento-4, .bento-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* An odd metric count leaves a single card on the last row; let it use the full width. */
+  .bento-5 > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
   .bento-2 { grid-template-columns: minmax(0, 1fr); }
@@ -149,6 +151,7 @@ m3e-theme { display: contents; }
 }
 @media (max-width: 380px) {
   .bento-4, .bento-5 { grid-template-columns: minmax(0, 1fr); }
+  .bento-5 > :last-child:nth-child(odd) { grid-column: auto; }
 }
 
 /* Cookie notice */
@@ -175,6 +178,11 @@ m3e-theme { display: contents; }
 .m-main:focus { outline: 0; }
 .skip-link { position: fixed; left: 12px; top: -56px; z-index: 90; padding: 11px 16px; border-radius: 999px; background: var(--color-accent); color: var(--color-on-accent); font-family: var(--font-family-body); font-size: 13px; font-weight: 600; text-decoration: none; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24); transition: top 0.2s ease; }
 .skip-link:focus-visible { top: 10px; }
+
+/* ---------- Pixel icons ----------
+   Glyphs come from @hackernoon/pixel-icon-library (24px icon font). The wrapper keeps each
+   glyph square and centred inside Astryx slots, and colour follows currentColor. */
+.pixel-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; line-height: 1; }
 
 /* ---------- Floating navigation (Material 3 Expressive) ----------
    A capsule that floats clear of the safe area. The selected destination morphs into a

@@ -24,8 +24,12 @@ export function Overview({ applications, applicationsLoading, applicationsError,
   const [refreshing, setRefreshing] = useState(false);
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const seq = useRef(0);
-  const remaining = quota?.remaining, limit = quota?.limit;
-  const usage = typeof remaining === "number" && typeof limit === "number" && limit > 0 ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
+  const limit = typeof quota?.limit === "number" ? quota.limit : null;
+  const used = typeof quota?.count === "number" ? quota.count : applications.length;
+  const remaining = typeof quota?.remaining === "number" ? quota.remaining : limit !== null ? Math.max(limit - used, 0) : null;
+  const usage = limit !== null && limit > 0 && remaining !== null ? Math.min(100, Math.max(0, ((limit - remaining) / limit) * 100)) : null;
+  const plan = quota?.name || quota?.plan || null;
+  const subscriptionInactive = Boolean(quota?.status && quota.status !== "active");
 
   const refresh = useCallback(async () => {
     const id = ++seq.current;
@@ -53,7 +57,8 @@ export function Overview({ applications, applicationsLoading, applicationsError,
 
     <div className="bento bento-4">
       <Metric label="Applications" value={signedIn && !applicationsLoading && !applicationsError ? applications.length : "—"} hint={applicationsLoading ? "Loading applications…" : applicationsError ? "Application count unavailable." : signedIn ? "Linked to your Ace ID." : "Sign in to load your workspace."} />
-      <Metric label="Available quota" value={signedIn && typeof remaining === "number" ? remaining : "—"} hint={typeof limit === "number" ? `${quota?.count ?? applications.length} of ${limit} applications used` : "Quota unavailable"}>
+      <Metric label="Available quota" value={signedIn && remaining !== null ? remaining : "—"}
+        hint={!signedIn ? "Sign in to load your quota." : subscriptionInactive ? `${plan ? `${plan} ` : "Your "}subscription is ${quota?.status}.` : limit !== null ? `${used} of ${limit} applications used${plan ? ` · ${plan} plan` : ""}` : "Quota unavailable"}>
         {usage !== null && <ProgressBar label="Application quota used" value={usage} isLabelHidden />}
       </Metric>
       <Metric label="Active sessions" value={operations?.sessions?.active ?? "—"} hint="Across the apps you own." />

@@ -1,6 +1,6 @@
 export type User = { id: string; email?: string | null; name?: string | null; picture?: string | null; avatar_url?: string | null };
 export type Application = { id: string; name: string; description?: string | null; client_id?: string | null; origin_url?: string | null; application_type?: string | null; status?: string | null; created_at?: string; updated_at?: string };
-export type Quota = { count?: number | null; limit?: number | null; remaining?: number | null };
+export type Quota = { count?: number | null; limit?: number | null; remaining?: number | null; plan?: string | null; name?: string | null; status?: string | null };
 export type RedirectUri = { id: string; application_id: string; uri: string; created_at?: string };
 export type ActivityEvent = { id: string; application_id: string; application_name?: string; event_type: string; success: boolean; metadata?: Record<string, unknown> | null; created_at: string };
 export type LoginAnalytics = { days: number; items: { date: string; count: number; uniqueUsers: number; failedAttempts: number }[]; total: number; failedAttempts: number; uniqueUsers: number };

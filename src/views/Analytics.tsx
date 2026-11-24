@@ -13,6 +13,7 @@ import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { api } from "../lib/api";
+import { dayLabel } from "../lib/dates";
 import { RANGES } from "../lib/ranges";
 import { usePreferences } from "../lib/prefs";
 import { ErrorBanner, LoadingState, Metric, PageHeader } from "../ui/blocks";
@@ -61,7 +62,7 @@ export function Analytics() {
         {loading && !logins ? <LoadingState title="Loading trends" /> : daily.length
           ? <VStack gap={2} role="group" aria-label="Daily successful sign-ins">
             {daily.map((i) => <HStack gap={3} vAlign="center" key={i.date}>
-              <StackItem size="static"><Text type="supporting" color="secondary" hasTabularNumbers>{new Date(`${i.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</Text></StackItem>
+              <StackItem size="static"><Text type="supporting" color="secondary" hasTabularNumbers>{dayLabel(i.date)}</Text></StackItem>
               <StackItem size="fill"><ProgressBar value={i.count} max={peak} label={`${i.date}: ${i.count} sign-ins`} isLabelHidden /></StackItem>
               <StackItem size="static"><Text type="supporting" hasTabularNumbers>{i.count}</Text></StackItem>
             </HStack>)}
@@ -69,7 +70,7 @@ export function Analytics() {
           : logins ? <EmptyState isCompact title="No sign-in data yet" description="Real activity will appear here after users authenticate." /> : <Text color="secondary">Sign-in data is unavailable.</Text>}
       </VStack></Card>
       <Card padding={4}><VStack gap={3}>
-        <Heading level={2}>Application health <Badge label={`${rows.length} tracked`} /></Heading>
+        <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application health</Heading><Badge label={`${rows.length} tracked`} /></HStack>
         {rows.length ? rows.map((row, i) => {
           const name = String(row.name || row.application_name || row.application_id || `Application ${i + 1}`);
           const pct = typeof row.uptime_percent === "number" ? row.uptime_percent : null;

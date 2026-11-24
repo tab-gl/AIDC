@@ -75,8 +75,8 @@ describe("phone shell", () => {
     expect(nav.querySelectorAll("button[aria-current]")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Account menu" })).toBeNull();
-    // The bar is drawn with the Ace ID pixel glyphs.
-    expect(nav.querySelectorAll("svg.pixel-icon")).toHaveLength(4);
+    // The bar is drawn with the HackerNoon Pixel Icon Library.
+    expect(nav.querySelectorAll("i.pixel-icon.hn")).toHaveLength(4);
   }, 20_000);
 
   it("moves the active state and label to the chosen destination", async () => {
