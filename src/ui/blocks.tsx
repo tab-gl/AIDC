@@ -43,8 +43,8 @@ export function LoadingState({ title = "Loading", text }: { title?: string; text
   </VStack>;
 }
 
-export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
-  return <Banner status="error" title="Something went wrong" description={message} endContent={onRetry && <Button label="Retry" onClick={onRetry} />} />;
+export function ErrorBanner({ message, title = "Something went wrong", onRetry }: { message: string; title?: string; onRetry?: () => void }) {
+  return <Banner status="error" title={title} description={message} endContent={onRetry ? <Button label="Retry" onClick={onRetry} /> : undefined} />;
 }
 
 /** Loading → error → empty → content, in one place. */
@@ -55,7 +55,34 @@ export function AsyncState({ loading, error, empty, emptyTitle = "Nothing here y
   return <>{children}</>;
 }
 
-export const eventLabel = (type: string) => type.replace(/[._]/g, " ");
+// Event types arrive as machine identifiers (`login.success`, `credential.rotated`). Show them
+// as a readable sentence instead of leaking the wire format into the UI.
+const EVENT_WORDS: Record<string, string> = {
+  oidc: "OIDC", oauth: "OAuth", mfa: "MFA", totp: "TOTP", api: "API",
+  jwt: "JWT", jwks: "JWKS", sso: "SSO", uri: "URI", urls: "URLs", id: "ID"
+};
+export function eventLabel(type: string) {
+  const words = String(type || "")
+    .replace(/[._\-/]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => EVENT_WORDS[word.toLowerCase()] ?? `${word.charAt(0).toUpperCase()}${word.slice(1)}`);
+  return words.length ? words.join(" ") : "Event";
+}
+
+const detailValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "—";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object") {
+    try { return JSON.stringify(value).slice(0, 120); } catch { return "—"; }
+  }
+  const text = String(value);
+  return text.length > 120 ? `${text.slice(0, 117)}…` : text;
+};
+
 export function eventDetail(metadata?: Record<string, unknown> | null) {
-  return metadata && Object.keys(metadata).length ? Object.entries(metadata).slice(0, 3).map(([k, v]) => `${k}: ${String(v)}`).join(" · ") : "";
+  if (!metadata) return "";
+  const entries = Object.entries(metadata).filter(([, value]) => value !== null && value !== undefined && value !== "");
+  return entries.slice(0, 3).map(([key, value]) => `${eventLabel(key)}: ${detailValue(value)}`).join(" · ");
 }

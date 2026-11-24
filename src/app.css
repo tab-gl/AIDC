@@ -23,12 +23,12 @@ m3e-theme { display: contents; }
 
 /* Landing: an editorial rhythm of generous type, fine rules and numbered sections. */
 .landing { min-height: 100dvh; display: flex; flex-direction: column; }
-.landing-nav { padding: 20px clamp(20px, 4vw, 64px); border-bottom: 1px solid var(--color-border); }
 .landing-brand { white-space: nowrap; }
 .landing-brand img { object-fit: contain; }
 .landing-brand-description { color: var(--color-text-secondary); font-size: .8125rem; margin-left: .5rem; }
 .landing-nav-docs { margin-right: .5rem; }
 .landing-main { width: min(100% - clamp(40px, 8vw, 128px), 1440px); margin: 0 auto; flex: 1; }
+.landing-main:focus { outline: 0; }
 .landing-footer {
   font-family: var(--font-family-body);
   font-size: .6875rem;
@@ -61,7 +61,6 @@ m3e-theme { display: contents; }
 
 @media (max-width: 760px) {
   .landing-brand-description, .landing-nav-docs { display: none; }
-  .landing-nav { padding: 14px 20px; }
   .landing-hero { grid-template-columns: minmax(0, 1fr); gap: 48px; padding: 72px 0 80px; }
   .landing-hero-field { inset: -8% -14% -4%; opacity: .55; }
   .landing .landing-hero-title { font-size: clamp(3.6rem, 11.5vw, 5.5rem); }
@@ -245,23 +244,16 @@ m3e-theme { display: contents; }
    photo so the bar only ever carries four places. */
 .mobile-nav {
   position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 50;
-  display: flex; align-items: center; gap: 3px;
-  max-width: calc(100vw - 16px);
-  padding: 4px; border-radius: 999px;
-  background: color-mix(in srgb, var(--color-background-body) 78%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 18px 42px -18px rgba(0, 0, 0, 0.45),
-    0 6px 16px -10px rgba(0, 0, 0, 0.22);
+  display: flex; align-items: center;
+  width: max-content; max-width: calc(100vw - 16px);
   transform: translateX(-50%);
   transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
   will-change: transform;
 }
 .mobile-nav.is-hidden { transform: translate(-50%, calc(100% + 28px)); opacity: 0; pointer-events: none; }
+/* The capsule is the ReactBits Glass Surface; the bar only positions it. */
+.mobile-nav-glass { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.mobile-nav .glass-surface__content { padding: 0 4px; gap: 3px; }
 
 .mobile-nav-items { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .mobile-nav-item {
@@ -323,11 +315,11 @@ m3e-theme { display: contents; }
   box-shadow: 0 0 0 2px var(--color-accent), 0 0 0 5px color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 .mobile-nav-account:active .mobile-nav-avatar { transform: scale(0.92); }
-.mobile-nav button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.mobile-nav button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 @keyframes nav-pill-in { from { transform: scale(0.94); } to { transform: none; } }
 @keyframes nav-icon-pop { 0% { transform: scale(0.82) rotate(-5deg); } 55% { transform: scale(1.1) rotate(2deg); } 100% { transform: none; } }
 @media (max-width: 344px) {
-  .mobile-nav { gap: 2px; padding: 4px; }
+  .mobile-nav .glass-surface__content { gap: 2px; padding: 0 2px; }
   .mobile-nav-item { min-width: 40px; padding: 0 7px; }
   .mobile-nav-item.is-active { padding: 0 10px; gap: 5px; }
   .mobile-nav-item.is-active .mobile-nav-label { max-width: 62px; }
@@ -420,12 +412,34 @@ m3e-theme { display: contents; }
   .mobile-nav-item.is-active .mobile-nav-icon { animation: none; }
 }
 
-/* ---------- Landing: centred hero, bento grid, liquid-glass navbar ---------- */
-.landing { padding-top: 96px; }
-.landing-nav-wrap { position: relative; z-index: 20; }
-.landing-glass { z-index: 20; }
-.landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 28px; width: min(1040px, calc(100vw - 56px)); border: 0; padding: 0; color: var(--color-text-primary); }
-.landing-hero { display: block; text-align: center; padding: clamp(48px, 6vw, 96px) 0 clamp(48px, 5.5vw, 80px); }
+/* ---------- ReactBits Glass Surface ----------
+   The landing navbar and the phone bar share this component. It is a real frosted surface:
+   the SVG/WebGL displacement map bends the page at the rim, so keep its box opaque enough to
+   read over both the light and charcoal canvases. */
+.glass-surface, .glass-surface * { box-sizing: border-box; }
+.glass-surface__content { min-width: 0; }
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: color-mix(in srgb, var(--color-background-body, #fff) 94%, transparent) !important;
+  }
+}
+
+/* ---------- Landing: centred hero, bento grid, glass navbar ---------- */
+.landing { padding-top: clamp(96px, 13vh, 132px); }
+/* The fixed wrapper owns the width so the glass itself can stay 100% and respond to resizes. */
+.landing-nav-wrap {
+  /* Centred with auto margins rather than a transform: a transformed ancestor can become a
+     backdrop root in some engines, which would leave the glass sampling nothing. */
+  position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 0; right: 0;
+  width: min(1040px, calc(100vw - 28px)); margin-inline: auto; z-index: 30;
+}
+.landing-glass { width: 100%; }
+.landing-glass .glass-surface__content { padding: 0 clamp(10px, 1.4vw, 18px); }
+.landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 28px; width: 100%; height: 100%; border: 0; padding: 0; color: var(--color-text-primary); }
+.landing-nav-actions { flex: none; }
+.landing-hero { display: block; text-align: center; scroll-margin-top: 120px; padding: clamp(48px, 6vw, 96px) 0 clamp(48px, 5.5vw, 80px); }
 .landing-hero-copy { display: flex; flex-direction: column; align-items: center; }
 .landing-eyebrow { justify-content: center; }
 .landing .landing-hero-title { max-width: 14ch; margin-inline: auto; }
@@ -452,8 +466,10 @@ m3e-theme { display: contents; }
   .tile-wide, .tile-narrow { grid-column: span 6; }
 }
 @media (max-width: 760px) {
-  .landing { padding-top: 84px; }
-  .landing-nav { gap: 12px; width: calc(100vw - 40px); }
+  .landing { padding-top: 92px; }
+  .landing-nav-wrap { width: calc(100vw - 20px); top: calc(14px + env(safe-area-inset-top)); }
+  .landing-nav { gap: 12px; }
+  .landing-glass .glass-surface__content { padding: 0 10px; }
   .landing-hero { padding: 40px 0 56px; }
   .landing-cta { flex-direction: column; align-items: flex-start; }
 }

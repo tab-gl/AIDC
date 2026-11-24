@@ -3,6 +3,7 @@ import { Avatar } from "@astryxdesign/core/Avatar";
 import { PixelIcon } from "../ui/PixelIcon";
 import type { PixelIconName } from "../ui/pixelIcons";
 import { haptic } from "../lib/haptics";
+import GlassSurface from "../ui/GlassSurface";
 
 export type MobileNavItem = { id: string; label: string; icon: PixelIconName };
 export type MobileAccount = { name: string; avatarUrl?: string };
@@ -29,6 +30,8 @@ type Props = {
  * so the bar reads as a compact, thumb-friendly capsule. Settings is not a destination here:
  * it lives behind the profile photo on the right, which keeps the bar to four places.
  *
+ * The capsule itself is the ReactBits Glass Surface, so the rim refracts the page behind it and
+ * the centre stays calm; the existing hover, press and haptic feedback sit on top of it.
  * Micro-interactions: the pill springs open around the active destination, its icon pops as it
  * lands, a soft state layer answers the finger while it is down, and a mild haptic pulse fires on
  * touch. Everything is CSS-driven and collapses under prefers-reduced-motion.
@@ -80,39 +83,58 @@ export const MobileNav = memo(function MobileNav({ items, active, onSelect, acco
 
   return (
     <nav className={`mobile-nav${hidden ? " is-hidden" : ""}`} aria-label="Primary" onKeyDown={onKeyDown}>
-      <div className="mobile-nav-items">
-        {items.map((item) => {
-          const isActive = item.id === active;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`mobile-nav-item${isActive ? " is-active" : ""}`}
-              aria-current={isActive ? "page" : undefined}
-              aria-label={item.label}
-              onPointerDown={tap}
-              onClick={(event) => { press(event); onSelect(item.id); }}
-            >
-              <span className="mobile-nav-icon"><PixelIcon name={item.icon} size={26} filled={isActive} /></span>
-              <span className="mobile-nav-label" aria-hidden="true"><span>{item.label}</span></span>
-            </button>
-          );
-        })}
-      </div>
-      <span className="mobile-nav-divider" aria-hidden="true" />
-      <button
-        type="button"
-        className={`mobile-nav-account${accountActive ? " is-active" : ""}`}
-        aria-label={`Ace ID and settings${account.name ? ` (${account.name})` : ""}`}
-        aria-haspopup="dialog"
-        aria-expanded={accountOpen}
-        onPointerDown={tap}
-        onClick={(event) => { press(event); onAccount(); }}
+      <GlassSurface
+        className="mobile-nav-glass"
+        width="auto"
+        height={54}
+        borderRadius={999}
+        borderWidth={0.055}
+        blur={10}
+        brightness={52}
+        opacity={0.9}
+        displace={1.4}
+        backgroundOpacity={0.09}
+        saturation={1.6}
+        distortionScale={-72}
+        redOffset={0}
+        greenOffset={6}
+        blueOffset={12}
+        renderer="auto"
       >
-        <span className="mobile-nav-avatar">
-          <Avatar name={account.name} src={account.avatarUrl} size={32} tooltip={false} />
-        </span>
-      </button>
+        <div className="mobile-nav-items">
+          {items.map((item) => {
+            const isActive = item.id === active;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`mobile-nav-item${isActive ? " is-active" : ""}`}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={item.label}
+                onPointerDown={tap}
+                onClick={(event) => { press(event); onSelect(item.id); }}
+              >
+                <span className="mobile-nav-icon"><PixelIcon name={item.icon} size={26} filled={isActive} /></span>
+                <span className="mobile-nav-label" aria-hidden="true"><span>{item.label}</span></span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="mobile-nav-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className={`mobile-nav-account${accountActive ? " is-active" : ""}`}
+          aria-label={`Ace ID and settings${account.name ? ` (${account.name})` : ""}`}
+          aria-haspopup="dialog"
+          aria-expanded={accountOpen}
+          onPointerDown={tap}
+          onClick={(event) => { press(event); onAccount(); }}
+        >
+          <span className="mobile-nav-avatar">
+            <Avatar name={account.name} src={account.avatarUrl} size={32} tooltip={false} />
+          </span>
+        </button>
+      </GlassSurface>
     </nav>
   );
 });

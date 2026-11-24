@@ -33,17 +33,23 @@ export function Analytics({ applications, applicationsLoading, applicationsError
 
   const load = useCallback(async () => {
     const id = ++seq.current;
-    setLoading(true); setError(""); setLogins(null); setOperations(null);
+    setLoading(true); setError("");
     const [l, o] = await Promise.allSettled([api.analytics.logins(days), api.analytics.operations(days)]);
     if (id !== seq.current) return;
-    setLogins(l.status === "fulfilled" ? l.value : null);
-    setOperations(o.status === "fulfilled" ? o.value : null);
-    if (l.status === "rejected" || o.status === "rejected") setError(l.status === "rejected" && o.status === "rejected" ? "Analytics could not be loaded. Check the API connection and retry." : `${l.status === "rejected" ? "Sign-in analytics" : "Operations analytics"} could not be loaded. Other results are available.`);
+    // Keep the last good series on a failed refresh; the banner names what is stale.
+    if (l.status === "fulfilled") setLogins(l.value);
+    if (o.status === "fulfilled") setOperations(o.value);
+    if (l.status === "rejected" || o.status === "rejected") setError(l.status === "rejected" && o.status === "rejected" ? "Analytics could not be loaded. Check the API connection and retry." : `${l.status === "rejected" ? "Sign-in analytics" : "Operations analytics"} could not be loaded. The other series is still shown.`);
     setLoading(false);
   }, [days]);
+  // Results are tied to the selected window, so drop them when the window changes; the
+  // next load replaces the cards as soon as it settles.
+  useEffect(() => { setLogins(null); setOperations(null); }, [days]);
   useEffect(() => { void load(); return () => { seq.current += 1; }; }, [load]);
 
-  const daily = logins?.items ?? [];
+  // Newest last, so the bars read top-to-bottom as a timeline even if the API changes order.
+  const daily = [...(logins?.items ?? [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const hasData = Boolean(logins || operations);
   const peak = Math.max(1, ...daily.map((i) => i.count));
   const uptime = operations?.uptime;
   const rows = Array.isArray(uptime?.applications) ? uptime.applications as Array<Record<string, unknown>> : [];
@@ -56,8 +62,9 @@ export function Analytics({ applications, applicationsLoading, applicationsError
   return <VStack gap={5}>
     <PageHeader eyebrow="Insights" title="Analytics" description="Authentication trends, active sessions, and application reliability."
       actions={<><Selector label="Time range" variant="secondary" options={RANGES} value={String(days)} onChange={(v) => v && setDays(Number(v))} /><Button label="Refresh" isLoading={loading} onClick={() => void load()} /></>} />
-    {error && <ErrorBanner message={error} onRetry={() => void load()} />}
-    <div className="bento bento-5">
+    {error && <ErrorBanner title="Some analytics are unavailable" message={error} onRetry={() => void load()} />}
+    <Text type="supporting" color="secondary">Showing the last {days} days.</Text>
+    <div className="bento bento-5" aria-busy={loading || undefined}>
       <Metric label="Successful logins" value={logins?.total ?? "—"} hint={`Completed sign-ins over ${days} days.`} />
       <Metric label="Unique users" value={logins?.uniqueUsers ?? "—"} hint="Distinct Ace IDs in the window." />
       <Metric label="Failed attempts" value={logins?.failedAttempts ?? "—"} hint="Failed authentication events." />
@@ -74,7 +81,7 @@ export function Analytics({ applications, applicationsLoading, applicationsError
         <ProgressBar label="Projects used" value={usage} isLabelHidden />
       </> : <Text color="secondary">{applicationsLoading ? "Loading applications…" : "Application count is unavailable."}</Text>}
     </VStack></Card>
-    <div className="bento bento-2">
+    <div className="bento bento-2" aria-busy={loading || undefined} style={{ opacity: loading && hasData ? 0.78 : 1, transition: "opacity .18s ease" }}>
       <Card padding={4}><VStack gap={3}>
         <Heading level={2}>Daily sign-ins</Heading>
         {loading && !logins ? <LoadingState title="Loading trends" /> : daily.length
@@ -91,7 +98,9 @@ export function Analytics({ applications, applicationsLoading, applicationsError
         <HStack gap={2} vAlign="center" wrap="wrap"><Heading level={2}>Application health</Heading><Badge label={`${rows.length} tracked`} /></HStack>
         {rows.length ? rows.map((row, i) => {
           const name = String(row.name || row.application_name || row.application_id || `Application ${i + 1}`);
-          const pct = typeof row.uptime_percent === "number" ? row.uptime_percent : null;
+          const rawPct = row.uptime_percent;
+          const parsed = typeof rawPct === "number" ? rawPct : typeof rawPct === "string" && rawPct.trim() !== "" ? Number(rawPct) : NaN;
+          const pct = Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : null;
           const status = String(row.status || (pct === null ? "no data" : pct >= 99 ? "operational" : "degraded"));
           return <Item key={String(row.application_id || row.id || name)} label={name} description={status.replace(/_/g, " ")}
             startContent={<StatusDot variant={status === "operational" ? "success" : status === "degraded" ? "error" : "neutral"} label={status} />}

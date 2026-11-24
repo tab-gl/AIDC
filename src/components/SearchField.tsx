@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { PixelIcon } from "../ui/PixelIcon";
 
 export type SearchItem = { id: string; label: string; hint?: string };
@@ -11,6 +11,9 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
+  // Two search fields can coexist (a breakpoint re-render, or a future shell); a unique
+  // listbox id keeps `aria-controls` pointing at the right list.
+  const listId = useId();
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (q ? items.filter((i) => i.label.toLowerCase().includes(q) || i.hint?.toLowerCase().includes(q)) : items).slice(0, 8);
@@ -25,6 +28,8 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
   const choose = (id: string) => { close(true); onSelect(id); };
 
   useEffect(() => { if (open) input.current?.focus(); }, [open]);
+  // Keep the highlighted option inside the (possibly shrinking) result list.
+  useEffect(() => { setIndex((current) => Math.min(current, Math.max(0, results.length - 1))); }, [results.length]);
   useEffect(() => {
     if (!open) return;
     const away = (event: PointerEvent) => { if (!root.current?.contains(event.target as Node)) close(); };
@@ -56,7 +61,8 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
             aria-label="Search pages and applications"
             role="combobox"
             aria-expanded="true"
-            aria-controls="search-results"
+            aria-controls={listId}
+            aria-activedescendant={results[index] ? `${listId}-option-${index}` : undefined}
             aria-autocomplete="list"
             autoComplete="off"
             autoCorrect="off"
@@ -68,10 +74,11 @@ export function SearchField({ items, onSelect }: { items: SearchItem[]; onSelect
           <button type="button" className="search-close" aria-label="Close search" onClick={() => close(true)}>
             <PixelIcon name="close" size={16} />
           </button>
-          <ul id="search-results" className="search-results" role="listbox" aria-label="Search results">
+          <ul id={listId} className="search-results" role="listbox" aria-label="Search results">
             {results.length ? results.map((item, i) => (
-              <li key={item.id} role="option" aria-selected={i === index}>
-                <button type="button" className={i === index ? "is-active" : undefined} onMouseEnter={() => setIndex(i)} onClick={() => choose(item.id)}>
+              <li key={item.id} role="none">
+                <button type="button" role="option" id={`${listId}-option-${i}`} aria-selected={i === index} tabIndex={-1}
+                  className={i === index ? "is-active" : undefined} onMouseEnter={() => setIndex(i)} onClick={() => choose(item.id)}>
                   <span>{item.label}</span>{item.hint && <small>{item.hint}</small>}
                 </button>
               </li>

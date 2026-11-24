@@ -86,20 +86,34 @@ export function App() {
   const clearAuthenticatedState = useCallback(() => {
     authEpoch.current += 1;
     setUser(null); setApplications([]); setSelectedId(null); setCreateOpen(false); setCreateError(null); setCommandOpen(false); setNotice(null); setAccountOpen(false);
+    setAuthLoading(false); setApplicationsLoading(false); setApplicationsError(null); setSettingsDraft(null);
   }, []);
-  const loadApplications = useCallback(async (reconcile?: { upsert?: Application; removedId?: string }) => {
+  /**
+   * Loads the application list. A silent refresh revalidates in the background after a
+   * mutation or when the tab regains focus: the current list stays on screen instead of
+   * being replaced by a spinner, and a failed refresh keeps the confirmed local state.
+   */
+  const loadApplications = useCallback(async (change?: { upsert?: Application; removedId?: string }, options?: { silent?: boolean }) => {
     const seq = ++appsSeq.current;
     const epoch = authEpoch.current;
-    setApplicationsLoading(true); setApplicationsError(null);
+    const silent = options?.silent === true;
+    if (!silent) { setApplicationsLoading(true); setApplicationsError(null); }
     try {
       const d = await api.applications.list();
       if (!Array.isArray(d?.applications)) throw new Error("The server returned an invalid application list.");
       if (seq === appsSeq.current && epoch === authEpoch.current) {
-        setApplications(reconcileApplications(d.applications, reconcile));
+        setApplications(reconcileApplications(d.applications, change));
+        setApplicationsError(null);
       }
     } catch (error) {
-      if (seq === appsSeq.current && epoch === authEpoch.current) setApplicationsError(error instanceof Error ? error.message : "Failed to load applications.");
-    } finally { if (seq === appsSeq.current && epoch === authEpoch.current) setApplicationsLoading(false); }
+      // A background refresh must not blank a list the user can already see; the next
+      // foreground load (or the retry button) reports the problem.
+      if (seq === appsSeq.current && epoch === authEpoch.current && !silent) {
+        setApplicationsError(error instanceof Error ? error.message : "Failed to load applications.");
+      }
+    } finally {
+      if (seq === appsSeq.current && epoch === authEpoch.current) setApplicationsLoading(false);
+    }
   }, []);
   const bootstrap = useCallback(async () => {
     const seq = ++bootSeq.current;
@@ -116,7 +130,7 @@ export function App() {
       if (seq !== bootSeq.current || epoch !== authEpoch.current) return;
       if ((error as { status?: number }).status !== 401) setAuthError(connectionMessage(error));
       clearAuthenticatedState();
-    } finally { if (seq === bootSeq.current) setAuthLoading(false); }
+    } finally { if (seq === bootSeq.current && epoch === authEpoch.current) setAuthLoading(false); }
   }, [clearAuthenticatedState]);
 
   useEffect(() => { void bootstrap(); }, [bootstrap]);
@@ -128,8 +142,33 @@ export function App() {
     return () => { window.removeEventListener("hashchange", onHash); window.removeEventListener("aidc-auth-required", onAuthRequired); };
   }, [clearAuthenticatedState]);
   useEffect(() => { if (user) void loadApplications(); }, [user, loadApplications]);
+  // Coming back to the tab or regaining connectivity is a natural moment to revalidate.
+  // Throttled, silent and skipped while hidden, so it never competes with a view's own fetch.
+  useEffect(() => {
+    if (!user) return;
+    let lastRefresh = Date.now();
+    const revalidate = () => {
+      if (document.visibilityState === "hidden") return;
+      if (Date.now() - lastRefresh < 30_000) return;
+      lastRefresh = Date.now();
+      void loadApplications(undefined, { silent: true });
+    };
+    window.addEventListener("online", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => { window.removeEventListener("online", revalidate); document.removeEventListener("visibilitychange", revalidate); };
+  }, [user, loadApplications]);
   // Hash navigation does not reset scroll; a new page should start at its masthead.
   useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: "auto" }); }, [route]);
+  // Successes are confirmations, not permanent furniture; errors linger a little longer.
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), notice.kind === "success" ? 5_000 : 9_000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+  useEffect(() => {
+    const label = routes.find((item) => item.id === route)?.label;
+    document.title = user && label ? `${label} · AIDC` : "AIDC @ Ace Identity Developer Console";
+  }, [route, user]);
   useEffect(() => {
     if (!user) return;
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCommandOpen(true); } };
@@ -143,11 +182,16 @@ export function App() {
     setLogoutBusy(true);
     try {
       await api.auth.logout();
-      clearAuthenticatedState();
-      window.location.replace("/");
     } catch (error) {
-      if ((error as { status?: number }).status !== 401) setNotice({ kind: "error", text: "Could not sign out. Please try again." });
-    } finally { setLogoutBusy(false); }
+      // An expired session is already signed out server-side, so still drop local state.
+      if ((error as { status?: number }).status !== 401) {
+        setNotice({ kind: "error", text: "Could not sign out. Please try again." });
+        setLogoutBusy(false);
+        return;
+      }
+    }
+    clearAuthenticatedState();
+    window.location.replace("/");
   };
   const switchAccount = async () => {
     setAccountOpen(false);
@@ -187,7 +231,7 @@ export function App() {
       setApplications((c) => [d.application, ...c.filter((a) => a.id !== d.application.id)]);
       setCreateOpen(false);
       setNotice({ kind: "success", text: `Application “${d.application.name}” created.` });
-      void loadApplications({ upsert: d.application });
+      void loadApplications({ upsert: d.application }, { silent: true });
     } catch (error) {
       if (epoch !== authEpoch.current) return;
       const t = error as { message?: string; data?: { error?: string } };
@@ -201,9 +245,9 @@ export function App() {
     if (prefs.hapticFeedback) haptic(6);
     appsSeq.current += 1;
     setApplicationsLoading(false); setApplicationsError(null);
-    setApplications((items) => items.map((i) => i.id === id ? { ...i, ...r.application } : i));
     const previous = applications.find((item) => item.id === id);
-    if (previous) void loadApplications({ upsert: { ...previous, ...r.application } });
+    setApplications((items) => items.map((i) => i.id === id ? { ...i, ...r.application } : i));
+    void loadApplications(previous ? { upsert: { ...previous, ...r.application } } : undefined, { silent: true });
   };
   const deleteApplication = async (id: string) => {
     const epoch = authEpoch.current;
@@ -215,7 +259,7 @@ export function App() {
     setApplications((items) => items.filter((i) => i.id !== id));
     setSelectedId(null);
     setNotice({ kind: "success", text: "Application deleted." });
-    void loadApplications({ removedId: id });
+    void loadApplications({ removedId: id }, { silent: true });
   };
 
   const userName = user?.name || user?.email || "Developer";
@@ -231,11 +275,15 @@ export function App() {
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
-      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><PixelIcon name="plus" size={20} /><span>New application</span></HStack> }
+      { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><PixelIcon name="plus" size={20} /><span>New application</span></HStack> },
+      ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, element: <HStack gap={2} vAlign="center"><PixelIcon name="grid" size={20} /><span>{a.name}</span></HStack> }))
     ];
-    const find = (q: string) => items.filter((i) => i.label.toLowerCase().includes(q.trim().toLowerCase()));
+    const find = (q: string) => {
+      const needle = q.trim().toLowerCase();
+      return needle ? items.filter((i) => i.label.toLowerCase().includes(needle)) : items;
+    };
     return { search: find, bootstrap: () => items, cancel: () => {} };
-  }, []);
+  }, [applications]);
   const searchItems = useMemo<SearchItem[]>(() => [
     ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, hint: "Page" })),
     { id: "action:create", label: "New application", hint: "Action" },
@@ -250,6 +298,7 @@ export function App() {
     setCommandOpen(false);
     if (value === "action:create") window.setTimeout(openCreate, 120); // let the palette dialog finish closing first
     else if (value.startsWith("route:")) navigate(value.slice(6) as RouteId);
+    else if (value.startsWith("app:")) setSelectedId(value.slice(4));
   };
 
   // The existing AIDC charcoal/neutral palette is also the Material color seed.
@@ -327,7 +376,7 @@ export function App() {
         accountOpen={accountOpen}
         account={navAccount}
         hapticsEnabled={prefs.hapticFeedback}
-        pinned={accountOpen}
+        pinned={accountOpen || createOpen || commandOpen || selectedId !== null}
         onAccount={openAccount}
         onSelect={selectRoute}
         items={navItems}
