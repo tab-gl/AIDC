@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuItem } from "@astryxdesign/core/DropdownMenu"
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { IconButton } from "@astryxdesign/core/IconButton";
-import { SideNav, SideNavHeading, SideNavSection } from "@astryxdesign/core/SideNav";
+import { SideNav, SideNavHeading, SideNavItem } from "@astryxdesign/core/SideNav";
 import { Theme } from "@astryxdesign/core/theme";
 import { TopNav } from "@astryxdesign/core/TopNav";
 import { VStack } from "@astryxdesign/core/VStack";
@@ -18,7 +18,6 @@ import { CookieBanner } from "./components/CookieBanner";
 import { Icon } from "./ui/Icon";
 import type { IconName } from "./ui/Icon";
 import { MobileNav, type MobileNavItem } from "./components/MobileNav";
-import BranchedMenu from "./components/BranchedMenu";
 import { SearchField, type SearchItem } from "./components/SearchField";
 import { Sheet } from "./components/Sheet";
 import { useIsMobile } from "./lib/useMedia";
@@ -415,35 +414,16 @@ export function App() {
   return frame(<>
     <AppShell contentPadding={5}
       sideNav={<SideNav header={<SideNavHeading heading="AIDC" icon={<img src="/assets/icon.png" alt="" width={24} height={24} />} headingHref="#" />}>
-        <SideNavSection title="Navigate">
-          <BranchedMenu
-            key={route}
-            width={224}
-            rowHeight={38}
-            indent={36}
-            fontSize={13}
-            color="var(--color-text-primary)"
-            accentColor="var(--color-accent)"
-            lineColor="var(--color-border)"
-            defaultOpen={[0, 1, 2]}
-            defaultActive={route}
-            items={[
-              { label: "Workspace", children: [
-                { value: "overview", label: "Overview" },
-                { value: "applications", label: "Applications" }
-              ] },
-              { label: "Insights", children: [
-                { value: "analytics", label: "Analytics" },
-                { value: "activity", label: "Activity" }
-              ] },
-              { label: "Manage", children: [
-                { value: "users", label: "Users" },
-                { value: "settings", label: "Settings" }
-              ] }
-            ]}
-            onSelect={(value) => navigate(value as RouteId)}
+        {routes.map((r) => (
+          <SideNavItem
+            key={r.id}
+            label={r.label}
+            icon={<Icon name={ROUTE_ICONS[r.id]} size={20} />}
+            selectedIcon={<Icon name={ROUTE_ICONS[r.id]} size={20} filled />}
+            isSelected={route === r.id}
+            onClick={() => navigate(r.id)}
           />
-        </SideNavSection>
+        ))}
       </SideNav>}
       topNav={<TopNav label="Console toolbar" endContent={<HStack gap={2} vAlign="center">
         <SearchField items={searchItems} onSelect={onSearchSelect} />

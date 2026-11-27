@@ -123,7 +123,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
   const changeTab = (next: TabId) => {
     if (tab === "credentials" && next !== "credentials") setFreshSecret("");
     setTab(next); setStatus(""); setError("");
-    sectionsForTab(next).filter((section) => sections[section] === "idle").forEach((section) => void loadSection(section, uptimeDays));
+    sectionsForTab(next).filter((section) => sections[section] === "idle" || sections[section] === "error").forEach((section) => void loadSection(section, uptimeDays));
   };
   if (!application) return null;
 
