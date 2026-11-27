@@ -28,21 +28,20 @@ import { API_ORIGIN, api } from "./lib/api";
 import { APPLICATION_LIMIT } from "./lib/limits";
 import { reconcileApplications } from "./lib/applications";
 import { haptic } from "./lib/haptics";
-import { navigate, readRoute, routes, type RouteId } from "./lib/navigation";
+import { INSIGHTS_TABS, navigate, readInsightsTab, readRoute, routes, type InsightsTab, type RouteId } from "./lib/navigation";
 import { usePreferences, type Preferences } from "./lib/prefs";
 import type { Application, User } from "./types";
 
 const CommandPalette = lazy(() => import("@astryxdesign/core/CommandPalette").then((m) => ({ default: m.CommandPalette })));
 const ApplicationDrawer = lazy(() => import("./components/ApplicationDrawer").then((m) => ({ default: m.ApplicationDrawer })));
 const CreateApplicationModal = lazy(() => import("./components/CreateApplicationModal").then((m) => ({ default: m.CreateApplicationModal })));
-const Activity = lazy(() => import("./views/Activity").then((m) => ({ default: m.Activity })));
-const Analytics = lazy(() => import("./views/Analytics").then((m) => ({ default: m.Analytics })));
+const Insights = lazy(() => import("./views/Insights").then((m) => ({ default: m.Insights })));
 const Settings = lazy(() => import("./views/Settings").then((m) => ({ default: m.Settings })));
-const Users = lazy(() => import("./views/Users").then((m) => ({ default: m.Users })));
 
 const navIcon = (id: RouteId, filled = false) => <Icon name={ROUTE_ICONS[id]} size={20} filled={filled} />;
-// One Iconoir glyph per destination, shared by both shells.
-const ROUTE_ICONS: Record<RouteId, IconName> = { overview: "home", applications: "grid", analytics: "chart", activity: "pulse", users: "user", settings: "gear" };
+// One Solar glyph per destination, shared by both shells.
+const ROUTE_ICONS: Record<RouteId, IconName> = { overview: "home", applications: "grid", insights: "chart", settings: "gear" };
+const TAB_ICONS: Record<InsightsTab, IconName> = { analytics: "chart", activity: "pulse", users: "user" };
 type Changes = Partial<Pick<Application, "name" | "description" | "origin_url" | "application_type">>;
 
 function connectionMessage(error: unknown): string {
@@ -63,6 +62,7 @@ export function App() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [settingsDraft]);
   const [route, setRoute] = useState<RouteId>(readRoute);
+  const [insightsTab, setInsightsTab] = useState<InsightsTab>(readInsightsTab);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -133,7 +133,7 @@ export function App() {
 
   useEffect(() => { void bootstrap(); }, [bootstrap]);
   useEffect(() => {
-    const onHash = () => setRoute(readRoute());
+    const onHash = () => { setRoute(readRoute()); setInsightsTab(readInsightsTab()); };
     const onAuthRequired = () => { clearAuthenticatedState(); setRoute("overview"); navigate("overview"); };
     window.addEventListener("hashchange", onHash);
     window.addEventListener("aidc-auth-required", onAuthRequired);
@@ -265,7 +265,7 @@ export function App() {
   // Stable identities keep the floating bar out of re-renders it has nothing to do with
   // (application counts and health polling, notices, drawers); the icon set and destinations never change.
   const navItems = useMemo<MobileNavItem[]>(() => routes
-    .filter((r) => ["overview", "applications", "analytics", "activity"].includes(r.id))
+    .filter((r) => ["overview", "applications", "insights"].includes(r.id))
     .map((r) => ({ id: r.id, label: r.id === "applications" ? "Apps" : r.label, icon: ROUTE_ICONS[r.id] })), []);
   const navAccount = useMemo(() => ({ name: userName, avatarUrl: user?.picture || user?.avatar_url || undefined }), [userName, user]);
   const selectRoute = useCallback((id: string) => { setAccountOpen(false); navigate(id as RouteId); }, []);
@@ -273,6 +273,7 @@ export function App() {
   const searchSource = useMemo(() => {
     const items = [
       ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, element: <HStack gap={2} vAlign="center">{navIcon(r.id)}<span>{r.label}</span></HStack> })),
+      ...INSIGHTS_TABS.map((t) => ({ id: `route:${t.id}`, label: `Insights · ${t.label}`, element: <HStack gap={2} vAlign="center"><Icon name={TAB_ICONS[t.id]} size={20} /><span>Insights · {t.label}</span></HStack> })),
       { id: "action:create", label: "New application", element: <HStack gap={2} vAlign="center"><Icon name="plus" size={20} /><span>New application</span></HStack> },
       ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, element: <HStack gap={2} vAlign="center"><Icon name="grid" size={20} /><span>{a.name}</span></HStack> }))
     ];
@@ -284,6 +285,7 @@ export function App() {
   }, [applications]);
   const searchItems = useMemo<SearchItem[]>(() => [
     ...routes.map((r) => ({ id: `route:${r.id}`, label: r.label, hint: "Page" })),
+    ...INSIGHTS_TABS.map((t) => ({ id: `route:${t.id}`, label: `Insights · ${t.label}`, hint: "Page" })),
     { id: "action:create", label: "New application", hint: "Action" },
     ...applications.map((a) => ({ id: `app:${a.id}`, label: a.name, hint: "Application" }))
   ], [applications]);
@@ -318,9 +320,7 @@ export function App() {
     switch (route) {
       case "overview": return <Overview applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} signedIn showTips={prefs.showTips} onApplications={() => navigate("applications")} onActivity={() => navigate("activity")} onSettings={() => navigate("settings")} onCreate={openCreate} />;
       case "applications": return <Applications applications={applications} loading={applicationsLoading} error={applicationsError} signedIn onRetry={() => void loadApplications()} onCreate={openCreate} onOpen={(a) => setSelectedId(a.id)} />;
-      case "analytics": return <Analytics applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} />;
-      case "activity": return <Activity />;
-      case "users": return <Users />;
+      case "insights": return <Insights tab={insightsTab} onTab={setInsightsTab} applications={applications} applicationsLoading={applicationsLoading} applicationsError={applicationsError} />;
       case "settings": return <Settings saved={prefs} draft={settingsDraft} onDraftChange={setSettingsDraft} />;
     }
   })();
@@ -390,7 +390,6 @@ export function App() {
         </div>
         <div className="sheet-list">
           {accountRow("settings", "gear", "Settings", "Theme, contrast, motion and haptics")}
-          {accountRow("users", "user", "Users", "People who consented to your applications")}
           <button type="button" className="sheet-row" onClick={() => { feedback(); void switchAccount(); }}>
             <span className="sheet-row-icon"><Icon name="exchange" size={22} /></span>
             <span className="sheet-row-text"><span className="sheet-row-label">Switch Ace ID</span><span className="sheet-row-hint">Sign in with a different Ace ID</span></span>

@@ -66,7 +66,7 @@ test("returns to the signed-out overview when an authenticated API call expires"
   await mockApi(page, { expireAnalytics: true });
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toBeVisible();
-  await page.getByRole("button", { name: "Analytics" }).first().click();
+  await page.getByRole("button", { name: "Insights" }).first().click();
   await expect(page.getByRole("button", { name: /continue with ace id/i }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
 });
@@ -294,7 +294,7 @@ test("settings drafts survive navigation, revert, and sync useful defaults", asy
   await expect(page.locator("html")).toHaveAttribute("data-text-size", "large");
   await expect(page.locator("m3e-theme")).toHaveJSProperty("contrast", "high");
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("aidc-neo-preferences-v1") || "{}"))).toMatchObject({ defaultRange: 30, hapticFeedback: false });
-  await page.getByRole("button", { name: "Analytics" }).first().click();
+  await page.getByRole("button", { name: "Insights" }).first().click();
   await expect.poll(() => analyticsRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
   await page.getByRole("button", { name: "Settings" }).first().click();
   await page.getByRole("button", { name: "Restore defaults" }).click();
@@ -351,10 +351,10 @@ test("phone shell floats the navigation and keeps settings behind the profile", 
   await expect(nav.getByRole("button", { name: "Settings", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Ace ID menu" })).toHaveCount(0);
   await expect(nav.getByRole("button")).toHaveCount(5);
-  const analytics = nav.getByRole("button", { name: "Analytics" });
+  const analytics = nav.getByRole("button", { name: "Insights" });
   await analytics.click();
   await expect(analytics).toHaveAttribute("aria-current", "page");
-  await expect(analytics.locator(".mobile-nav-label")).toHaveText("Analytics");
+  await expect(analytics.locator(".mobile-nav-label")).toHaveText("Insights");
   await expect(page.getByRole("heading", { name: "Analytics", level: 1 })).toBeVisible();
   const profile = nav.getByRole("button", { name: /ace id and settings/i });
   await profile.click();

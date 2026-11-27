@@ -68,24 +68,24 @@ describe("phone shell", () => {
     setViewport(390);
     render(<App />);
     const nav = await screen.findByRole("navigation", { name: "Primary" });
-    for (const label of ["Overview", "Apps", "Analytics", "Activity"]) {
+    for (const label of ["Overview", "Apps", "Insights"]) {
       expect(screen.getByRole("button", { name: label })).toBeTruthy();
     }
     expect(nav.querySelectorAll("button[aria-current]")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Ace ID menu" })).toBeNull();
     // The bar is drawn with the HackerNoon Pixel Icon Library.
-    expect(nav.querySelectorAll("svg.icon")).toHaveLength(4);
+    expect(nav.querySelectorAll("svg.icon")).toHaveLength(3);
   }, 20_000);
 
   it("moves the active state and label to the chosen destination", async () => {
     setViewport(390);
     render(<App />);
-    const analytics = await screen.findByRole("button", { name: "Analytics" });
-    expect(analytics.getAttribute("aria-current")).toBeNull();
-    fireEvent.click(analytics);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Analytics" }).getAttribute("aria-current")).toBe("page"));
-    expect(window.location.hash).toBe("#analytics");
+    const insights = await screen.findByRole("button", { name: "Insights" });
+    expect(insights.getAttribute("aria-current")).toBeNull();
+    fireEvent.click(insights);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Insights" }).getAttribute("aria-current")).toBe("page"));
+    expect(window.location.hash).toBe("#insights");
     expect(await screen.findByRole("heading", { name: "Analytics", level: 1 })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBeNull();
   }, 20_000);
