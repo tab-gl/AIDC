@@ -23,9 +23,9 @@ export default defineConfig({
           // re-downloading it with the app shell on every deploy.
           if (id.includes("/src/ui/GlassSurface")) return "glass";
           // glisse only renders inside lazy views, so its chunk must not be preloaded with the
-          // shell. The Iconoir glyphs are needed by both shells, so they get their own chunk.
+          // shell. The Solar glyphs are needed by both shells, so they get their own chunk.
           if (id.includes("/node_modules/glisse/")) return "glisse";
-          if (id.includes("/node_modules/iconoir-react/")) return "icons";
+          if (id.includes("/node_modules/@solar-icons/react/")) return "icons";
           if (!id.includes("node_modules")) return;
           if (id.includes("react-dom") || id.includes("/react/") || id.includes("scheduler")) return "react";
           if (id.includes("@m3e/")) return "m3e";
