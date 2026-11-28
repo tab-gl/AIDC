@@ -84,7 +84,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
   const sectionSeq = useRef<Record<Section, number>>({ redirects: 0, scopes: 0, credentials: 0, branding: 0, monitoring: 0, events: 0 });
 
   const id = application?.id;
-  const loadSection = useCallback(async (section: Section, days = 30) => {
+  const loadSection = useCallback(async (section: Section, days = 30, attempt = 1): Promise<void> => {
     if (!id) return;
     const currentGeneration = generation.current;
     const seq = ++sectionSeq.current[section];
@@ -106,7 +106,15 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
       }
       if (current()) setSections((s) => ({ ...s, [section]: "ready" }));
     } catch {
-      if (current()) setSections((s) => ({ ...s, [section]: "error" }));
+      if (current()) {
+        // The API can return a transient 503 while the database pool is busy. One quiet retry
+        // recovers those without a visible error; a second failure is shown with Retry.
+        if (attempt < 2) {
+          window.setTimeout(() => { if (currentGeneration === generation.current) void loadSection(section, days, attempt + 1); }, 900);
+        } else {
+          setSections((s) => ({ ...s, [section]: "error" }));
+        }
+      }
     }
   }, [id]);
   useEffect(() => {
@@ -240,6 +248,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
   const needed = sectionsForTab(tab);
   const failed = needed.filter((section) => sections[section] === "error");
   const loading = needed.some((section) => sections[section] === "idle" || sections[section] === "loading");
+  const currentLabel = TABS.find((t) => t.value === tab)?.label ?? "";
   const content = failed.length ? <ErrorBanner message={`Could not load ${failed.join(" and ")}. Your data has not been changed.`} onRetry={() => failed.forEach((section) => void loadSection(section, uptimeDays))} />
     : loading ? <LoadingState title={`Loading ${tab}`} /> : panels[tab];
 
@@ -253,6 +262,7 @@ export function ApplicationDrawer({ application, onClose, onUpdate, onDelete }: 
         </>}
         content={<LayoutContent padding={4} label="Application details">
           <VStack gap={4}>
+            <p className="drawer-current-tab" aria-hidden="true"><span>{currentLabel}</span></p>
             {error && <div role="alert"><Banner status="error" title="Something went wrong" description={error} isDismissable onDismiss={() => setError("")} /></div>}
             {status && <div role="status"><Banner status="success" title={status} isDismissable onDismiss={() => setStatus("")} /></div>}
             {TABS.map(({ value: v, label }) => <div key={v} role="tabpanel" id={`${tabId}-panel-${v}`} aria-label={label} tabIndex={0} hidden={tab !== v}>{tab === v ? content : null}</div>)}

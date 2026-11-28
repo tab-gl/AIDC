@@ -222,6 +222,12 @@ m3e-theme { display: contents; }
   .cookie-banner-accept { width: 100%; }
 }
 @media (max-width: 380px) { .cookie-banner { left: 8px; right: 8px; } }
+/* On desktop the notice sits in the bottom-right corner, clear of the page content and the
+   application drawer, instead of floating across the middle of the workspace. */
+@media (min-width: 761px) {
+  .cookie-banner { left: auto; right: 24px; bottom: 24px; margin: 0; width: min(420px, calc(100vw - 48px)); max-width: 420px; flex-direction: column; align-items: stretch; gap: 12px; padding: 16px 18px; }
+  .cookie-banner-accept { width: 100%; }
+}
 
 /* ---------- Mobile shell ---------- */
 .m-shell { min-height: 100dvh; background: var(--color-background-body); color: var(--color-text-primary); }
@@ -574,3 +580,8 @@ m3e-theme { display: contents; }
 /* React Bits Branched Menu inherits AIDC theme tokens and Figtree. */
 .branched-menu { font-family: var(--font-family-body); }
 .branched-menu button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 6px; }
+
+/* Names the open application-drawer section under the tab bar, so the current tab reads as
+   text on phones too, where the tab icons are the only glyphs. */
+.drawer-current-tab { margin: 0; font: 600 0.8125rem/1.2 var(--font-family-body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-secondary); }
+.drawer-current-tab span { color: var(--color-text-primary); }
